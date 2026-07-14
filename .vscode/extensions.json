@@ -1,1 +1,9 @@
-{ "recommendations": ["expo.vscode-expo-tools"] }
+{
+  "recommendations": [
+    "expo.vscode-expo-tools",
+    "dbaeumer.vscode-eslint",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "qwtel.sqlite-viewer"
+  ]
+}
