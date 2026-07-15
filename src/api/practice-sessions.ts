@@ -19,3 +19,5 @@ export type PracticeSessionInput = {
 
 export const createPracticeSession = (input: PracticeSessionInput) =>
   api.post<PracticeSession>('/practice-sessions', input);
+
+export const getPracticeSessions = () => api.get<PracticeSession[]>('/practice-sessions');
