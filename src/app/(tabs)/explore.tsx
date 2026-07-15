@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +13,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function TabTwoScreen() {
+  const router = useRouter();
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
     ...safeAreaInsets,
@@ -56,6 +58,16 @@ export default function TabTwoScreen() {
               </ThemedView>
             </Pressable>
           </ExternalLink>
+        </ThemedView>
+
+        <ThemedView style={styles.newSessionWrapper}>
+          <Pressable
+            onPress={() => router.push('/nova-pratica')}
+            style={({ pressed }) => pressed && styles.pressed}>
+            <ThemedView type="backgroundElement" style={styles.linkButton}>
+              <ThemedText type="link">+ Nova sessão de prática</ThemedText>
+            </ThemedView>
+          </Pressable>
         </ThemedView>
 
         <ThemedView style={styles.sectionsWrapper}>
@@ -148,6 +160,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  newSessionWrapper: {
+    alignItems: 'center',
   },
   linkButton: {
     flexDirection: 'row',
