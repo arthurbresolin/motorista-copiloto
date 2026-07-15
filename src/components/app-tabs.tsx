@@ -27,6 +27,11 @@ export default function AppTabs() {
           renderingMode="template"
         />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="monitor">
+        <NativeTabs.Trigger.Label>Monitor</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="gauge.with.needle" md="speed" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
