@@ -1,10 +1,16 @@
+import { useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Accelerometer } from 'expo-sensors';
-import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { createMonitorSession } from '@/api/monitor-sessions';
+import { ApiError } from '@/api/client';
+import {
+  createMonitorSession,
+  getMonitorSessions,
+  type MonitorSession,
+} from '@/api/monitor-sessions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -12,9 +18,23 @@ import { useTheme } from '@/hooks/use-theme';
 import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
 
 type MonitorState = 'idle' | 'checking' | 'unavailable' | 'monitoring';
+type HistoryState = 'loading' | 'error' | 'ready';
 
 const ALERT_VISIBLE_DURATION_MS = 2500;
 const UPDATE_INTERVAL_MS = 200;
+
+function formatDateTime(isoDateTime: string) {
+  const date = new Date(isoDateTime);
+  const day = date.toLocaleDateString('pt-BR');
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `${day} às ${time}`;
+}
+
+function formatDuration(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}min ${seconds.toString().padStart(2, '0')}s`;
+}
 
 export default function MonitorScreen() {
   const insets = useSafeAreaInsets();
@@ -24,10 +44,34 @@ export default function MonitorScreen() {
   const [eventCount, setEventCount] = useState(0);
   const [alertVisible, setAlertVisible] = useState(false);
 
+  const [history, setHistory] = useState<MonitorSession[]>([]);
+  const [historyState, setHistoryState] = useState<HistoryState>('loading');
+  const [historyError, setHistoryError] = useState('');
+
   const subscriptionRef = useRef<ReturnType<typeof Accelerometer.addListener> | null>(null);
   const previousReadingRef = useRef<AccelerometerReading | null>(null);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
+
+  const loadHistory = useCallback(async () => {
+    setHistoryState('loading');
+    try {
+      const data = await getMonitorSessions();
+      setHistory(data);
+      setHistoryState('ready');
+    } catch (error) {
+      setHistoryError(
+        error instanceof ApiError ? error.message : 'Não foi possível carregar o histórico.',
+      );
+      setHistoryState('error');
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadHistory();
+    }, [loadHistory]),
+  );
 
   function showAlert() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
@@ -85,7 +129,9 @@ export default function MonitorScreen() {
         started_at: startedAt.toISOString(),
         duration_seconds: durationSeconds,
         event_count: eventCount,
-      }).catch(() => {});
+      })
+        .then(loadHistory)
+        .catch(() => {});
     }
   }
 
@@ -174,6 +220,51 @@ export default function MonitorScreen() {
             </Pressable>
           </ThemedView>
         )}
+
+        <ThemedView style={styles.historySection}>
+          <ThemedText type="smallBold">Sessões anteriores</ThemedText>
+
+          {historyState === 'loading' && (
+            <ThemedView style={styles.centerContent}>
+              <ActivityIndicator />
+            </ThemedView>
+          )}
+
+          {historyState === 'error' && (
+            <ThemedView style={styles.centerContent}>
+              <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                {historyError}
+              </ThemedText>
+              <Pressable onPress={loadHistory} style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="backgroundElement" style={styles.actionButton}>
+                  <ThemedText type="link">Tentar novamente</ThemedText>
+                </ThemedView>
+              </Pressable>
+            </ThemedView>
+          )}
+
+          {historyState === 'ready' && history.length === 0 && (
+            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+              Nenhuma sessão de monitoramento registrada ainda.
+            </ThemedText>
+          )}
+
+          {historyState === 'ready' && history.length > 0 && (
+            <ThemedView style={styles.historyWrapper}>
+              {history.map((session) => (
+                <ThemedView key={session.id} type="backgroundElement" style={styles.historyCard}>
+                  <ThemedText type="small">{formatDateTime(session.started_at)}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {formatDuration(session.duration_seconds)} ·{' '}
+                    {session.event_count === 0
+                      ? 'nenhum movimento brusco'
+                      : `${session.event_count} movimento(s) brusco(s)`}
+                  </ThemedText>
+                </ThemedView>
+              ))}
+            </ThemedView>
+          )}
+        </ThemedView>
       </ThemedView>
     </ScrollView>
   );
@@ -224,5 +315,17 @@ const styles = StyleSheet.create({
   },
   alertText: {
     color: '#000000',
+  },
+  historySection: {
+    gap: Spacing.three,
+    paddingTop: Spacing.two,
+  },
+  historyWrapper: {
+    gap: Spacing.two,
+  },
+  historyCard: {
+    gap: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
   },
 });

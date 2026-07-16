@@ -15,3 +15,5 @@ export type MonitorSessionInput = {
 
 export const createMonitorSession = (input: MonitorSessionInput) =>
   api.post<MonitorSession>('/monitor-sessions', input);
+
+export const getMonitorSessions = () => api.get<MonitorSession[]>('/monitor-sessions');
