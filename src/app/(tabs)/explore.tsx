@@ -4,7 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { ApiError } from '@/api/client';
-import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
+import {
+  getPracticeSessionStats,
+  getPracticeSessions,
+  type PracticeSession,
+  type PracticeSessionStats,
+} from '@/api/practice-sessions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -15,6 +20,12 @@ type LoadState = 'loading' | 'error' | 'ready';
 function formatDate(isoDate: string) {
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
+}
+
+function formatHoursMinutes(totalMinutes: number) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${minutes}min`;
 }
 
 export default function HistoricoScreen() {
@@ -30,6 +41,9 @@ export default function HistoricoScreen() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [stats, setStats] = useState<PracticeSessionStats | null>(null);
+  const [statsLoadState, setStatsLoadState] = useState<LoadState>('loading');
+
   const loadSessions = useCallback(async () => {
     setLoadState('loading');
     try {
@@ -44,10 +58,22 @@ export default function HistoricoScreen() {
     }
   }, []);
 
+  const loadStats = useCallback(async () => {
+    setStatsLoadState('loading');
+    try {
+      const data = await getPracticeSessionStats();
+      setStats(data);
+      setStatsLoadState('ready');
+    } catch {
+      setStatsLoadState('error');
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadSessions();
-    }, [loadSessions]),
+      loadStats();
+    }, [loadSessions, loadStats]),
   );
 
   const contentPlatformStyle = Platform.select({
@@ -70,10 +96,24 @@ export default function HistoricoScreen() {
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Histórico de prática</ThemedText>
+          <ThemedText type="subtitle">Práticas</ThemedText>
           <ThemedText themeColor="textSecondary">
             Suas sessões de prática registradas, mais recentes primeiro.
           </ThemedText>
+
+          {statsLoadState === 'ready' && stats && (
+            <ThemedView style={styles.statsRow}>
+              <ThemedView type="backgroundElement" style={styles.statPill}>
+                <ThemedText type="small">{stats.total_sessions} sessões</ThemedText>
+              </ThemedView>
+              <ThemedView type="backgroundElement" style={styles.statPill}>
+                <ThemedText type="small">{stats.total_km} km</ThemedText>
+              </ThemedView>
+              <ThemedView type="backgroundElement" style={styles.statPill}>
+                <ThemedText type="small">{formatHoursMinutes(stats.total_minutes)}</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
 
           <Pressable
             onPress={() => router.push('/nova-pratica')}
@@ -180,6 +220,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.one,
     alignItems: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  statPill: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
   },
   sessionsWrapper: {
     gap: Spacing.three,

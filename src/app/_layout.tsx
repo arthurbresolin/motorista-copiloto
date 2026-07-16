@@ -21,6 +21,10 @@ export default function RootLayout() {
           name="meu-carro"
           options={{ presentation: 'modal', title: 'Meus carros' }}
         />
+        <Stack.Screen
+          name="checklist"
+          options={{ presentation: 'modal', title: 'Checklist pré-direção' }}
+        />
       </Stack>
     </ThemeProvider>
   );

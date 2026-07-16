@@ -19,7 +19,16 @@ export type PracticeSessionInput = {
   car_id: number | null;
 };
 
+export type PracticeSessionStats = {
+  total_sessions: number;
+  total_minutes: number;
+  total_km: number;
+};
+
 export const createPracticeSession = (input: PracticeSessionInput) =>
   api.post<PracticeSession>('/practice-sessions', input);
 
 export const getPracticeSessions = () => api.get<PracticeSession[]>('/practice-sessions');
+
+export const getPracticeSessionStats = () =>
+  api.get<PracticeSessionStats>('/practice-sessions/stats');

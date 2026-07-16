@@ -22,3 +22,9 @@ class PracticeSessionRead(BaseModel):
     maneuvers: list[str]
     notes: str | None
     car_id: int | None
+
+
+class PracticeSessionStats(BaseModel):
+    total_sessions: int
+    total_minutes: int
+    total_km: float

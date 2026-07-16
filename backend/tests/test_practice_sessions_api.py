@@ -81,3 +81,23 @@ async def test_create_practice_session_without_car(client, session_factory):
 
     assert response.status_code == 201
     assert response.json()["car_id"] is None
+
+
+async def test_practice_session_stats_empty_db(client, session_factory):
+    response = await client.get("/practice-sessions/stats")
+
+    assert response.status_code == 200
+    assert response.json() == {"total_sessions": 0, "total_minutes": 0, "total_km": 0.0}
+
+
+async def test_practice_session_stats_aggregates(client, session_factory):
+    await client.post("/practice-sessions", json={**VALID_PAYLOAD, "duration_minutes": 45, "distance_km": 12.5})
+    await client.post("/practice-sessions", json={**VALID_PAYLOAD, "duration_minutes": 30, "distance_km": 8.0})
+
+    response = await client.get("/practice-sessions/stats")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_sessions"] == 2
+    assert body["total_minutes"] == 75
+    assert body["total_km"] == 20.5
