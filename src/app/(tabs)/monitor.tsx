@@ -196,8 +196,8 @@ export default function MonitorScreen() {
               disabled={state === 'checking'}
               onPress={startMonitoring}
               style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.actionButton}>
-                <ThemedText type="link">
+              <ThemedView type="accent" style={styles.actionButton}>
+                <ThemedText type="link" themeColor="onAccent">
                   {state === 'checking' ? 'Verificando sensor…' : 'Iniciar monitoramento'}
                 </ThemedText>
               </ThemedView>

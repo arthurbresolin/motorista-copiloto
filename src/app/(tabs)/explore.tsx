@@ -78,8 +78,10 @@ export default function HistoricoScreen() {
           <Pressable
             onPress={() => router.push('/nova-pratica')}
             style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedView type="backgroundElement" style={styles.linkButton}>
-              <ThemedText type="link">+ Nova sessão de prática</ThemedText>
+            <ThemedView type="accent" style={styles.linkButton}>
+              <ThemedText type="link" themeColor="onAccent">
+                + Nova sessão de prática
+              </ThemedText>
             </ThemedView>
           </Pressable>
         </ThemedView>

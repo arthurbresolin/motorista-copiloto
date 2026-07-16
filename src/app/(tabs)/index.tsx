@@ -141,8 +141,10 @@ export default function ChecklistScreen() {
               disabled={isSaving}
               onPress={handleFinish}
               style={({ pressed }) => [styles.finishButton, pressed && styles.pressed]}>
-              <ThemedView type="backgroundElement" style={styles.actionButton}>
-                <ThemedText type="link">{isSaving ? 'Salvando…' : 'Concluir checklist'}</ThemedText>
+              <ThemedView type="accent" style={styles.actionButton}>
+                <ThemedText type="link" themeColor="onAccent">
+                  {isSaving ? 'Salvando…' : 'Concluir checklist'}
+                </ThemedText>
               </ThemedView>
             </Pressable>
           </ThemedView>

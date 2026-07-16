@@ -177,8 +177,10 @@ export default function NovaPraticaScreen() {
           disabled={isSaving}
           onPress={handleSave}
           style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}>
-          <ThemedView type="backgroundElement" style={styles.saveButtonInner}>
-            <ThemedText type="link">{isSaving ? 'Salvando…' : 'Salvar sessão'}</ThemedText>
+          <ThemedView type="accent" style={styles.saveButtonInner}>
+            <ThemedText type="link" themeColor="onAccent">
+              {isSaving ? 'Salvando…' : 'Salvar sessão'}
+            </ThemedText>
           </ThemedView>
         </Pressable>
       </ThemedView>
