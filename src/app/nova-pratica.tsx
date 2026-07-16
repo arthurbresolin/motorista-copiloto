@@ -1,17 +1,27 @@
 import { Checkbox, Column, Host } from '@expo/ui';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { createPracticeSession } from '@/api/practice-sessions';
 import { ApiError } from '@/api/client';
+import { getCars, type Car } from '@/api/cars';
+import { createPracticeSession } from '@/api/practice-sessions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const MANEUVER_OPTIONS = ['Baliza', 'Rotatória', 'Estacionamento', 'Rodovia', 'Curva', 'Marcha à ré'];
+
+type CarsLoadState = 'loading' | 'error' | 'ready';
 
 function todayIsoDate() {
   const now = new Date();
@@ -35,9 +45,32 @@ export default function NovaPraticaScreen() {
   const [selectedManeuvers, setSelectedManeuvers] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState('');
 
+  const [cars, setCars] = useState<Car[]>([]);
+  const [carsLoadState, setCarsLoadState] = useState<CarsLoadState>('loading');
+  const [carsError, setCarsError] = useState('');
+  const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
+
   const [fieldErrors, setFieldErrors] = useState<{ duration?: string; distance?: string }>({});
   const [submitError, setSubmitError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  async function loadCars() {
+    setCarsLoadState('loading');
+    try {
+      const data = await getCars();
+      setCars(data);
+      setCarsLoadState('ready');
+    } catch (error) {
+      setCarsError(
+        error instanceof ApiError ? error.message : 'Não foi possível carregar os carros.',
+      );
+      setCarsLoadState('error');
+    }
+  }
+
+  useEffect(() => {
+    loadCars();
+  }, []);
 
   function toggleManeuver(maneuver: string) {
     setSelectedManeuvers((current) => {
@@ -81,6 +114,7 @@ export default function NovaPraticaScreen() {
         distance_km: parseDecimal(distanceKm),
         maneuvers: Array.from(selectedManeuvers),
         notes: notes.trim() === '' ? null : notes.trim(),
+        car_id: selectedCarId,
       });
       router.replace('/explore');
     } catch (error) {
@@ -100,6 +134,65 @@ export default function NovaPraticaScreen() {
         { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + Spacing.four },
       ]}>
       <ThemedView style={styles.container}>
+        <ThemedView style={styles.field}>
+          <ThemedText type="smallBold">Com qual carro?</ThemedText>
+
+          {carsLoadState === 'loading' && (
+            <ThemedView style={styles.centerContent}>
+              <ActivityIndicator />
+            </ThemedView>
+          )}
+
+          {carsLoadState === 'error' && (
+            <ThemedView style={styles.centerContent}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                {carsError}
+              </ThemedText>
+              <Pressable onPress={loadCars} style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="backgroundElement" style={styles.secondaryButton}>
+                  <ThemedText type="link">Tentar novamente</ThemedText>
+                </ThemedView>
+              </Pressable>
+            </ThemedView>
+          )}
+
+          {carsLoadState === 'ready' && cars.length === 0 && (
+            <ThemedView style={styles.centerContent}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                Nenhum carro cadastrado ainda.
+              </ThemedText>
+              <Pressable
+                onPress={() => router.push('/meu-carro')}
+                style={({ pressed }) => pressed && styles.pressed}>
+                <ThemedView type="backgroundElement" style={styles.secondaryButton}>
+                  <ThemedText type="link">Cadastrar um carro</ThemedText>
+                </ThemedView>
+              </Pressable>
+            </ThemedView>
+          )}
+
+          {carsLoadState === 'ready' && cars.length > 0 && (
+            <ThemedView style={styles.carsWrapper}>
+              {cars.map((car) => (
+                <Pressable
+                  key={car.id}
+                  onPress={() => setSelectedCarId((current) => (current === car.id ? null : car.id))}
+                  style={({ pressed }) => pressed && styles.pressed}>
+                  <ThemedView
+                    type={selectedCarId === car.id ? 'accent' : 'backgroundElement'}
+                    style={styles.carOption}>
+                    <ThemedText
+                      type="small"
+                      themeColor={selectedCarId === car.id ? 'onAccent' : 'text'}>
+                      {car.brand_model}
+                    </ThemedText>
+                  </ThemedView>
+                </Pressable>
+              ))}
+            </ThemedView>
+          )}
+        </ThemedView>
+
         <ThemedView style={styles.field}>
           <ThemedText type="smallBold">Duração (minutos)</ThemedText>
           <TextInput
@@ -216,11 +309,30 @@ const styles = StyleSheet.create({
     minHeight: Platform.select({ web: 96, default: 80 }),
     textAlignVertical: 'top',
   },
+  centerContent: {
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+  },
   centerText: {
     textAlign: 'center',
   },
   pressed: {
     opacity: 0.7,
+  },
+  secondaryButton: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+  },
+  carsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  carOption: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
   },
   saveButton: {
     alignSelf: 'flex-start',

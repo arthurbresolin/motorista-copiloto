@@ -17,6 +17,10 @@ export default function RootLayout() {
           name="nova-pratica"
           options={{ presentation: 'modal', title: 'Nova sessão de prática' }}
         />
+        <Stack.Screen
+          name="meu-carro"
+          options={{ presentation: 'modal', title: 'Meus carros' }}
+        />
       </Stack>
     </ThemeProvider>
   );

@@ -64,3 +64,20 @@ async def test_get_practice_session_by_id_not_found(client, session_factory):
     response = await client.get("/practice-sessions/999")
 
     assert response.status_code == 404
+
+
+async def test_create_practice_session_with_car(client, session_factory):
+    car = await client.post("/cars", json={"brand_model": "Fiat Argo 2022"})
+    car_id = car.json()["id"]
+
+    response = await client.post("/practice-sessions", json={**VALID_PAYLOAD, "car_id": car_id})
+
+    assert response.status_code == 201
+    assert response.json()["car_id"] == car_id
+
+
+async def test_create_practice_session_without_car(client, session_factory):
+    response = await client.post("/practice-sessions", json=VALID_PAYLOAD)
+
+    assert response.status_code == 201
+    assert response.json()["car_id"] is None

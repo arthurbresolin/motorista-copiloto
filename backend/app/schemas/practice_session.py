@@ -9,6 +9,7 @@ class PracticeSessionCreate(BaseModel):
     distance_km: float = Field(gt=0)
     maneuvers: list[str] = []
     notes: str | None = None
+    car_id: int | None = None
 
 
 class PracticeSessionRead(BaseModel):
@@ -20,3 +21,4 @@ class PracticeSessionRead(BaseModel):
     distance_km: float
     maneuvers: list[str]
     notes: str | None
+    car_id: int | None

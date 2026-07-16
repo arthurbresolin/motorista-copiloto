@@ -7,6 +7,7 @@ export type PracticeSession = {
   distance_km: number;
   maneuvers: string[];
   notes: string | null;
+  car_id: number | null;
 };
 
 export type PracticeSessionInput = {
@@ -15,6 +16,7 @@ export type PracticeSessionInput = {
   distance_km: number;
   maneuvers: string[];
   notes: string | null;
+  car_id: number | null;
 };
 
 export const createPracticeSession = (input: PracticeSessionInput) =>
