@@ -30,6 +30,9 @@ export default function AppTabs() {
           <TabTrigger name="monitor" href="/monitor" asChild>
             <TabButton>Monitor</TabButton>
           </TabTrigger>
+          <TabTrigger name="quiz" href="/quiz" asChild>
+            <TabButton>Quiz</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

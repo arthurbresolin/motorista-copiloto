@@ -32,6 +32,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Monitor</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="gauge.with.needle" md="speed" />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="quiz">
+        <NativeTabs.Trigger.Label>Quiz</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="questionmark.circle" md="quiz" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
