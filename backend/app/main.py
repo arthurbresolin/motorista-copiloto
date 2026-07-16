@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.checklist import router as checklist_router
+from app.api.monitor_sessions import router as monitor_sessions_router
 from app.api.practice_sessions import router as practice_sessions_router
 
 app = FastAPI(title="Motorista Copiloto API")
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(checklist_router)
+app.include_router(monitor_sessions_router)
 app.include_router(practice_sessions_router)
 
 

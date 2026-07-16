@@ -18,8 +18,13 @@ Monitor de Direção em tempo real: usa os sensores de movimento do celular para
 
 ## Non-Goals (v2)
 
-- Não persiste os eventos/sessões de monitoramento no backend ainda (fica só na tela, client-side). Pode virar uma v2.1 se fizer sentido depois de usar na prática.
 - Não usa GPS/velocidade ainda, só o acelerômetro (frenagem/aceleração). Monitorar velocidade via GPS fica para depois.
+
+## v2.1 — Persistência do resumo (concluído)
+
+- [x] Ao parar o monitoramento, salva um resumo da sessão no backend: `started_at`, `duration_seconds`, `event_count` (endpoint `POST /monitor-sessions`, tabela `monitor_sessions`).
+- [x] Salvamento é "fire and forget": falha de rede não bloqueia nem avisa o usuário, já que o valor real da funcionalidade é o alerta em tempo real, não o resumo.
+- Ainda não há tela de histórico de sessões de monitoramento (só ficam salvas no backend); pode virar uma v2.2 se fizer sentido.
 
 ## Technical Considerations
 
@@ -29,5 +34,5 @@ Monitor de Direção em tempo real: usa os sensores de movimento do celular para
 
 ## Open Questions
 
-- Vale a pena, numa v2.1, salvar um resumo da sessão de monitoramento (quantos eventos, quando) no backend, como já fazemos com checklist e prática?
 - O limiar de 0.4g está bom, ou precisa ajustar depois de testar em um carro de verdade?
+- Vale a pena adicionar uma tela de histórico para as sessões de monitoramento (v2.2)?

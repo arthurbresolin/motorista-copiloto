@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { createMonitorSession } from '@/api/monitor-sessions';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -26,6 +27,7 @@ export default function MonitorScreen() {
   const subscriptionRef = useRef<ReturnType<typeof Accelerometer.addListener> | null>(null);
   const previousReadingRef = useRef<AccelerometerReading | null>(null);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startedAtRef = useRef<Date | null>(null);
 
   function showAlert() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
@@ -54,6 +56,7 @@ export default function MonitorScreen() {
     }
 
     previousReadingRef.current = null;
+    startedAtRef.current = new Date();
     setEventCount(0);
     Accelerometer.setUpdateInterval(UPDATE_INTERVAL_MS);
     subscriptionRef.current = Accelerometer.addListener((reading) => {
@@ -72,6 +75,18 @@ export default function MonitorScreen() {
     subscriptionRef.current = null;
     previousReadingRef.current = null;
     setState('idle');
+
+    const startedAt = startedAtRef.current;
+    startedAtRef.current = null;
+    if (startedAt) {
+      const durationSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
+      // Resumo não é crítico para o fluxo: falha de rede não deve interromper o usuário.
+      createMonitorSession({
+        started_at: startedAt.toISOString(),
+        duration_seconds: durationSeconds,
+        event_count: eventCount,
+      }).catch(() => {});
+    }
   }
 
   useEffect(() => {
