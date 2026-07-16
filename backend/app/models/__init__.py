@@ -2,5 +2,14 @@ from app.models.car import Car
 from app.models.checklist import ChecklistItem, ChecklistSession
 from app.models.monitor_session import MonitorSession
 from app.models.practice_session import PracticeSession
+from app.models.quiz import QuizQuestion, QuizSession
 
-__all__ = ["Car", "ChecklistItem", "ChecklistSession", "MonitorSession", "PracticeSession"]
+__all__ = [
+    "Car",
+    "ChecklistItem",
+    "ChecklistSession",
+    "MonitorSession",
+    "PracticeSession",
+    "QuizQuestion",
+    "QuizSession",
+]

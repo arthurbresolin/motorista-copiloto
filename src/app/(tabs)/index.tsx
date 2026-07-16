@@ -7,6 +7,7 @@ import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
+import { getQuizSessions, type QuizSession } from '@/api/quiz';
 import { OrganicButton, OrganicPill, OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -74,20 +75,23 @@ export default function HomeScreen() {
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
+  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadSessions = useCallback(async () => {
     setLoadState('loading');
     try {
-      const [practice, checklist, monitor] = await Promise.all([
+      const [practice, checklist, monitor, quiz] = await Promise.all([
         getPracticeSessions(),
         getChecklistSessions(),
         getMonitorSessions(),
+        getQuizSessions(),
       ]);
       setSessions(practice);
       setChecklistSessions(checklist);
       setMonitorSessions(monitor);
+      setQuizSessions(quiz);
       setLoadState('ready');
     } catch (error) {
       setErrorMessage(
@@ -107,9 +111,8 @@ export default function HomeScreen() {
   const weekDays = computeLastSevenDays(sessions);
   const maxWeekMinutes = Math.max(1, ...weekDays.map((day) => day.minutes));
   const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions);
-  // Quiz ainda não existe (chega no próximo estágio) — XP/conquistas de quiz ficam em 0 por ora.
-  const xp = computeXp(sessions.length, checklistSessions.length, 0);
-  const achievements = computeAchievements(sessions, streak, monitorSessions, 0);
+  const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length);
+  const achievements = computeAchievements(sessions, streak, monitorSessions, quizSessions.length);
 
   const contentPlatformStyle = Platform.select({
     android: {
