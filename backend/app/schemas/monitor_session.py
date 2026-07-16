@@ -3,10 +3,17 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class RoutePoint(BaseModel):
+    lat: float
+    lng: float
+    harsh: bool = False
+
+
 class MonitorSessionCreate(BaseModel):
     started_at: datetime
     duration_seconds: int = Field(ge=0)
     event_count: int = Field(ge=0)
+    route: list[RoutePoint] | None = None
 
 
 class MonitorSessionRead(BaseModel):
@@ -16,3 +23,4 @@ class MonitorSessionRead(BaseModel):
     started_at: datetime
     duration_seconds: int
     event_count: int
+    route: list[RoutePoint] | None

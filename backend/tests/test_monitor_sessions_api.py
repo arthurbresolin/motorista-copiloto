@@ -68,3 +68,23 @@ async def test_get_monitor_session_by_id_not_found(client, session_factory):
     response = await client.get("/monitor-sessions/999")
 
     assert response.status_code == 404
+
+
+async def test_create_monitor_session_with_route(client, session_factory):
+    route = [
+        {"lat": -23.55, "lng": -46.63, "harsh": False},
+        {"lat": -23.551, "lng": -46.631, "harsh": True},
+    ]
+
+    response = await client.post("/monitor-sessions", json={**VALID_PAYLOAD, "route": route})
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["route"] == route
+
+
+async def test_create_monitor_session_without_route(client, session_factory):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+
+    assert response.status_code == 201
+    assert response.json()["route"] is None

@@ -32,6 +32,12 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usado pra registrar o trajeto da sua sessão de prática no Monitor de direção."
+        }
       ]
     ],
     "experiments": {

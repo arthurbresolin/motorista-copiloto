@@ -1,5 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
 import { Accelerometer } from 'expo-sensors';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
@@ -10,12 +11,20 @@ import {
   createMonitorSession,
   getMonitorSessions,
   type MonitorSession,
+  type RoutePoint,
 } from '@/api/monitor-sessions';
+import { RouteMap } from '@/components/route-map';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
+
+const LOCATION_OPTIONS: Location.LocationOptions = {
+  accuracy: Location.Accuracy.Balanced,
+  timeInterval: 5000,
+  distanceInterval: 15,
+};
 
 type MonitorState = 'idle' | 'checking' | 'unavailable' | 'monitoring';
 type HistoryState = 'loading' | 'error' | 'ready';
@@ -52,6 +61,8 @@ export default function MonitorScreen() {
   const previousReadingRef = useRef<AccelerometerReading | null>(null);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedAtRef = useRef<Date | null>(null);
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const routeRef = useRef<RoutePoint[]>([]);
 
   const loadHistory = useCallback(async () => {
     setHistoryState('loading');
@@ -82,6 +93,42 @@ export default function MonitorScreen() {
     alertTimeoutRef.current = setTimeout(() => setAlertVisible(false), ALERT_VISIBLE_DURATION_MS);
   }
 
+  function markLastRoutePointHarsh() {
+    const route = routeRef.current;
+    if (route.length === 0) {
+      return;
+    }
+    const last = route[route.length - 1];
+    if (last.harsh) {
+      return;
+    }
+    routeRef.current = [...route.slice(0, -1), { ...last, harsh: true }];
+  }
+
+  // GPS é uma melhoria aditiva: qualquer falha aqui (permissão negada,
+  // sensor indisponível) não pode interromper o monitoramento por
+  // acelerômetro, que é o núcleo já validado da funcionalidade.
+  async function startLocationTracking() {
+    routeRef.current = [];
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        return;
+      }
+      locationSubscriptionRef.current = await Location.watchPositionAsync(
+        LOCATION_OPTIONS,
+        (location) => {
+          routeRef.current = [
+            ...routeRef.current,
+            { lat: location.coords.latitude, lng: location.coords.longitude, harsh: false },
+          ];
+        },
+      );
+    } catch {
+      locationSubscriptionRef.current = null;
+    }
+  }
+
   async function startMonitoring() {
     setState('checking');
 
@@ -107,10 +154,12 @@ export default function MonitorScreen() {
       const previous = previousReadingRef.current;
       if (previous && isHarshEvent(previous, reading)) {
         setEventCount((count) => count + 1);
+        markLastRoutePointHarsh();
         showAlert();
       }
       previousReadingRef.current = reading;
     });
+    startLocationTracking();
     setState('monitoring');
   }
 
@@ -118,10 +167,14 @@ export default function MonitorScreen() {
     subscriptionRef.current?.remove();
     subscriptionRef.current = null;
     previousReadingRef.current = null;
+    locationSubscriptionRef.current?.remove();
+    locationSubscriptionRef.current = null;
     setState('idle');
 
     const startedAt = startedAtRef.current;
     startedAtRef.current = null;
+    const route = routeRef.current;
+    routeRef.current = [];
     if (startedAt) {
       const durationSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
       // Resumo não é crítico para o fluxo: falha de rede não deve interromper o usuário.
@@ -129,6 +182,7 @@ export default function MonitorScreen() {
         started_at: startedAt.toISOString(),
         duration_seconds: durationSeconds,
         event_count: eventCount,
+        route: route.length > 0 ? route : null,
       })
         .then(loadHistory)
         .catch(() => {});
@@ -138,6 +192,7 @@ export default function MonitorScreen() {
   useEffect(() => {
     return () => {
       subscriptionRef.current?.remove();
+      locationSubscriptionRef.current?.remove();
       if (alertTimeoutRef.current) {
         clearTimeout(alertTimeoutRef.current);
       }
@@ -260,6 +315,9 @@ export default function MonitorScreen() {
                       ? 'nenhum movimento brusco'
                       : `${session.event_count} movimento(s) brusco(s)`}
                   </ThemedText>
+                  {session.route && session.route.length > 0 && (
+                    <RouteMap points={session.route} />
+                  )}
                 </ThemedView>
               ))}
             </ThemedView>
