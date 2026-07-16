@@ -7,10 +7,9 @@ import { ApiError } from '@/api/client';
 import { getCars, type Car } from '@/api/cars';
 import { createPracticeSession } from '@/api/practice-sessions';
 import { OrganicButton, OrganicCheckbox, OrganicSurface, OrganicText } from '@/components/organic';
+import { MANEUVER_OPTIONS } from '@/constants/skills';
 import { BorderWidth, MaxContentWidth, OrganicFontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-const MANEUVER_OPTIONS = ['Baliza', 'Rotatória', 'Estacionamento', 'Rodovia', 'Curva', 'Marcha à ré'];
 
 type CarsLoadState = 'loading' | 'error' | 'ready';
 

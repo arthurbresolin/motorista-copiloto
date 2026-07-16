@@ -3,11 +3,14 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
+import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
+import { OrganicButton, OrganicPill, OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { computeAchievements, computeSkillProgress, computeXp } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -69,14 +72,22 @@ export default function HomeScreen() {
   const theme = useTheme();
 
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
+  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
+  const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadSessions = useCallback(async () => {
     setLoadState('loading');
     try {
-      const data = await getPracticeSessions();
-      setSessions(data);
+      const [practice, checklist, monitor] = await Promise.all([
+        getPracticeSessions(),
+        getChecklistSessions(),
+        getMonitorSessions(),
+      ]);
+      setSessions(practice);
+      setChecklistSessions(checklist);
+      setMonitorSessions(monitor);
       setLoadState('ready');
     } catch (error) {
       setErrorMessage(
@@ -95,6 +106,10 @@ export default function HomeScreen() {
   const streak = computeStreak(sessions);
   const weekDays = computeLastSevenDays(sessions);
   const maxWeekMinutes = Math.max(1, ...weekDays.map((day) => day.minutes));
+  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions);
+  // Quiz ainda não existe (chega no próximo estágio) — XP/conquistas de quiz ficam em 0 por ora.
+  const xp = computeXp(sessions.length, checklistSessions.length, 0);
+  const achievements = computeAchievements(sessions, streak, monitorSessions, 0);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -146,6 +161,7 @@ export default function HomeScreen() {
                   ? 'dias seguidos — não quebre a corrente!'
                   : 'comece uma sessão de prática pra iniciar sua sequência'}
               </OrganicText>
+              <OrganicPill label={`XP ${xp}`} backgroundColor="background" />
             </OrganicSurface>
 
             <View style={styles.quickLinksRow}>
@@ -194,6 +210,40 @@ export default function HomeScreen() {
               <OrganicText size="small" color="textSecondary">
                 min. de prática por dia
               </OrganicText>
+            </OrganicSurface>
+
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.trailCard}>
+              <OrganicText size="small">Sua trilha</OrganicText>
+              <View style={styles.trailRow}>
+                {skillProgress.map(({ skill, state }) => (
+                  <Pressable
+                    key={skill.key}
+                    onPress={() => router.push(`/skill/${skill.key}`)}
+                    style={({ pressed }) => [styles.trailItem, pressed && styles.pressed]}>
+                    <SkillNode state={state} label={skill.label} />
+                    <OrganicText size="small" color="textSecondary" style={styles.trailLabel}>
+                      {skill.label}
+                    </OrganicText>
+                  </Pressable>
+                ))}
+              </View>
+            </OrganicSurface>
+
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.trailCard}>
+              <OrganicText size="small">Conquistas</OrganicText>
+              <View style={styles.trailRow}>
+                {achievements.map((achievement) => (
+                  <View key={achievement.key} style={styles.trailItem}>
+                    <SkillNode
+                      state={achievement.unlocked ? 'done' : 'locked'}
+                      label={achievement.label}
+                    />
+                    <OrganicText size="small" color="textSecondary" style={styles.trailLabel}>
+                      {achievement.label}
+                    </OrganicText>
+                  </View>
+                ))}
+              </View>
             </OrganicSurface>
 
             <View style={styles.ctaWrapper}>
@@ -279,6 +329,23 @@ const styles = StyleSheet.create({
   weekBar: {
     width: '100%',
     borderRadius: Spacing.one,
+  },
+  trailCard: {
+    gap: Spacing.three,
+    padding: Spacing.three,
+  },
+  trailRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.three,
+  },
+  trailItem: {
+    alignItems: 'center',
+    gap: Spacing.one,
+    width: 64,
+  },
+  trailLabel: {
+    textAlign: 'center',
   },
   ctaWrapper: {
     alignItems: 'center',
