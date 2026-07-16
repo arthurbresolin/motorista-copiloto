@@ -1,12 +1,10 @@
-import { Checkbox, Column, Host } from '@expo/ui';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { createChecklistSession, getChecklistItems, type ChecklistItem } from '@/api/checklist';
 import { ApiError } from '@/api/client';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { OrganicButton, OrganicCheckbox, OrganicText } from '@/components/organic';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -92,64 +90,51 @@ export default function ChecklistScreen() {
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Checklist pré-direção</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            Confira os itens antes de sair para dirigir.
-          </ThemedText>
-        </ThemedView>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <OrganicText size="subtitle">Checklist pré-direção</OrganicText>
+          <OrganicText color="textSecondary">Confira os itens antes de sair para dirigir.</OrganicText>
+        </View>
 
         {loadState === 'loading' && (
-          <ThemedView style={styles.centerContent}>
+          <View style={styles.centerContent}>
             <ActivityIndicator />
-          </ThemedView>
+          </View>
         )}
 
         {loadState === 'error' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
-            </ThemedText>
-            <Pressable onPress={loadItems} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.actionButton}>
-                <ThemedText type="link">Tentar novamente</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadItems} />
+          </View>
         )}
 
         {loadState === 'ready' && (
-          <ThemedView style={styles.itemsWrapper}>
-            <Host matchContents>
-              <Column spacing={Spacing.three}>
-                {items.map((item) => (
-                  <Checkbox
-                    key={item.id}
-                    label={item.title}
-                    value={checkedIds.has(item.id)}
-                    onValueChange={() => toggleItem(item.id)}
-                  />
-                ))}
-              </Column>
-            </Host>
+          <View style={styles.itemsWrapper}>
+            <View style={styles.checkboxList}>
+              {items.map((item) => (
+                <OrganicCheckbox
+                  key={item.id}
+                  label={item.title}
+                  value={checkedIds.has(item.id)}
+                  onValueChange={() => toggleItem(item.id)}
+                />
+              ))}
+            </View>
 
-            {errorMessage !== '' && <ThemedText themeColor="textSecondary">{errorMessage}</ThemedText>}
-            {savedMessage !== '' && <ThemedText type="smallBold">{savedMessage}</ThemedText>}
+            {errorMessage !== '' && <OrganicText color="textSecondary">{errorMessage}</OrganicText>}
+            {savedMessage !== '' && <OrganicText size="small">{savedMessage}</OrganicText>}
 
-            <Pressable
+            <OrganicButton
+              label={isSaving ? 'Salvando…' : 'Concluir checklist'}
               disabled={isSaving}
               onPress={handleFinish}
-              style={({ pressed }) => [styles.finishButton, pressed && styles.pressed]}>
-              <ThemedView type="accent" style={styles.actionButton}>
-                <ThemedText type="link" themeColor="onAccent">
-                  {isSaving ? 'Salvando…' : 'Concluir checklist'}
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            />
+          </View>
         )}
-      </ThemedView>
+      </View>
     </ScrollView>
   );
 }
@@ -187,15 +172,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     alignItems: 'flex-start',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  finishButton: {
-    alignSelf: 'flex-start',
-  },
-  actionButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+  checkboxList: {
+    gap: Spacing.three,
   },
 });

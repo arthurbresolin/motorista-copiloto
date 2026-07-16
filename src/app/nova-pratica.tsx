@@ -1,22 +1,13 @@
-import { Checkbox, Column, Host } from '@expo/ui';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { getCars, type Car } from '@/api/cars';
 import { createPracticeSession } from '@/api/practice-sessions';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { OrganicButton, OrganicCheckbox, OrganicSurface, OrganicText } from '@/components/organic';
+import { BorderWidth, MaxContentWidth, OrganicFontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const MANEUVER_OPTIONS = ['Baliza', 'Rotatória', 'Estacionamento', 'Rodovia', 'Curva', 'Marcha à ré'];
@@ -126,6 +117,16 @@ export default function NovaPraticaScreen() {
     }
   }
 
+  const inputStyle = [
+    styles.input,
+    {
+      fontFamily: OrganicFontFamily,
+      color: theme.text,
+      backgroundColor: theme.background,
+      borderColor: theme.borderColor,
+    },
+  ];
+
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
@@ -133,118 +134,110 @@ export default function NovaPraticaScreen() {
         styles.contentContainer,
         { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + Spacing.four },
       ]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">Com qual carro?</ThemedText>
+      <View style={styles.container}>
+        <View style={styles.field}>
+          <OrganicText size="small">Com qual carro?</OrganicText>
 
           {carsLoadState === 'loading' && (
-            <ThemedView style={styles.centerContent}>
+            <View style={styles.centerContent}>
               <ActivityIndicator />
-            </ThemedView>
+            </View>
           )}
 
           {carsLoadState === 'error' && (
-            <ThemedView style={styles.centerContent}>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+            <View style={styles.centerContent}>
+              <OrganicText size="small" color="textSecondary" style={styles.centerText}>
                 {carsError}
-              </ThemedText>
-              <Pressable onPress={loadCars} style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView type="backgroundElement" style={styles.secondaryButton}>
-                  <ThemedText type="link">Tentar novamente</ThemedText>
-                </ThemedView>
-              </Pressable>
-            </ThemedView>
+              </OrganicText>
+              <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadCars} />
+            </View>
           )}
 
           {carsLoadState === 'ready' && cars.length === 0 && (
-            <ThemedView style={styles.centerContent}>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+            <View style={styles.centerContent}>
+              <OrganicText size="small" color="textSecondary" style={styles.centerText}>
                 Nenhum carro cadastrado ainda.
-              </ThemedText>
-              <Pressable
+              </OrganicText>
+              <OrganicButton
+                label="Cadastrar um carro"
+                variant="neutral"
                 onPress={() => router.push('/meu-carro')}
-                style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView type="backgroundElement" style={styles.secondaryButton}>
-                  <ThemedText type="link">Cadastrar um carro</ThemedText>
-                </ThemedView>
-              </Pressable>
-            </ThemedView>
+              />
+            </View>
           )}
 
           {carsLoadState === 'ready' && cars.length > 0 && (
-            <ThemedView style={styles.carsWrapper}>
+            <View style={styles.carsWrapper}>
               {cars.map((car) => (
                 <Pressable
                   key={car.id}
                   onPress={() => setSelectedCarId((current) => (current === car.id ? null : car.id))}
                   style={({ pressed }) => pressed && styles.pressed}>
-                  <ThemedView
-                    type={selectedCarId === car.id ? 'accent' : 'backgroundElement'}
+                  <OrganicSurface
+                    backgroundColor={selectedCarId === car.id ? 'accent' : 'backgroundElement'}
+                    shadow={false}
+                    borderRadius={999}
                     style={styles.carOption}>
-                    <ThemedText
-                      type="small"
-                      themeColor={selectedCarId === car.id ? 'onAccent' : 'text'}>
+                    <OrganicText size="small" color={selectedCarId === car.id ? 'onAccent' : 'text'}>
                       {car.brand_model}
-                    </ThemedText>
-                  </ThemedView>
+                    </OrganicText>
+                  </OrganicSurface>
                 </Pressable>
               ))}
-            </ThemedView>
+            </View>
           )}
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">Duração (minutos)</ThemedText>
+        <View style={styles.field}>
+          <OrganicText size="small">Duração (minutos)</OrganicText>
           <TextInput
             value={durationMinutes}
             onChangeText={setDurationMinutes}
             keyboardType="numeric"
             placeholder="ex: 45"
             placeholderTextColor={theme.textSecondary}
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={inputStyle}
           />
           {fieldErrors.duration && (
-            <ThemedText type="small" themeColor="textSecondary">
+            <OrganicText size="small" color="textSecondary">
               {fieldErrors.duration}
-            </ThemedText>
+            </OrganicText>
           )}
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">Distância (km)</ThemedText>
+        <View style={styles.field}>
+          <OrganicText size="small">Distância (km)</OrganicText>
           <TextInput
             value={distanceKm}
             onChangeText={setDistanceKm}
             keyboardType="numeric"
             placeholder="ex: 12.5"
             placeholderTextColor={theme.textSecondary}
-            style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+            style={inputStyle}
           />
           {fieldErrors.distance && (
-            <ThemedText type="small" themeColor="textSecondary">
+            <OrganicText size="small" color="textSecondary">
               {fieldErrors.distance}
-            </ThemedText>
+            </OrganicText>
           )}
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">Manobras praticadas</ThemedText>
-          <Host matchContents>
-            <Column spacing={Spacing.two}>
-              {MANEUVER_OPTIONS.map((maneuver) => (
-                <Checkbox
-                  key={maneuver}
-                  label={maneuver}
-                  value={selectedManeuvers.has(maneuver)}
-                  onValueChange={() => toggleManeuver(maneuver)}
-                />
-              ))}
-            </Column>
-          </Host>
-        </ThemedView>
+        <View style={styles.field}>
+          <OrganicText size="small">Manobras praticadas</OrganicText>
+          <View style={styles.checkboxList}>
+            {MANEUVER_OPTIONS.map((maneuver) => (
+              <OrganicCheckbox
+                key={maneuver}
+                label={maneuver}
+                value={selectedManeuvers.has(maneuver)}
+                onValueChange={() => toggleManeuver(maneuver)}
+              />
+            ))}
+          </View>
+        </View>
 
-        <ThemedView style={styles.field}>
-          <ThemedText type="smallBold">Observações</ThemedText>
+        <View style={styles.field}>
+          <OrganicText size="small">Observações</OrganicText>
           <TextInput
             value={notes}
             onChangeText={setNotes}
@@ -252,31 +245,22 @@ export default function NovaPraticaScreen() {
             placeholderTextColor={theme.textSecondary}
             multiline
             numberOfLines={4}
-            style={[
-              styles.input,
-              styles.notesInput,
-              { color: theme.text, backgroundColor: theme.backgroundElement },
-            ]}
+            style={[...inputStyle, styles.notesInput]}
           />
-        </ThemedView>
+        </View>
 
         {submitError !== '' && (
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <OrganicText color="textSecondary" style={styles.centerText}>
             {submitError}
-          </ThemedText>
+          </OrganicText>
         )}
 
-        <Pressable
+        <OrganicButton
+          label={isSaving ? 'Salvando…' : 'Salvar sessão'}
           disabled={isSaving}
           onPress={handleSave}
-          style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]}>
-          <ThemedView type="accent" style={styles.saveButtonInner}>
-            <ThemedText type="link" themeColor="onAccent">
-              {isSaving ? 'Salvando…' : 'Salvar sessão'}
-            </ThemedText>
-          </ThemedView>
-        </Pressable>
-      </ThemedView>
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -299,8 +283,12 @@ const styles = StyleSheet.create({
   field: {
     gap: Spacing.two,
   },
+  checkboxList: {
+    gap: Spacing.two,
+  },
   input: {
     borderRadius: Spacing.two,
+    borderWidth: BorderWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -319,11 +307,6 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
-  secondaryButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
   carsWrapper: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -332,14 +315,5 @@ const styles = StyleSheet.create({
   carOption: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
-  saveButton: {
-    alignSelf: 'flex-start',
-  },
-  saveButtonInner: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
   },
 });

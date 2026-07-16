@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 
@@ -10,8 +10,7 @@ import {
   type PracticeSession,
   type PracticeSessionStats,
 } from '@/api/practice-sessions';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { OrganicButton, OrganicPill, OrganicSurface, OrganicText } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -94,89 +93,74 @@ export default function HistoricoScreen() {
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Práticas</ThemedText>
-          <ThemedText themeColor="textSecondary">
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <OrganicText size="subtitle">Práticas</OrganicText>
+          <OrganicText color="textSecondary">
             Suas sessões de prática registradas, mais recentes primeiro.
-          </ThemedText>
+          </OrganicText>
 
           {statsLoadState === 'ready' && stats && (
-            <ThemedView style={styles.statsRow}>
-              <ThemedView type="backgroundElement" style={styles.statPill}>
-                <ThemedText type="small">{stats.total_sessions} sessões</ThemedText>
-              </ThemedView>
-              <ThemedView type="backgroundElement" style={styles.statPill}>
-                <ThemedText type="small">{stats.total_km} km</ThemedText>
-              </ThemedView>
-              <ThemedView type="backgroundElement" style={styles.statPill}>
-                <ThemedText type="small">{formatHoursMinutes(stats.total_minutes)}</ThemedText>
-              </ThemedView>
-            </ThemedView>
+            <View style={styles.statsRow}>
+              <OrganicPill label={`${stats.total_sessions} sessões`} backgroundColor="backgroundElement" />
+              <OrganicPill label={`${stats.total_km} km`} backgroundColor="backgroundElement" />
+              <OrganicPill
+                label={formatHoursMinutes(stats.total_minutes)}
+                backgroundColor="backgroundElement"
+              />
+            </View>
           )}
 
-          <Pressable
-            onPress={() => router.push('/nova-pratica')}
-            style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedView type="accent" style={styles.linkButton}>
-              <ThemedText type="link" themeColor="onAccent">
-                + Nova sessão de prática
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
-        </ThemedView>
+          <OrganicButton label="+ Nova sessão de prática" onPress={() => router.push('/nova-pratica')} />
+        </View>
 
         {loadState === 'loading' && (
-          <ThemedView style={styles.centerContent}>
+          <View style={styles.centerContent}>
             <ActivityIndicator />
-          </ThemedView>
+          </View>
         )}
 
         {loadState === 'error' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
-            </ThemedText>
-            <Pressable onPress={loadSessions} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Tentar novamente</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadSessions} />
+          </View>
         )}
 
         {loadState === 'ready' && sessions.length === 0 && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
-              Você ainda não registrou nenhuma sessão de prática.{'\n'}Toque em &quot;+ Nova sessão
-              de prática&quot; para começar.
-            </ThemedText>
-          </ThemedView>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
+              Você ainda não registrou nenhuma sessão de prática.{'\n'}Toque em &quot;+ Nova sessão de
+              prática&quot; para começar.
+            </OrganicText>
+          </View>
         )}
 
         {loadState === 'ready' && sessions.length > 0 && (
-          <ThemedView style={styles.sessionsWrapper}>
+          <View style={styles.sessionsWrapper}>
             {sessions.map((session) => (
-              <ThemedView key={session.id} type="backgroundElement" style={styles.sessionCard}>
-                <ThemedView style={styles.sessionHeaderRow}>
-                  <ThemedText type="smallBold">{formatDate(session.practiced_at)}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+              <OrganicSurface key={session.id} backgroundColor="backgroundElement" style={styles.sessionCard}>
+                <View style={styles.sessionHeaderRow}>
+                  <OrganicText size="small">{formatDate(session.practiced_at)}</OrganicText>
+                  <OrganicText size="small" color="textSecondary">
                     {session.duration_minutes} min · {session.distance_km} km
-                  </ThemedText>
-                </ThemedView>
+                  </OrganicText>
+                </View>
 
-                <ThemedText type="small" themeColor="textSecondary">
+                <OrganicText size="small" color="textSecondary">
                   {session.maneuvers.length > 0
                     ? session.maneuvers.join(', ')
                     : 'Nenhuma manobra registrada'}
-                </ThemedText>
+                </OrganicText>
 
-                {session.notes && <ThemedText type="small">{session.notes}</ThemedText>}
-              </ThemedView>
+                {session.notes && <OrganicText size="small">{session.notes}</OrganicText>}
+              </OrganicSurface>
             ))}
-          </ThemedView>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </ScrollView>
   );
 }
@@ -209,26 +193,9 @@ const styles = StyleSheet.create({
   centerText: {
     textAlign: 'center',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
-  },
   statsRow: {
     flexDirection: 'row',
     gap: Spacing.two,
-  },
-  statPill: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderRadius: Spacing.five,
   },
   sessionsWrapper: {
     gap: Spacing.three,
@@ -237,7 +204,6 @@ const styles = StyleSheet.create({
   sessionCard: {
     gap: Spacing.one,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
   sessionHeaderRow: {
     flexDirection: 'row',

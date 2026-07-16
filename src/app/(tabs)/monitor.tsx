@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { Accelerometer } from 'expo-sensors';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
@@ -13,9 +13,8 @@ import {
   type MonitorSession,
   type RoutePoint,
 } from '@/api/monitor-sessions';
+import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
 import { RouteMap } from '@/components/route-map';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
@@ -216,114 +215,97 @@ export default function MonitorScreen() {
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Monitor de direção</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <OrganicText size="subtitle">Monitor de direção</OrganicText>
+          <OrganicText color="textSecondary" style={styles.centerText}>
             Avisa com vibração quando detecta uma freada ou aceleração brusca durante a prática.
-          </ThemedText>
-        </ThemedView>
+          </OrganicText>
+        </View>
 
         {alertVisible && (
-          <ThemedView style={styles.alertBanner}>
-            <ThemedText type="smallBold" style={styles.alertText}>
+          <OrganicSurface backgroundColor="warning" style={styles.alertBanner}>
+            <OrganicText size="small" color="onWarning">
               Movimento brusco detectado!
-            </ThemedText>
-          </ThemedView>
+            </OrganicText>
+          </OrganicSurface>
         )}
 
         {state === 'unavailable' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               Não foi possível acessar o sensor de movimento neste aparelho.
-            </ThemedText>
-            <Pressable onPress={startMonitoring} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.actionButton}>
-                <ThemedText type="link">Tentar novamente</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={startMonitoring} />
+          </View>
         )}
 
         {(state === 'idle' || state === 'checking') && (
-          <ThemedView style={styles.centerContent}>
-            <Pressable
+          <View style={styles.centerContent}>
+            <OrganicButton
+              label={state === 'checking' ? 'Verificando sensor…' : 'Iniciar monitoramento'}
               disabled={state === 'checking'}
               onPress={startMonitoring}
-              style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="accent" style={styles.actionButton}>
-                <ThemedText type="link" themeColor="onAccent">
-                  {state === 'checking' ? 'Verificando sensor…' : 'Iniciar monitoramento'}
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            />
+          </View>
         )}
 
         {state === 'monitoring' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText type="smallBold">Monitorando…</ThemedText>
-            <ThemedText themeColor="textSecondary">
+          <View style={styles.centerContent}>
+            <OrganicText size="small">Monitorando…</OrganicText>
+            <OrganicText color="textSecondary">
               {eventCount === 0
                 ? 'Nenhum movimento brusco até agora.'
                 : `${eventCount} movimento(s) brusco(s) detectado(s).`}
-            </ThemedText>
-            <Pressable onPress={stopMonitoring} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.actionButton}>
-                <ThemedText type="link">Parar monitoramento</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Parar monitoramento" variant="neutral" onPress={stopMonitoring} />
+          </View>
         )}
 
-        <ThemedView style={styles.historySection}>
-          <ThemedText type="smallBold">Sessões anteriores</ThemedText>
+        <View style={styles.historySection}>
+          <OrganicText size="small">Sessões anteriores</OrganicText>
 
           {historyState === 'loading' && (
-            <ThemedView style={styles.centerContent}>
+            <View style={styles.centerContent}>
               <ActivityIndicator />
-            </ThemedView>
+            </View>
           )}
 
           {historyState === 'error' && (
-            <ThemedView style={styles.centerContent}>
-              <ThemedText themeColor="textSecondary" style={styles.centerText}>
+            <View style={styles.centerContent}>
+              <OrganicText color="textSecondary" style={styles.centerText}>
                 {historyError}
-              </ThemedText>
-              <Pressable onPress={loadHistory} style={({ pressed }) => pressed && styles.pressed}>
-                <ThemedView type="backgroundElement" style={styles.actionButton}>
-                  <ThemedText type="link">Tentar novamente</ThemedText>
-                </ThemedView>
-              </Pressable>
-            </ThemedView>
+              </OrganicText>
+              <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadHistory} />
+            </View>
           )}
 
           {historyState === 'ready' && history.length === 0 && (
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               Nenhuma sessão de monitoramento registrada ainda.
-            </ThemedText>
+            </OrganicText>
           )}
 
           {historyState === 'ready' && history.length > 0 && (
-            <ThemedView style={styles.historyWrapper}>
+            <View style={styles.historyWrapper}>
               {history.map((session) => (
-                <ThemedView key={session.id} type="backgroundElement" style={styles.historyCard}>
-                  <ThemedText type="small">{formatDateTime(session.started_at)}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+                <OrganicSurface key={session.id} backgroundColor="backgroundElement" style={styles.historyCard}>
+                  <OrganicText size="small">{formatDateTime(session.started_at)}</OrganicText>
+                  <OrganicText size="small" color="textSecondary">
                     {formatDuration(session.duration_seconds)} ·{' '}
                     {session.event_count === 0
                       ? 'nenhum movimento brusco'
                       : `${session.event_count} movimento(s) brusco(s)`}
-                  </ThemedText>
+                  </OrganicText>
                   {session.route && session.route.length > 0 && (
                     <RouteMap points={session.route} />
                   )}
-                </ThemedView>
+                </OrganicSurface>
               ))}
-            </ThemedView>
+            </View>
           )}
-        </ThemedView>
-      </ThemedView>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -356,23 +338,10 @@ const styles = StyleSheet.create({
   centerText: {
     textAlign: 'center',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  actionButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
   alertBanner: {
-    backgroundColor: '#E0B400',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.three,
     alignItems: 'center',
-  },
-  alertText: {
-    color: '#000000',
   },
   historySection: {
     gap: Spacing.three,
@@ -384,6 +353,5 @@ const styles = StyleSheet.create({
   historyCard: {
     gap: Spacing.one,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
 });

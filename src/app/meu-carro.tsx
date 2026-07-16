@@ -1,13 +1,12 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { createCar, getCars, type Car } from '@/api/cars';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
+import { BorderWidth, MaxContentWidth, OrganicFontFamily, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -92,108 +91,121 @@ export default function MeuCarroScreen() {
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Meus carros</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            Cadastre o(s) carro(s) usados nas suas práticas.
-          </ThemedText>
-        </ThemedView>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <OrganicText size="subtitle">Meus carros</OrganicText>
+          <OrganicText color="textSecondary">Cadastre o(s) carro(s) usados nas suas práticas.</OrganicText>
+        </View>
 
         {loadState === 'loading' && (
-          <ThemedView style={styles.centerContent}>
+          <View style={styles.centerContent}>
             <ActivityIndicator />
-          </ThemedView>
+          </View>
         )}
 
         {loadState === 'error' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
-            </ThemedText>
-            <Pressable onPress={loadCars} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.secondaryButton}>
-                <ThemedText type="link">Tentar novamente</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadCars} />
+          </View>
         )}
 
         {loadState === 'ready' && cars.length === 0 && (
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <OrganicText color="textSecondary" style={styles.centerText}>
             Nenhum carro cadastrado ainda.
-          </ThemedText>
+          </OrganicText>
         )}
 
         {loadState === 'ready' && cars.length > 0 && (
-          <ThemedView style={styles.carsWrapper}>
+          <View style={styles.carsWrapper}>
             {cars.map((car) => (
-              <ThemedView key={car.id} type="backgroundElement" style={styles.carCard}>
-                <ThemedText type="smallBold">{car.brand_model}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+              <OrganicSurface key={car.id} backgroundColor="backgroundElement" style={styles.carCard}>
+                <OrganicText size="small">{car.brand_model}</OrganicText>
+                <OrganicText size="small" color="textSecondary">
                   {[car.plate, car.transmission].filter(Boolean).join(' · ') || 'sem detalhes'}
-                </ThemedText>
-              </ThemedView>
+                </OrganicText>
+              </OrganicSurface>
             ))}
-          </ThemedView>
+          </View>
         )}
 
-        <ThemedView style={styles.formWrapper}>
-          <ThemedText type="smallBold">Adicionar carro</ThemedText>
+        <View style={styles.formWrapper}>
+          <OrganicText size="small">Adicionar carro</OrganicText>
 
-          <ThemedView style={styles.field}>
+          <View style={styles.field}>
             <TextInput
               value={brandModel}
               onChangeText={setBrandModel}
               placeholder="Marca/modelo (ex: Fiat Argo 2022)"
               placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              style={[
+                styles.input,
+                {
+                  fontFamily: OrganicFontFamily,
+                  color: theme.text,
+                  backgroundColor: theme.background,
+                  borderColor: theme.borderColor,
+                },
+              ]}
             />
             {fieldError !== '' && (
-              <ThemedText type="small" themeColor="textSecondary">
+              <OrganicText size="small" color="textSecondary">
                 {fieldError}
-              </ThemedText>
+              </OrganicText>
             )}
-          </ThemedView>
+          </View>
 
-          <ThemedView style={styles.field}>
+          <View style={styles.field}>
             <TextInput
               value={plate}
               onChangeText={setPlate}
               placeholder="Placa (opcional)"
               placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              style={[
+                styles.input,
+                {
+                  fontFamily: OrganicFontFamily,
+                  color: theme.text,
+                  backgroundColor: theme.background,
+                  borderColor: theme.borderColor,
+                },
+              ]}
             />
-          </ThemedView>
+          </View>
 
-          <ThemedView style={styles.field}>
+          <View style={styles.field}>
             <TextInput
               value={transmission}
               onChangeText={setTransmission}
               placeholder="Câmbio (opcional, ex: manual)"
               placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
+              style={[
+                styles.input,
+                {
+                  fontFamily: OrganicFontFamily,
+                  color: theme.text,
+                  backgroundColor: theme.background,
+                  borderColor: theme.borderColor,
+                },
+              ]}
             />
-          </ThemedView>
+          </View>
 
           {submitError !== '' && (
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               {submitError}
-            </ThemedText>
+            </OrganicText>
           )}
 
-          <Pressable
+          <OrganicButton
+            label={isSaving ? 'Salvando…' : '+ Adicionar carro'}
             disabled={isSaving}
             onPress={handleAddCar}
-            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-            <ThemedView type="accent" style={styles.addButtonInner}>
-              <ThemedText type="link" themeColor="onAccent">
-                {isSaving ? 'Salvando…' : '+ Adicionar carro'}
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
-        </ThemedView>
-      </ThemedView>
+          />
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -224,21 +236,12 @@ const styles = StyleSheet.create({
   centerText: {
     textAlign: 'center',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  secondaryButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
   carsWrapper: {
     gap: Spacing.two,
   },
   carCard: {
     gap: Spacing.one,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
   formWrapper: {
     gap: Spacing.three,
@@ -248,16 +251,9 @@ const styles = StyleSheet.create({
   },
   input: {
     borderRadius: Spacing.two,
+    borderWidth: BorderWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
-  },
-  addButton: {
-    alignSelf: 'flex-start',
-  },
-  addButtonInner: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
   },
 });
