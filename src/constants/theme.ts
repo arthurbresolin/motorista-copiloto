@@ -16,6 +16,13 @@ export const Colors = {
     textSecondary: '#777777',
     accent: '#FFBD8F',
     onAccent: '#2B2B2B',
+    borderColor: '#2B2B2B',
+    barFill: '#F79B5B',
+    mapPatternA: '#EEF2EC',
+    mapPatternB: '#E2E9DF',
+    danger: '#CC0000',
+    warning: '#E0B400',
+    onWarning: '#000000',
   },
   dark: {
     text: '#F2F2F0',
@@ -25,10 +32,23 @@ export const Colors = {
     textSecondary: '#9A9FA6',
     accent: '#A9D9A4',
     onAccent: '#14281A',
+    borderColor: '#0C0C0E',
+    barFill: '#F79B5B',
+    mapPatternA: '#22262A',
+    mapPatternB: '#1C2023',
+    danger: '#CC0000',
+    warning: '#E0B400',
+    onWarning: '#000000',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+// Fonte cursiva do wireframe orgânico, carregada via @expo-google-fonts/patrick-hand.
+export const OrganicFontFamily = 'PatrickHand_400Regular';
+
+export const BorderWidth = 2;
+export const ShadowOffset = { x: 2, y: 3 };
 
 export const Fonts = Platform.select({
   ios: {

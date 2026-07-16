@@ -1,3 +1,4 @@
+import { PatrickHand_400Regular, useFonts } from '@expo-google-fonts/patrick-hand';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
@@ -8,6 +9,12 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded] = useFonts({ PatrickHand_400Regular });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />

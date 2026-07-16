@@ -1,12 +1,11 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -115,107 +114,94 @@ export default function HomeScreen() {
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Oi! 👋</ThemedText>
-          <ThemedText themeColor="textSecondary">Pronto pra dirigir hoje?</ThemedText>
-        </ThemedView>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <OrganicText size="subtitle">Oi! 👋</OrganicText>
+          <OrganicText color="textSecondary">Pronto pra dirigir hoje?</OrganicText>
+        </View>
 
         {loadState === 'loading' && (
-          <ThemedView style={styles.centerContent}>
+          <View style={styles.centerContent}>
             <ActivityIndicator />
-          </ThemedView>
+          </View>
         )}
 
         {loadState === 'error' && (
-          <ThemedView style={styles.centerContent}>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <View style={styles.centerContent}>
+            <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
-            </ThemedText>
-            <Pressable onPress={loadSessions} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.secondaryButton}>
-                <ThemedText type="link">Tentar novamente</ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            </OrganicText>
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadSessions} />
+          </View>
         )}
 
         {loadState === 'ready' && (
-          <ThemedView style={styles.sectionsWrapper}>
-            <ThemedView type="accent" style={styles.streakCard}>
-              <ThemedText type="title" themeColor="onAccent" style={styles.streakEmoji}>
+          <View style={styles.sectionsWrapper}>
+            <OrganicSurface backgroundColor="accent" style={styles.streakCard}>
+              <OrganicText size="title" color="onAccent">
                 {streak > 0 ? `🔥 ${streak}` : '👋'}
-              </ThemedText>
-              <ThemedText type="small" themeColor="onAccent">
+              </OrganicText>
+              <OrganicText size="small" color="onAccent" style={styles.streakLabel}>
                 {streak > 0
                   ? 'dias seguidos — não quebre a corrente!'
                   : 'comece uma sessão de prática pra iniciar sua sequência'}
-              </ThemedText>
-            </ThemedView>
+              </OrganicText>
+            </OrganicSurface>
 
-            <ThemedView style={styles.quickLinksRow}>
+            <View style={styles.quickLinksRow}>
               <Pressable
                 onPress={() => router.push('/checklist')}
                 style={({ pressed }) => [styles.quickLink, pressed && styles.pressed]}>
-                <ThemedView type="backgroundElement" style={styles.quickLinkCard}>
-                  <ThemedText type="smallBold">✅ Checklist</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+                <OrganicSurface backgroundColor="backgroundElement" style={styles.quickLinkCard}>
+                  <OrganicText size="small">✅ Checklist</OrganicText>
+                  <OrganicText size="small" color="textSecondary">
                     antes de sair
-                  </ThemedText>
-                </ThemedView>
+                  </OrganicText>
+                </OrganicSurface>
               </Pressable>
               <Pressable
                 onPress={() => router.push('/nova-pratica')}
                 style={({ pressed }) => [styles.quickLink, pressed && styles.pressed]}>
-                <ThemedView type="backgroundElement" style={styles.quickLinkCard}>
-                  <ThemedText type="smallBold">🚗 Praticar</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+                <OrganicSurface backgroundColor="backgroundElement" style={styles.quickLinkCard}>
+                  <OrganicText size="small">🚗 Praticar</OrganicText>
+                  <OrganicText size="small" color="textSecondary">
                     nova sessão
-                  </ThemedText>
-                </ThemedView>
+                  </OrganicText>
+                </OrganicSurface>
               </Pressable>
-            </ThemedView>
+            </View>
 
-            <ThemedView type="backgroundElement" style={styles.weekCard}>
-              <ThemedText type="smallBold">Sua semana</ThemedText>
-              <ThemedView style={styles.weekChart}>
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.weekCard}>
+              <OrganicText size="small">Sua semana</OrganicText>
+              <View style={styles.weekChart}>
                 {weekDays.map((day, index) => (
-                  <ThemedView key={index} style={styles.weekBarColumn}>
-                    <ThemedView
-                      type="accent"
+                  <View key={index} style={styles.weekBarColumn}>
+                    <View
                       style={[
                         styles.weekBar,
                         {
-                          height: Math.max(
-                            4,
-                            (day.minutes / maxWeekMinutes) * WEEK_CHART_HEIGHT,
-                          ),
+                          backgroundColor: theme.barFill,
+                          height: Math.max(4, (day.minutes / maxWeekMinutes) * WEEK_CHART_HEIGHT),
                         },
                       ]}
                     />
-                    <ThemedText type="small" themeColor="textSecondary">
+                    <OrganicText size="small" color="textSecondary">
                       {day.label}
-                    </ThemedText>
-                  </ThemedView>
+                    </OrganicText>
+                  </View>
                 ))}
-              </ThemedView>
-              <ThemedText type="small" themeColor="textSecondary">
+              </View>
+              <OrganicText size="small" color="textSecondary">
                 min. de prática por dia
-              </ThemedText>
-            </ThemedView>
+              </OrganicText>
+            </OrganicSurface>
 
-            <Pressable
-              onPress={() => router.push('/monitor')}
-              style={({ pressed }) => [styles.ctaButton, pressed && styles.pressed]}>
-              <ThemedView type="accent" style={styles.ctaButtonInner}>
-                <ThemedText type="link" themeColor="onAccent">
-                  🚗 Sair pra dirigir
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-          </ThemedView>
+            <View style={styles.ctaWrapper}>
+              <OrganicButton label="🚗 Sair pra dirigir" onPress={() => router.push('/monitor')} />
+            </View>
+          </View>
         )}
-      </ThemedView>
+      </View>
     </ScrollView>
   );
 }
@@ -251,13 +237,8 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
-  secondaryButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
   sectionsWrapper: {
-    gap: Spacing.three,
+    gap: Spacing.four,
     paddingHorizontal: Spacing.four,
   },
   streakCard: {
@@ -265,15 +246,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
-  streakEmoji: {
-    fontSize: 28,
-    lineHeight: 32,
+  streakLabel: {
+    flex: 1,
   },
   quickLinksRow: {
     flexDirection: 'row',
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   quickLink: {
     flex: 1,
@@ -281,12 +260,10 @@ const styles = StyleSheet.create({
   quickLinkCard: {
     gap: Spacing.half,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
   weekCard: {
     gap: Spacing.three,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
   },
   weekChart: {
     flexDirection: 'row',
@@ -303,13 +280,8 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: Spacing.one,
   },
-  ctaButton: {
-    alignSelf: 'center',
+  ctaWrapper: {
+    alignItems: 'center',
     marginTop: Spacing.two,
-  },
-  ctaButtonInner: {
-    paddingHorizontal: Spacing.five,
-    paddingVertical: Spacing.three,
-    borderRadius: Spacing.five,
   },
 });
