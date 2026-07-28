@@ -25,3 +25,4 @@ class QuizSession(Base):
     )
     score: Mapped[int] = mapped_column(Integer)
     total_questions: Mapped[int] = mapped_column(Integer)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)

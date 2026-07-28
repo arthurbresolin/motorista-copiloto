@@ -19,6 +19,7 @@ class QuizAnswer(BaseModel):
 
 class QuizSessionCreate(BaseModel):
     answers: list[QuizAnswer]
+    category: str | None = None
 
 
 class QuizSessionRead(BaseModel):
@@ -28,3 +29,13 @@ class QuizSessionRead(BaseModel):
     completed_at: datetime
     score: int
     total_questions: int
+    category: str | None
+
+
+class QuizPhaseRead(BaseModel):
+    category: str | None
+    label: str
+    question_count: int
+    unlocked: bool
+    best_score: int | None
+    best_total: int | None

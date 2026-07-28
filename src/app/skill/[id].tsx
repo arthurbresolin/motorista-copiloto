@@ -119,11 +119,23 @@ export default function SkillDetailScreen() {
               <OrganicText color="textSecondary">{skill.description}</OrganicText>
             </OrganicSurface>
 
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+              <OrganicText size="small">Antes de praticar</OrganicText>
+              {skill.tips.map((tip, index) => (
+                <View key={index} style={styles.tipRow}>
+                  <OrganicText color="textSecondary">•</OrganicText>
+                  <OrganicText color="textSecondary" style={styles.tipText}>
+                    {tip}
+                  </OrganicText>
+                </View>
+              ))}
+            </OrganicSurface>
+
             <OrganicButton label="🚗 Praticar agora" onPress={() => router.push('/nova-pratica')} />
             <OrganicButton
               label="❓ Quiz rápido"
               variant="neutral"
-              onPress={() => router.push('/quiz')}
+              onPress={() => router.push(`/quiz/${skill.key}`)}
             />
           </View>
         )}
@@ -164,5 +176,12 @@ const styles = StyleSheet.create({
   card: {
     gap: Spacing.two,
     padding: Spacing.three,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  tipText: {
+    flex: 1,
   },
 });

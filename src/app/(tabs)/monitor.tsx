@@ -148,16 +148,28 @@ export default function MonitorScreen() {
     previousReadingRef.current = null;
     startedAtRef.current = new Date();
     setEventCount(0);
-    Accelerometer.setUpdateInterval(UPDATE_INTERVAL_MS);
-    subscriptionRef.current = Accelerometer.addListener((reading) => {
-      const previous = previousReadingRef.current;
-      if (previous && isHarshEvent(previous, reading)) {
-        setEventCount((count) => count + 1);
-        markLastRoutePointHarsh();
-        showAlert();
-      }
-      previousReadingRef.current = reading;
-    });
+
+    try {
+      Accelerometer.setUpdateInterval(UPDATE_INTERVAL_MS);
+      subscriptionRef.current = Accelerometer.addListener((reading) => {
+        const previous = previousReadingRef.current;
+        if (previous && isHarshEvent(previous, reading)) {
+          setEventCount((count) => count + 1);
+          markLastRoutePointHarsh();
+          showAlert();
+        }
+        previousReadingRef.current = reading;
+      });
+    } catch {
+      // expo-sensors@57.0.1 relata o acelerômetro como disponível no navegador,
+      // mas o shim web não implementa addListener de verdade — bug do pacote,
+      // não do app. Sem isso não tem como monitorar, então cai pro estado
+      // "unavailable" em vez de deixar a tela travar com erro não tratado.
+      startedAtRef.current = null;
+      setState('unavailable');
+      return;
+    }
+
     startLocationTracking();
     setState('monitoring');
   }
@@ -234,7 +246,9 @@ export default function MonitorScreen() {
         {state === 'unavailable' && (
           <View style={styles.centerContent}>
             <OrganicText color="textSecondary" style={styles.centerText}>
-              Não foi possível acessar o sensor de movimento neste aparelho.
+              {Platform.OS === 'web'
+                ? 'O monitor por acelerômetro não funciona no navegador (limitação do expo-sensors na web) — abra o app no celular pra usar essa tela.'
+                : 'Não foi possível acessar o sensor de movimento neste aparelho.'}
             </OrganicText>
             <OrganicButton label="Tentar novamente" variant="neutral" onPress={startMonitoring} />
           </View>

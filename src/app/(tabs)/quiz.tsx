@@ -1,52 +1,40 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
-import {
-  createQuizSession,
-  getQuizQuestions,
-  type QuizAnswer,
-  type QuizQuestion,
-  type QuizSession,
-} from '@/api/quiz';
-import { OrganicButton, OrganicProgressBar, OrganicSurface, OrganicText } from '@/components/organic';
+import { getQuizPhases, type QuizPhase } from '@/api/quiz';
+import { OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
-type QuizStage = 'playing' | 'submitting' | 'finished';
 
-export default function QuizScreen() {
+const QUIZ_PASS_PERCENT = 70;
+
+function phaseRouteParam(phase: QuizPhase) {
+  return phase.category ?? 'geral';
+}
+
+export default function QuizPhasesScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const router = useRouter();
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [phases, setPhases] = useState<QuizPhase[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [stage, setStage] = useState<QuizStage>('playing');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<QuizAnswer[]>([]);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [result, setResult] = useState<QuizSession | null>(null);
-  const [submitError, setSubmitError] = useState('');
-
-  const loadQuestions = useCallback(async () => {
+  const loadPhases = useCallback(async () => {
     setLoadState('loading');
     try {
-      const data = await getQuizQuestions();
-      setQuestions(data);
-      setStage('playing');
-      setCurrentIndex(0);
-      setAnswers([]);
-      setSelectedOption(null);
-      setResult(null);
+      const data = await getQuizPhases();
+      setPhases(data);
       setLoadState('ready');
     } catch (error) {
       setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar as perguntas.',
+        error instanceof ApiError ? error.message : 'Não foi possível carregar o quiz.',
       );
       setLoadState('error');
     }
@@ -54,47 +42,9 @@ export default function QuizScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadQuestions();
-    }, [loadQuestions]),
+      loadPhases();
+    }, [loadPhases]),
   );
-
-  const currentQuestion = questions[currentIndex];
-
-  async function handleNext() {
-    if (selectedOption === null || !currentQuestion) {
-      return;
-    }
-
-    const nextAnswers = [...answers, { question_id: currentQuestion.id, selected_index: selectedOption }];
-    setAnswers(nextAnswers);
-    setSelectedOption(null);
-
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex(currentIndex + 1);
-      return;
-    }
-
-    setStage('submitting');
-    setSubmitError('');
-    try {
-      const session = await createQuizSession(nextAnswers);
-      setResult(session);
-      setStage('finished');
-    } catch (error) {
-      setSubmitError(
-        error instanceof ApiError ? error.message : 'Não foi possível enviar o resultado do quiz.',
-      );
-      setStage('playing');
-    }
-  }
-
-  function handleRestart() {
-    setStage('playing');
-    setCurrentIndex(0);
-    setAnswers([]);
-    setSelectedOption(null);
-    setResult(null);
-  }
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -117,7 +67,7 @@ export default function QuizScreen() {
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">Quiz de teoria</OrganicText>
           <OrganicText color="textSecondary" style={styles.centerText}>
-            Treine antes da prova com perguntas de teoria de trânsito.
+            Acerte pelo menos {QUIZ_PASS_PERCENT}% pra liberar a próxima fase.
           </OrganicText>
         </View>
 
@@ -132,78 +82,49 @@ export default function QuizScreen() {
             <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
             </OrganicText>
-            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadQuestions} />
           </View>
         )}
 
-        {loadState === 'ready' && questions.length === 0 && (
+        {loadState === 'ready' && phases.length === 0 && (
           <OrganicText color="textSecondary" style={styles.centerText}>
-            Nenhuma pergunta cadastrada ainda.
+            Nenhuma fase de quiz cadastrada ainda.
           </OrganicText>
         )}
 
-        {loadState === 'ready' && questions.length > 0 && (stage === 'playing' || stage === 'submitting') && currentQuestion && (
-          <View style={styles.playWrapper}>
-            <OrganicText size="small" color="textSecondary">
-              Pergunta {currentIndex + 1} de {questions.length}
-            </OrganicText>
-            <OrganicProgressBar progress={(currentIndex + 1) / questions.length} />
+        {loadState === 'ready' && phases.length > 0 && (
+          <View style={styles.phaseList}>
+            {phases.map((phase) => {
+              const passed =
+                phase.best_score !== null &&
+                phase.best_total !== null &&
+                phase.best_total > 0 &&
+                phase.best_score / phase.best_total >= QUIZ_PASS_PERCENT / 100;
+              const state = passed ? 'done' : phase.unlocked ? 'current' : 'locked';
 
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.questionCard}>
-              <OrganicText size="small">{currentQuestion.prompt}</OrganicText>
-            </OrganicSurface>
-
-            <View style={styles.optionsList}>
-              {currentQuestion.options.map((option, index) => (
+              return (
                 <Pressable
-                  key={index}
-                  onPress={() => setSelectedOption(index)}
-                  style={({ pressed }) => pressed && styles.pressed}>
-                  <OrganicSurface
-                    backgroundColor={selectedOption === index ? 'accent' : 'backgroundElement'}
-                    shadow={false}
-                    style={styles.optionCard}>
-                    <OrganicText
-                      size="small"
-                      color={selectedOption === index ? 'onAccent' : 'text'}>
-                      {option}
-                    </OrganicText>
+                  key={phase.category ?? 'geral'}
+                  disabled={!phase.unlocked}
+                  onPress={() => router.push(`/quiz/${phaseRouteParam(phase)}`)}
+                  style={({ pressed }) => pressed && phase.unlocked && styles.pressed}>
+                  <OrganicSurface backgroundColor="backgroundElement" style={styles.phaseCard}>
+                    <SkillNode state={state} label={phase.label} />
+                    <View style={styles.phaseInfo}>
+                      <OrganicText size="small">{phase.label}</OrganicText>
+                      <OrganicText size="small" color="textSecondary">
+                        {phase.question_count} pergunta{phase.question_count === 1 ? '' : 's'}
+                        {phase.best_total !== null ? ` · recorde ${phase.best_score}/${phase.best_total}` : ''}
+                      </OrganicText>
+                      {!phase.unlocked && (
+                        <OrganicText size="small" color="textSecondary">
+                          🔒 complete a fase anterior com {QUIZ_PASS_PERCENT}% pra liberar
+                        </OrganicText>
+                      )}
+                    </View>
                   </OrganicSurface>
                 </Pressable>
-              ))}
-            </View>
-
-            {submitError !== '' && (
-              <OrganicText color="textSecondary" style={styles.centerText}>
-                {submitError}
-              </OrganicText>
-            )}
-
-            <OrganicButton
-              label={
-                stage === 'submitting'
-                  ? 'Enviando…'
-                  : currentIndex + 1 < questions.length
-                    ? 'Próxima'
-                    : 'Ver resultado'
-              }
-              disabled={selectedOption === null || stage === 'submitting'}
-              onPress={handleNext}
-            />
-          </View>
-        )}
-
-        {stage === 'finished' && result && (
-          <View style={styles.playWrapper}>
-            <OrganicSurface backgroundColor="accent" style={styles.resultCard}>
-              <OrganicText size="title" color="onAccent">
-                {result.score}/{result.total_questions}
-              </OrganicText>
-              <OrganicText size="small" color="onAccent">
-                +{result.score * 15} XP
-              </OrganicText>
-            </OrganicSurface>
-            <OrganicButton label="Tentar de novo" onPress={handleRestart} />
+              );
+            })}
           </View>
         )}
       </View>
@@ -242,21 +163,17 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
-  playWrapper: {
-    gap: Spacing.three,
-  },
-  questionCard: {
-    padding: Spacing.three,
-  },
-  optionsList: {
+  phaseList: {
     gap: Spacing.two,
   },
-  optionCard: {
-    padding: Spacing.three,
-  },
-  resultCard: {
+  phaseCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    padding: Spacing.five,
+    gap: Spacing.three,
+    padding: Spacing.three,
+  },
+  phaseInfo: {
+    flex: 1,
+    gap: 2,
   },
 });

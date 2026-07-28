@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { createChecklistSession, getChecklistItems, type ChecklistItem } from '@/api/checklist';
 import { ApiError } from '@/api/client';
-import { OrganicButton, OrganicCheckbox, OrganicText } from '@/components/organic';
+import { MascPlaceholder, OrganicButton, OrganicCheckbox, OrganicText } from '@/components/organic';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -127,6 +127,10 @@ export default function ChecklistScreen() {
             {errorMessage !== '' && <OrganicText color="textSecondary">{errorMessage}</OrganicText>}
             {savedMessage !== '' && <OrganicText size="small">{savedMessage}</OrganicText>}
 
+            <View style={styles.mascRow}>
+              <MascPlaceholder size={40} label="torce" />
+            </View>
+
             <OrganicButton
               label={isSaving ? 'Salvando…' : 'Concluir checklist'}
               disabled={isSaving}
@@ -174,5 +178,8 @@ const styles = StyleSheet.create({
   },
   checkboxList: {
     gap: Spacing.three,
+  },
+  mascRow: {
+    alignSelf: 'flex-end',
   },
 });

@@ -8,7 +8,14 @@ import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
 import { getQuizSessions, type QuizSession } from '@/api/quiz';
-import { OrganicButton, OrganicPill, OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
+import {
+  MascPlaceholder,
+  OrganicButton,
+  OrganicPill,
+  OrganicSurface,
+  OrganicText,
+  SkillNode,
+} from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { computeAchievements, computeSkillProgress, computeXp } from '@/lib/gamification';
@@ -133,9 +140,12 @@ export default function HomeScreen() {
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <View style={styles.container}>
-        <View style={styles.titleContainer}>
-          <OrganicText size="subtitle">Oi! 👋</OrganicText>
-          <OrganicText color="textSecondary">Pronto pra dirigir hoje?</OrganicText>
+        <View style={[styles.titleContainer, styles.titleRow]}>
+          <View>
+            <OrganicText size="subtitle">Oi! 👋</OrganicText>
+            <OrganicText color="textSecondary">Pronto pra dirigir hoje?</OrganicText>
+          </View>
+          <MascPlaceholder size={40} />
         </View>
 
         {loadState === 'loading' && (
@@ -277,6 +287,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.six,
     paddingBottom: Spacing.three,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   centerContent: {
     alignItems: 'center',

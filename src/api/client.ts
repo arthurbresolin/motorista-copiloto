@@ -1,6 +1,13 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
-export class ApiError extends Error {}
+export class ApiError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.status = status;
+  }
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   let response: Response;
@@ -15,7 +22,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
-    throw new ApiError(`O servidor respondeu com um erro (${response.status}).`);
+    throw new ApiError(`O servidor respondeu com um erro (${response.status}).`, response.status);
   }
 
   if (response.status === 204) {
