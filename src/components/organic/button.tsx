@@ -2,7 +2,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
-import { Spacing, type ThemeColor } from '@/constants/theme';
+import { RadiusPill, Spacing, type ThemeColor } from '@/constants/theme';
 
 export type OrganicButtonProps = {
   label: string;
@@ -20,7 +20,7 @@ export function OrganicButton({ label, onPress, disabled, variant = 'accent' }: 
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
-      <OrganicSurface backgroundColor={backgroundColor} style={styles.button}>
+      <OrganicSurface backgroundColor={backgroundColor} borderRadius={RadiusPill} style={styles.button}>
         <OrganicText size="body" color={textColor}>
           {label}
         </OrganicText>

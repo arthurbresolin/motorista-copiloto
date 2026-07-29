@@ -15,6 +15,53 @@ export type SkillProgress = {
   state: SkillNodeState;
 };
 
+const WEEKDAY_LABELS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+function isoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function computeStreak(sessions: PracticeSession[]) {
+  const practicedDates = new Set(sessions.map((session) => session.practiced_at));
+  if (practicedDates.size === 0) {
+    return 0;
+  }
+
+  const mostRecent = Array.from(practicedDates).sort().reverse()[0];
+  const cursor = new Date(`${mostRecent}T00:00:00`);
+  let streak = 0;
+  while (practicedDates.has(isoDate(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+export function computeLastSevenDays(sessions: PracticeSession[]) {
+  const minutesByDate = new Map<string, number>();
+  for (const session of sessions) {
+    minutesByDate.set(
+      session.practiced_at,
+      (minutesByDate.get(session.practiced_at) ?? 0) + session.duration_minutes,
+    );
+  }
+
+  const days: { label: string; minutes: number }[] = [];
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate() - 6);
+  for (let i = 0; i < 7; i++) {
+    days.push({
+      label: WEEKDAY_LABELS[cursor.getDay()],
+      minutes: minutesByDate.get(isoDate(cursor)) ?? 0,
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+}
+
 function isSmoothDrivingSession(session: MonitorSession) {
   return session.event_count === 0 && session.duration_seconds >= SMOOTH_DRIVING_MIN_DURATION_SECONDS;
 }

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { createCar, getCars, type Car } from '@/api/cars';
 import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
-import { BorderWidth, MaxContentWidth, OrganicFontFamily, Spacing } from '@/constants/theme';
+import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -143,9 +143,9 @@ export default function MeuCarroScreen() {
               style={[
                 styles.input,
                 {
-                  fontFamily: OrganicFontFamily,
+                  fontFamily: BodyFontFamily,
                   color: theme.text,
-                  backgroundColor: theme.background,
+                  backgroundColor: theme.backgroundElement,
                   borderColor: theme.borderColor,
                 },
               ]}
@@ -166,9 +166,9 @@ export default function MeuCarroScreen() {
               style={[
                 styles.input,
                 {
-                  fontFamily: OrganicFontFamily,
+                  fontFamily: BodyFontFamily,
                   color: theme.text,
-                  backgroundColor: theme.background,
+                  backgroundColor: theme.backgroundElement,
                   borderColor: theme.borderColor,
                 },
               ]}
@@ -184,9 +184,9 @@ export default function MeuCarroScreen() {
               style={[
                 styles.input,
                 {
-                  fontFamily: OrganicFontFamily,
+                  fontFamily: BodyFontFamily,
                   color: theme.text,
-                  backgroundColor: theme.background,
+                  backgroundColor: theme.backgroundElement,
                   borderColor: theme.borderColor,
                 },
               ]}
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   input: {
-    borderRadius: Spacing.two,
+    borderRadius: RadiusMd,
     borderWidth: BorderWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,

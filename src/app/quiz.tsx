@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { getQuizPhases, type QuizPhase } from '@/api/quiz';
 import { OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -51,7 +51,7 @@ export default function QuizPhasesScreen() {
       paddingTop: insets.top,
       paddingLeft: insets.left,
       paddingRight: insets.right,
-      paddingBottom: insets.bottom + BottomTabInset + Spacing.three,
+      paddingBottom: insets.bottom + Spacing.three,
     },
     web: {
       paddingTop: Spacing.six,
@@ -63,9 +63,9 @@ export default function QuizPhasesScreen() {
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+      <Stack.Screen options={{ title: 'Quiz de teoria' }} />
       <View style={styles.container}>
         <View style={styles.titleContainer}>
-          <OrganicText size="subtitle">Quiz de teoria</OrganicText>
           <OrganicText color="textSecondary" style={styles.centerText}>
             Acerte pelo menos {QUIZ_PASS_PERCENT}% pra liberar a próxima fase.
           </OrganicText>

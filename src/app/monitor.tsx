@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { Accelerometer } from 'expo-sensors';
@@ -15,7 +15,7 @@ import {
 } from '@/api/monitor-sessions';
 import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
 import { RouteMap } from '@/components/route-map';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
 
@@ -215,7 +215,7 @@ export default function MonitorScreen() {
       paddingTop: insets.top,
       paddingLeft: insets.left,
       paddingRight: insets.right,
-      paddingBottom: insets.bottom + BottomTabInset + Spacing.three,
+      paddingBottom: insets.bottom + Spacing.three,
     },
     web: {
       paddingTop: Spacing.six,
@@ -227,9 +227,9 @@ export default function MonitorScreen() {
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+      <Stack.Screen options={{ title: 'Monitor de direção' }} />
       <View style={styles.container}>
         <View style={styles.titleContainer}>
-          <OrganicText size="subtitle">Monitor de direção</OrganicText>
           <OrganicText color="textSecondary" style={styles.centerText}>
             Avisa com vibração quando detecta uma freada ou aceleração brusca durante a prática.
           </OrganicText>

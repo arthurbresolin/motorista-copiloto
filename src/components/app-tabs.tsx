@@ -9,7 +9,7 @@ import {
 import { Pressable, View, StyleSheet } from 'react-native';
 
 import { OrganicSurface, OrganicText } from './organic';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, RadiusLg, Spacing } from '@/constants/theme';
 
 export default function AppTabs() {
   return (
@@ -18,16 +18,16 @@ export default function AppTabs() {
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
-            <TabButton>Início</TabButton>
+            <TabButton icon="🏠">Início</TabButton>
           </TabTrigger>
           <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Práticas</TabButton>
+            <TabButton icon="🚗">Práticas</TabButton>
           </TabTrigger>
-          <TabTrigger name="monitor" href="/monitor" asChild>
-            <TabButton>Monitor</TabButton>
+          <TabTrigger name="trilha" href="/trilha" asChild>
+            <TabButton icon="🛣️">Trilha</TabButton>
           </TabTrigger>
-          <TabTrigger name="quiz" href="/quiz" asChild>
-            <TabButton>Quiz</TabButton>
+          <TabTrigger name="perfil" href="/perfil" asChild>
+            <TabButton icon="🙂">Perfil</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -35,18 +35,18 @@ export default function AppTabs() {
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+export function TabButton({
+  children,
+  icon,
+  isFocused,
+  ...props
+}: TabTriggerSlotProps & { icon: string }) {
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <OrganicSurface
-        backgroundColor={isFocused ? 'accent' : 'background'}
-        shadow={false}
-        borderRadius={999}
-        style={styles.tabButtonView}>
-        <OrganicText size="small" color={isFocused ? 'onAccent' : 'text'}>
-          {children}
-        </OrganicText>
-      </OrganicSurface>
+    <Pressable {...props} style={({ pressed }) => [styles.tabButton, pressed && styles.pressed]}>
+      <OrganicText style={[styles.icon, !isFocused && styles.iconDimmed]}>{icon}</OrganicText>
+      <OrganicText size="small" color={isFocused ? 'accent' : 'textSecondary'}>
+        {children}
+      </OrganicText>
     </Pressable>
   );
 }
@@ -54,11 +54,7 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 export function CustomTabList(props: TabListProps) {
   return (
     <View {...props} style={styles.tabListContainer}>
-      <OrganicSurface backgroundColor="background" borderRadius={999} style={styles.innerContainer}>
-        <OrganicText size="small" style={styles.brandText}>
-          Motorista Copiloto
-        </OrganicText>
-
+      <OrganicSurface backgroundColor="backgroundElement" borderRadius={RadiusLg} style={styles.innerContainer}>
         {props.children}
       </OrganicSurface>
     </View>
@@ -68,6 +64,7 @@ export function CustomTabList(props: TabListProps) {
 const styles = StyleSheet.create({
   tabListContainer: {
     position: 'absolute',
+    bottom: 0,
     width: '100%',
     padding: Spacing.three,
     justifyContent: 'center',
@@ -75,22 +72,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.four,
+    padding: Spacing.half,
     flexDirection: 'row',
     alignItems: 'center',
     flexGrow: 1,
-    gap: Spacing.two,
     maxWidth: MaxContentWidth,
-  },
-  brandText: {
-    marginRight: 'auto',
   },
   pressed: {
     opacity: 0.7,
   },
-  tabButtonView: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+    gap: 2,
+  },
+  icon: {
+    fontSize: 19,
+  },
+  iconDimmed: {
+    opacity: 0.45,
   },
 });

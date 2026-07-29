@@ -1,7 +1,7 @@
 import { Circle, Defs, Pattern, Polyline, Rect, Svg } from 'react-native-svg';
 
 import { OrganicSurface } from '@/components/organic';
-import { Spacing } from '@/constants/theme';
+import { RadiusMd } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { projectRoute, type RoutePoint } from '@/lib/route-projection';
 
@@ -22,7 +22,7 @@ export function RouteMap({ points }: { points: RoutePoint[] }) {
     <OrganicSurface
       backgroundColor="backgroundSelected"
       style={{ height: MAP_HEIGHT, overflow: 'hidden' }}
-      borderRadius={Spacing.two}>
+      borderRadius={RadiusMd}>
       <Svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
         <Defs>
           <Pattern

@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
-import { Spacing, type ThemeColor } from '@/constants/theme';
+import { RadiusPill, Spacing, type ThemeColor } from '@/constants/theme';
 
 export type OrganicPillProps = {
   label: string;
@@ -12,7 +12,7 @@ export type OrganicPillProps = {
 
 export function OrganicPill({ label, backgroundColor = 'background', textColor = 'text' }: OrganicPillProps) {
   return (
-    <OrganicSurface backgroundColor={backgroundColor} shadow={false} borderRadius={999} style={styles.pill}>
+    <OrganicSurface backgroundColor={backgroundColor} shadow={false} borderRadius={RadiusPill} style={styles.pill}>
       <OrganicText size="small" color={textColor}>
         {label}
       </OrganicText>

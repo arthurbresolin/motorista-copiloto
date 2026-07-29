@@ -8,9 +8,17 @@ export type SkillNodeState = 'done' | 'current' | 'locked';
 
 const NODE_SIZE = 44;
 
-export function SkillNode({ state, label }: { state: SkillNodeState; label: string }) {
+export function SkillNode({
+  state,
+  label,
+  size = NODE_SIZE,
+}: {
+  state: SkillNodeState;
+  label: string;
+  size?: number;
+}) {
   const backgroundColor: ThemeColor =
-    state === 'done' ? 'accent' : state === 'locked' ? 'backgroundSelected' : 'background';
+    state === 'done' ? 'accent' : state === 'locked' ? 'backgroundSelected' : 'backgroundElement';
   const textColor: ThemeColor =
     state === 'locked' ? 'textSecondary' : state === 'done' ? 'onAccent' : 'text';
   const icon = state === 'done' ? '✓' : state === 'locked' ? '🔒' : '★';
@@ -20,9 +28,10 @@ export function SkillNode({ state, label }: { state: SkillNodeState; label: stri
       circle
       backgroundColor={backgroundColor}
       shadow={state !== 'locked'}
-      style={styles.node}
+      inset={state === 'locked'}
+      style={[styles.node, { width: size, height: size }]}
       accessibilityLabel={label}>
-      <OrganicText size="small" color={textColor}>
+      <OrganicText size="small" color={textColor} style={{ fontSize: size * 0.32 }}>
         {icon}
       </OrganicText>
     </OrganicSurface>
@@ -31,8 +40,6 @@ export function SkillNode({ state, label }: { state: SkillNodeState; label: stri
 
 const styles = StyleSheet.create({
   node: {
-    width: NODE_SIZE,
-    height: NODE_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },

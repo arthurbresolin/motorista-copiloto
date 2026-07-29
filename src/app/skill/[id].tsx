@@ -137,6 +137,7 @@ export default function SkillDetailScreen() {
               variant="neutral"
               onPress={() => router.push(`/quiz/${skill.key}`)}
             />
+            <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
           </View>
         )}
       </View>

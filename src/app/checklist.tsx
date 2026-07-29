@@ -128,7 +128,7 @@ export default function ChecklistScreen() {
             {savedMessage !== '' && <OrganicText size="small">{savedMessage}</OrganicText>}
 
             <View style={styles.mascRow}>
-              <MascPlaceholder size={40} label="torce" />
+              <MascPlaceholder size={40} label="🙌" />
             </View>
 
             <OrganicButton

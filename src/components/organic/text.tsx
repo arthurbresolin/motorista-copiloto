@@ -1,6 +1,6 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { OrganicFontFamily, type ThemeColor } from '@/constants/theme';
+import { BodyFontFamily, HeadingFontFamily, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type OrganicTextProps = TextProps & {
@@ -10,11 +10,12 @@ export type OrganicTextProps = TextProps & {
 
 export function OrganicText({ style, size = 'body', color, ...rest }: OrganicTextProps) {
   const theme = useTheme();
+  const fontFamily = size === 'title' || size === 'subtitle' ? HeadingFontFamily : BodyFontFamily;
 
   return (
     <Text
       style={[
-        { fontFamily: OrganicFontFamily, color: theme[color ?? 'text'] },
+        { fontFamily, color: theme[color ?? 'text'] },
         size === 'title' && styles.title,
         size === 'subtitle' && styles.subtitle,
         size === 'body' && styles.body,

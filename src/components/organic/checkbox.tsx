@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
+import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
-import { BorderWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { RadiusSm, Spacing } from '@/constants/theme';
 
 export type OrganicCheckboxProps = {
   label: string;
@@ -11,28 +11,24 @@ export type OrganicCheckboxProps = {
 };
 
 export function OrganicCheckbox({ label, value, onValueChange }: OrganicCheckboxProps) {
-  const theme = useTheme();
-
   return (
     <Pressable
       onPress={onValueChange}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: value }}>
-      <View
-        style={[
-          styles.box,
-          {
-            borderColor: theme.borderColor,
-            backgroundColor: value ? theme.accent : theme.background,
-          },
-        ]}>
+      <OrganicSurface
+        backgroundColor={value ? 'accent' : 'backgroundSelected'}
+        inset={!value}
+        shadow={value}
+        borderRadius={RadiusSm * 0.6}
+        style={styles.box}>
         {value && (
           <OrganicText size="small" color="onAccent">
             ✓
           </OrganicText>
         )}
-      </View>
+      </OrganicSurface>
       <OrganicText size="body">{label}</OrganicText>
     </Pressable>
   );
@@ -50,8 +46,6 @@ const styles = StyleSheet.create({
   box: {
     width: 24,
     height: 24,
-    borderWidth: BorderWidth,
-    borderRadius: Spacing.one,
     alignItems: 'center',
     justifyContent: 'center',
   },

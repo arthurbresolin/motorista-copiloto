@@ -1,14 +1,22 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
-import { useTheme } from '@/hooks/use-theme';
+import { RadiusPill } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 
 export function OrganicProgressBar({ progress }: { progress: number }) {
   const theme = useTheme();
+  const gradients = useGradients();
   const clamped = Math.max(0, Math.min(1, progress));
 
   return (
     <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
-      <View style={[styles.fill, { backgroundColor: theme.barFill, width: `${clamped * 100}%` }]} />
+      <LinearGradient
+        colors={gradients.accent}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.fill, { width: `${clamped * 100}%` }]}
+      />
     </View>
   );
 }
@@ -16,11 +24,11 @@ export function OrganicProgressBar({ progress }: { progress: number }) {
 const styles = StyleSheet.create({
   track: {
     height: 8,
-    borderRadius: 999,
+    borderRadius: RadiusPill,
     overflow: 'hidden',
   },
   fill: {
     height: '100%',
-    borderRadius: 999,
+    borderRadius: RadiusPill,
   },
 });

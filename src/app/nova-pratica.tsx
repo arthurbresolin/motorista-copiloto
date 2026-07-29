@@ -8,7 +8,7 @@ import { getCars, type Car } from '@/api/cars';
 import { createPracticeSession } from '@/api/practice-sessions';
 import { OrganicButton, OrganicCheckbox, OrganicSurface, OrganicText } from '@/components/organic';
 import { MANEUVER_OPTIONS } from '@/constants/skills';
-import { BorderWidth, MaxContentWidth, OrganicFontFamily, Spacing } from '@/constants/theme';
+import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, RadiusPill, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type CarsLoadState = 'loading' | 'error' | 'ready';
@@ -119,9 +119,9 @@ export default function NovaPraticaScreen() {
   const inputStyle = [
     styles.input,
     {
-      fontFamily: OrganicFontFamily,
+      fontFamily: BodyFontFamily,
       color: theme.text,
-      backgroundColor: theme.background,
+      backgroundColor: theme.backgroundElement,
       borderColor: theme.borderColor,
     },
   ];
@@ -175,7 +175,7 @@ export default function NovaPraticaScreen() {
                   <OrganicSurface
                     backgroundColor={selectedCarId === car.id ? 'accent' : 'backgroundElement'}
                     shadow={false}
-                    borderRadius={999}
+                    borderRadius={RadiusPill}
                     style={styles.carOption}>
                     <OrganicText size="small" color={selectedCarId === car.id ? 'onAccent' : 'text'}>
                       {car.brand_model}
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   input: {
-    borderRadius: Spacing.two,
+    borderRadius: RadiusMd,
     borderWidth: BorderWidth,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,

@@ -13,18 +13,13 @@ import {
 import { OrganicButton, OrganicPill, OrganicSurface, OrganicText } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { formatHoursMinutes } from '@/lib/format';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
 function formatDate(isoDate: string) {
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
-}
-
-function formatHoursMinutes(totalMinutes: number) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return hours > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${minutes}min`;
 }
 
 export default function HistoricoScreen() {
