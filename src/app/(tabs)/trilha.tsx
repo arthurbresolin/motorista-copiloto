@@ -1,13 +1,7 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
-import { ApiError } from '@/api/client';
-import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
-import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { getQuizSessions, type QuizSession } from '@/api/quiz';
 import {
   OrganicButton,
   OrganicPill,
@@ -17,9 +11,7 @@ import {
   SkillTrail,
 } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { computeSkillProgress, computeStreak, computeXp } from '@/lib/gamification';
-
-type LoadState = 'loading' | 'error' | 'ready';
+import { useProgress } from '@/hooks/use-progress';
 
 export default function TrilhaScreen() {
   const router = useRouter();
@@ -28,44 +20,7 @@ export default function TrilhaScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const [sessions, setSessions] = useState<PracticeSession[]>([]);
-  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
-  const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
-  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const loadAll = useCallback(async () => {
-    setLoadState('loading');
-    try {
-      const [practice, checklist, monitor, quiz] = await Promise.all([
-        getPracticeSessions(),
-        getChecklistSessions(),
-        getMonitorSessions(),
-        getQuizSessions(),
-      ]);
-      setSessions(practice);
-      setChecklistSessions(checklist);
-      setMonitorSessions(monitor);
-      setQuizSessions(quiz);
-      setLoadState('ready');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar sua trilha.',
-      );
-      setLoadState('error');
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadAll();
-    }, [loadAll]),
-  );
-
-  const streak = computeStreak(sessions);
-  const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length);
-  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions);
+  const { loadState, errorMessage, reload, streak, xp, skillProgress } = useProgress();
   const doneCount = skillProgress.filter((item) => item.state === 'done').length;
 
   const contentPlatformStyle = Platform.select({
@@ -115,7 +70,7 @@ export default function TrilhaScreen() {
             <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
             </OrganicText>
-            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadAll} />
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={reload} />
           </View>
         )}
 

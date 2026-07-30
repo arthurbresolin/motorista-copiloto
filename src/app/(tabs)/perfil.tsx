@@ -1,18 +1,7 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
-import { ApiError } from '@/api/client';
-import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
-import {
-  getPracticeSessionStats,
-  getPracticeSessions,
-  type PracticeSession,
-  type PracticeSessionStats,
-} from '@/api/practice-sessions';
-import { getQuizSessions, type QuizSession } from '@/api/quiz';
 import {
   MascPlaceholder,
   OrganicButton,
@@ -23,10 +12,8 @@ import {
   SkillNode,
 } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { computeAchievements, computeStreak, computeXp } from '@/lib/gamification';
+import { useProgress } from '@/hooks/use-progress';
 import { formatHoursMinutes } from '@/lib/format';
-
-type LoadState = 'loading' | 'error' | 'ready';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -35,47 +22,7 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const [sessions, setSessions] = useState<PracticeSession[]>([]);
-  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
-  const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
-  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
-  const [stats, setStats] = useState<PracticeSessionStats | null>(null);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const loadAll = useCallback(async () => {
-    setLoadState('loading');
-    try {
-      const [practice, checklist, monitor, quiz, practiceStats] = await Promise.all([
-        getPracticeSessions(),
-        getChecklistSessions(),
-        getMonitorSessions(),
-        getQuizSessions(),
-        getPracticeSessionStats(),
-      ]);
-      setSessions(practice);
-      setChecklistSessions(checklist);
-      setMonitorSessions(monitor);
-      setQuizSessions(quiz);
-      setStats(practiceStats);
-      setLoadState('ready');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar seu perfil.',
-      );
-      setLoadState('error');
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadAll();
-    }, [loadAll]),
-  );
-
-  const streak = computeStreak(sessions);
-  const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length);
-  const achievements = computeAchievements(sessions, streak, monitorSessions, quizSessions.length);
+  const { loadState, errorMessage, reload, sessions, stats, streak, xp, achievements } = useProgress();
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -116,7 +63,7 @@ export default function PerfilScreen() {
             <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
             </OrganicText>
-            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadAll} />
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={reload} />
           </View>
         )}
 

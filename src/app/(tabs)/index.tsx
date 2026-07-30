@@ -1,11 +1,7 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
-import { ApiError } from '@/api/client';
-import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
 import {
   MascPlaceholder,
   OrganicButton,
@@ -14,9 +10,7 @@ import {
   ScreenBackground,
 } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, RadiusSm, Spacing } from '@/constants/theme';
-import { computeLastSevenDays, computeStreak } from '@/lib/gamification';
-
-type LoadState = 'loading' | 'error' | 'ready';
+import { useProgress } from '@/hooks/use-progress';
 
 const WEEK_CHART_HEIGHT = 44;
 
@@ -27,34 +21,7 @@ export default function HomeScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const [sessions, setSessions] = useState<PracticeSession[]>([]);
-  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const loadSessions = useCallback(async () => {
-    setLoadState('loading');
-    try {
-      const [practice, checklist] = await Promise.all([getPracticeSessions(), getChecklistSessions()]);
-      setSessions(practice);
-      setChecklistSessions(checklist);
-      setLoadState('ready');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar seu progresso.',
-      );
-      setLoadState('error');
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadSessions();
-    }, [loadSessions]),
-  );
-
-  const streak = computeStreak(sessions);
-  const weekDays = computeLastSevenDays(sessions);
+  const { loadState, errorMessage, reload, streak, weekDays } = useProgress();
   const maxWeekMinutes = Math.max(1, ...weekDays.map((day) => day.minutes));
 
   const contentPlatformStyle = Platform.select({
@@ -96,7 +63,7 @@ export default function HomeScreen() {
             <OrganicText color="textSecondary" style={styles.centerText}>
               {errorMessage}
             </OrganicText>
-            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadSessions} />
+            <OrganicButton label="Tentar novamente" variant="neutral" onPress={reload} />
           </View>
         )}
 
