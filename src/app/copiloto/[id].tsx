@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Speech from 'expo-speech';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,6 +16,7 @@ import { computeRouteDistanceKm } from '@/lib/route-projection';
 type Phase = 'ready' | 'playing' | 'saving' | 'finished';
 
 const HARSH_EVENT_CUE = 'Freada ou aceleração brusca — tenta suavizar.';
+const AUTO_ADVANCE_DELAY_MS = 2000;
 
 export default function CopilotoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,13 +32,40 @@ export default function CopilotoScreen() {
     null,
   );
   const sessionStartedAtRef = useRef<Date | null>(null);
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleNextRef = useRef<() => void>(() => {});
 
   const monitor = useDrivingMonitor(() => Speech.speak(HARSH_EVENT_CUE, { language: 'pt-BR' }));
 
-  function speakStep(index: number) {
-    if (steps[index]) {
-      Speech.speak(steps[index], { language: 'pt-BR' });
+  function clearAutoAdvance() {
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
     }
+  }
+
+  // Avança sozinho depois de um tempo estimado pela duração da fala — dá pra
+  // usar sem tocar na tela. O evento "terminou de falar" do TTS não é confiável
+  // em todas as plataformas (varia entre navegador/celular), então o tempo é
+  // calculado pelo texto em vez de depender desse evento. O botão "Próximo
+  // passo" continua ali pra quem quiser pular na hora.
+  function estimateSpeechMs(text: string) {
+    const wordCount = text.trim().split(/\s+/).length;
+    return Math.max(1500, wordCount * 380);
+  }
+
+  function speakStep(index: number) {
+    clearAutoAdvance();
+    const text = steps[index];
+    if (!text) {
+      return;
+    }
+    Speech.stop();
+    Speech.speak(text, { language: 'pt-BR' });
+    autoAdvanceTimeoutRef.current = setTimeout(
+      () => handleNextRef.current(),
+      estimateSpeechMs(text) + AUTO_ADVANCE_DELAY_MS,
+    );
   }
 
   function handleStart() {
@@ -83,6 +111,7 @@ export default function CopilotoScreen() {
   }, [monitor, skill]);
 
   function handleNext() {
+    clearAutoAdvance();
     const nextIndex = stepIndex + 1;
     if (nextIndex < steps.length) {
       setStepIndex(nextIndex);
@@ -91,6 +120,15 @@ export default function CopilotoScreen() {
     }
     finishSession();
   }
+
+  handleNextRef.current = handleNext;
+
+  useEffect(() => {
+    return () => {
+      clearAutoAdvance();
+      Speech.stop();
+    };
+  }, []);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -126,8 +164,8 @@ export default function CopilotoScreen() {
                 {skill.label}
               </OrganicText>
               <OrganicText color="textSecondary" style={styles.centerText}>
-                O celular vai falar cada passo em voz alta e o sensor de movimento liga junto.
-                Encaixe o celular no painel antes de começar.
+                O celular vai falar cada passo em voz alta e avançar sozinho — o sensor de
+                movimento liga junto. Encaixe o celular no painel antes de começar.
               </OrganicText>
               <View style={styles.actionsWrapper}>
                 <OrganicButton label="🎙️ Começar exercício" onPress={handleStart} />
