@@ -13,9 +13,14 @@ import {
   type QuizQuestion,
   type QuizSession,
 } from '@/api/quiz';
-import { OrganicButton, OrganicProgressBar, OrganicSurface, OrganicText } from '@/components/organic';
+import {
+  OrganicButton,
+  OrganicProgressBar,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type QuizStage = 'playing' | 'submitting' | 'finished';
@@ -25,7 +30,6 @@ const QUIZ_PASS_RATIO = 0.7;
 export default function QuizPhaseScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const router = useRouter();
 
   const [phase, setPhase] = useState<QuizPhase | null>(null);
@@ -125,11 +129,12 @@ export default function QuizPhaseScreen() {
   const passed = result !== null && result.total_questions > 0 && result.score / result.total_questions >= QUIZ_PASS_RATIO;
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <Stack.Screen options={{ title: phase?.label ?? 'Quiz' }} />
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <Stack.Screen options={{ title: phase?.label ?? 'Quiz' }} />
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">{phase?.label ?? 'Quiz'}</OrganicText>
         </View>
@@ -227,8 +232,9 @@ export default function QuizPhaseScreen() {
             <OrganicButton label="Voltar pras fases" variant="neutral" onPress={() => router.back()} />
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

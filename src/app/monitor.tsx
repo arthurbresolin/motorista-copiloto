@@ -13,10 +13,9 @@ import {
   type MonitorSession,
   type RoutePoint,
 } from '@/api/monitor-sessions';
-import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
+import { OrganicButton, OrganicSurface, OrganicText, ScreenBackground } from '@/components/organic';
 import { RouteMap } from '@/components/route-map';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
 
 const LOCATION_OPTIONS: Location.LocationOptions = {
@@ -46,7 +45,6 @@ function formatDuration(totalSeconds: number) {
 
 export default function MonitorScreen() {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
 
   const [state, setState] = useState<MonitorState>('idle');
   const [eventCount, setEventCount] = useState(0);
@@ -224,11 +222,12 @@ export default function MonitorScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <Stack.Screen options={{ title: 'Monitor de direção' }} />
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <Stack.Screen options={{ title: 'Monitor de direção' }} />
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText color="textSecondary" style={styles.centerText}>
             Avisa com vibração quando detecta uma freada ou aceleração brusca durante a prática.
@@ -319,8 +318,9 @@ export default function MonitorScreen() {
             </View>
           )}
         </View>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

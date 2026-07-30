@@ -6,7 +6,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@/api/client';
 import { getCars, type Car } from '@/api/cars';
 import { createPracticeSession } from '@/api/practice-sessions';
-import { OrganicButton, OrganicCheckbox, OrganicSurface, OrganicText } from '@/components/organic';
+import {
+  OrganicButton,
+  OrganicCheckbox,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { MANEUVER_OPTIONS } from '@/constants/skills';
 import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, RadiusPill, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -127,12 +133,13 @@ export default function NovaPraticaScreen() {
   ];
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[
-        styles.contentContainer,
-        { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + Spacing.four },
-      ]}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + Spacing.four },
+        ]}>
       <View style={styles.container}>
         <View style={styles.field}>
           <OrganicText size="small">Com qual carro?</OrganicText>
@@ -260,7 +267,8 @@ export default function NovaPraticaScreen() {
           onPress={handleSave}
         />
       </View>
-    </ScrollView>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

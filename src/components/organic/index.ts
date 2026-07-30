@@ -2,6 +2,7 @@ export { OrganicButton, type OrganicButtonProps } from './button';
 export { OrganicCheckbox, type OrganicCheckboxProps } from './checkbox';
 export { MascPlaceholder } from './masc-placeholder';
 export { OrganicPill, type OrganicPillProps } from './pill';
+export { ScreenBackground } from './screen-background';
 export { OrganicProgressBar } from './progress-bar';
 export { SkillNode, type SkillNodeState } from './skill-node';
 export { SkillTrail } from './skill-trail';

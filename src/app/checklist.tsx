@@ -4,9 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { createChecklistSession, getChecklistItems, type ChecklistItem } from '@/api/checklist';
 import { ApiError } from '@/api/client';
-import { MascPlaceholder, OrganicButton, OrganicCheckbox, OrganicText } from '@/components/organic';
+import {
+  MascPlaceholder,
+  OrganicButton,
+  OrganicCheckbox,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -16,8 +21,6 @@ export default function ChecklistScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + Spacing.three,
   };
-  const theme = useTheme();
-
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -86,11 +89,12 @@ export default function ChecklistScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentInset={insets}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">Checklist pré-direção</OrganicText>
           <OrganicText color="textSecondary">Confira os itens antes de sair para dirigir.</OrganicText>
@@ -138,8 +142,9 @@ export default function ChecklistScreen() {
             />
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

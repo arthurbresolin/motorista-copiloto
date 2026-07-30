@@ -19,9 +19,9 @@ export function OrganicButton({ label, onPress, disabled, variant = 'accent' }: 
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [styles.wrapper, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.wrapper, disabled && styles.disabled, pressed && styles.pressed]}>
       <OrganicSurface backgroundColor={backgroundColor} borderRadius={RadiusPill} style={styles.button}>
-        <OrganicText size="body" color={textColor}>
+        <OrganicText size="body" color={textColor} style={styles.label}>
           {label}
         </OrganicText>
       </OrganicSurface>
@@ -31,11 +31,20 @@ export function OrganicButton({ label, onPress, disabled, variant = 'accent' }: 
 
 const styles = StyleSheet.create({
   wrapper: {
-    alignSelf: 'flex-start',
+    width: '100%',
+  },
+  disabled: {
+    opacity: 0.45,
   },
   button: {
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  label: {
+    fontFamily: 'Archivo_900Black',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   pressed: {
     opacity: 0.7,

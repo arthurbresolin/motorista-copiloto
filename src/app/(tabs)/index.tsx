@@ -6,9 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { MascPlaceholder, OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
+import {
+  MascPlaceholder,
+  OrganicButton,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, RadiusSm, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { computeLastSevenDays, computeStreak } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -22,8 +27,6 @@ export default function HomeScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const theme = useTheme();
-
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -68,11 +71,12 @@ export default function HomeScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentInset={insets}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={[styles.titleContainer, styles.titleRow]}>
           <View>
             <OrganicText size="title">Oi, Arthur 👋</OrganicText>
@@ -173,15 +177,16 @@ export default function HomeScreen() {
 
             <Pressable onPress={() => router.push('/monitor')}>
               <OrganicSurface backgroundColor="accent" style={styles.ctaCard}>
-                <OrganicText size="subtitle" color="onAccent" style={styles.centerText}>
+                <OrganicText size="subtitle" color="onAccent" style={styles.ctaLabel}>
                   🚗 Sair pra dirigir
                 </OrganicText>
               </OrganicSurface>
             </Pressable>
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 
@@ -277,5 +282,11 @@ const styles = StyleSheet.create({
   },
   ctaCard: {
     padding: Spacing.four,
+  },
+  ctaLabel: {
+    textAlign: 'center',
+    fontFamily: 'Archivo_900Black',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
 });

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { createCar, getCars, type Car } from '@/api/cars';
-import { OrganicButton, OrganicSurface, OrganicText } from '@/components/organic';
+import { OrganicButton, OrganicSurface, OrganicText, ScreenBackground } from '@/components/organic';
 import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -88,10 +88,11 @@ export default function MeuCarroScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">Meus carros</OrganicText>
           <OrganicText color="textSecondary">Cadastre o(s) carro(s) usados nas suas práticas.</OrganicText>
@@ -205,8 +206,9 @@ export default function MeuCarroScreen() {
             onPress={handleAddCar}
           />
         </View>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

@@ -8,9 +8,15 @@ import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
 import { getQuizSessions, type QuizSession } from '@/api/quiz';
-import { OrganicButton, OrganicPill, OrganicSurface, OrganicText, SkillTrail } from '@/components/organic';
+import {
+  OrganicButton,
+  OrganicPill,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+  SkillTrail,
+} from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { computeSkillProgress, computeStreak, computeXp } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -22,8 +28,6 @@ export default function TrilhaScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const theme = useTheme();
-
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
@@ -78,11 +82,12 @@ export default function TrilhaScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentInset={insets}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={styles.pillRow}>
           <OrganicPill label={`🔥 ${streak}`} backgroundColor="backgroundElement" />
           <OrganicPill label={`⭐ ${xp}`} backgroundColor="backgroundElement" />
@@ -119,8 +124,9 @@ export default function TrilhaScreen() {
             <SkillTrail items={skillProgress} onPressSkill={(key) => router.push(`/skill/${key}`)} />
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

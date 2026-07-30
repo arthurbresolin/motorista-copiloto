@@ -10,9 +10,14 @@ import {
   type PracticeSession,
   type PracticeSessionStats,
 } from '@/api/practice-sessions';
-import { OrganicButton, OrganicPill, OrganicSurface, OrganicText } from '@/components/organic';
+import {
+  OrganicButton,
+  OrganicPill,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { formatHoursMinutes } from '@/lib/format';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -29,8 +34,6 @@ export default function HistoricoScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const theme = useTheme();
-
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -84,11 +87,12 @@ export default function HistoricoScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentInset={insets}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">Práticas</OrganicText>
           <OrganicText color="textSecondary">
@@ -155,8 +159,9 @@ export default function HistoricoScreen() {
             ))}
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

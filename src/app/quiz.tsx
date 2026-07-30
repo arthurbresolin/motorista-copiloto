@@ -5,9 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { getQuizPhases, type QuizPhase } from '@/api/quiz';
-import { OrganicSurface, OrganicText, SkillNode } from '@/components/organic';
+import { OrganicSurface, OrganicText, ScreenBackground, SkillNode } from '@/components/organic';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -19,7 +18,6 @@ function phaseRouteParam(phase: QuizPhase) {
 
 export default function QuizPhasesScreen() {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const router = useRouter();
 
   const [phases, setPhases] = useState<QuizPhase[]>([]);
@@ -60,11 +58,12 @@ export default function QuizPhasesScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <Stack.Screen options={{ title: 'Quiz de teoria' }} />
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <Stack.Screen options={{ title: 'Quiz de teoria' }} />
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText color="textSecondary" style={styles.centerText}>
             Acerte pelo menos {QUIZ_PASS_PERCENT}% pra liberar a próxima fase.
@@ -127,8 +126,9 @@ export default function QuizPhasesScreen() {
             })}
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

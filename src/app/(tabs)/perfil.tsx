@@ -19,10 +19,10 @@ import {
   OrganicPill,
   OrganicSurface,
   OrganicText,
+  ScreenBackground,
   SkillNode,
 } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { computeAchievements, computeStreak, computeXp } from '@/lib/gamification';
 import { formatHoursMinutes } from '@/lib/format';
 
@@ -35,8 +35,6 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const theme = useTheme();
-
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
@@ -93,11 +91,12 @@ export default function PerfilScreen() {
   });
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentInset={insets}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <View style={styles.container}>
         <View style={[styles.titleContainer, styles.titleRow]}>
           <View>
             <OrganicText size="title">Perfil</OrganicText>
@@ -176,8 +175,9 @@ export default function PerfilScreen() {
             />
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 

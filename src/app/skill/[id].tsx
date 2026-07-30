@@ -7,10 +7,15 @@ import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { OrganicButton, OrganicProgressBar, OrganicSurface, OrganicText } from '@/components/organic';
+import {
+  OrganicButton,
+  OrganicProgressBar,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { MANEUVER_DONE_THRESHOLD, SKILLS } from '@/constants/skills';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { computeSkillProgress } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -19,7 +24,6 @@ export default function SkillDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
 
   const skill = SKILLS.find((candidate) => candidate.key === id);
 
@@ -68,9 +72,9 @@ export default function SkillDetailScreen() {
 
   if (!skill) {
     return (
-      <View style={styles.centerContent}>
+      <ScreenBackground style={styles.centerContent}>
         <OrganicText color="textSecondary">Habilidade não encontrada.</OrganicText>
-      </View>
+      </ScreenBackground>
     );
   }
 
@@ -80,11 +84,12 @@ export default function SkillDetailScreen() {
   const count = progress?.count ?? 0;
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <Stack.Screen options={{ title: skill.label }} />
-      <View style={styles.container}>
+    <ScreenBackground>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+        <Stack.Screen options={{ title: skill.label }} />
+        <View style={styles.container}>
         <View style={styles.titleContainer}>
           <OrganicText size="subtitle">{skill.label}</OrganicText>
           {loadState === 'ready' && (
@@ -140,8 +145,9 @@ export default function SkillDetailScreen() {
             <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </ScreenBackground>
   );
 }
 
