@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { getPracticeSessionFeedback } from '@/api/coach';
 import { createMonitorSession } from '@/api/monitor-sessions';
 import { createPracticeSession } from '@/api/practice-sessions';
 import { OrganicButton, OrganicProgressBar, OrganicText, ScreenBackground } from '@/components/organic';
@@ -31,6 +32,7 @@ export default function CopilotoScreen() {
   const [savedSummary, setSavedSummary] = useState<{ minutes: number; km: number; events: number } | null>(
     null,
   );
+  const [coachMessage, setCoachMessage] = useState<string | null>(null);
   const sessionStartedAtRef = useRef<Date | null>(null);
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleNextRef = useRef<() => void>(() => {});
@@ -94,7 +96,7 @@ export default function CopilotoScreen() {
           route: summary.route.length > 0 ? summary.route : null,
         });
       }
-      await createPracticeSession({
+      const practiceSession = await createPracticeSession({
         practiced_at: todayIsoDate(),
         duration_minutes: durationMinutes,
         distance_km: distanceKm,
@@ -102,6 +104,16 @@ export default function CopilotoScreen() {
         notes: 'Registrado via Modo Copiloto',
         car_id: null,
       });
+
+      // Dica da IA é um extra — busca depois de já mostrar a conclusão, sem
+      // travar a tela nem quebrar o fluxo se a chave ainda não estiver configurada.
+      getPracticeSessionFeedback(practiceSession.id)
+        .then((feedback) => {
+          if (feedback.available && feedback.message) {
+            setCoachMessage(feedback.message);
+          }
+        })
+        .catch(() => {});
     } catch {
       // Sessão já foi vivida; falha ao salvar não pode travar a tela de conclusão.
     }
@@ -225,6 +237,9 @@ export default function CopilotoScreen() {
               <OrganicText color="textSecondary" style={styles.centerText}>
                 Sessão já registrada — não precisa preencher nada.
               </OrganicText>
+              {coachMessage && (
+                <OrganicText style={styles.centerText}>💬 {coachMessage}</OrganicText>
+              )}
 
               <View style={styles.actionsWrapper}>
                 <OrganicButton label="Voltar pra trilha" onPress={() => router.back()} />
