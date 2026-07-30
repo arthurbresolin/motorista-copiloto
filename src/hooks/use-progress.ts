@@ -68,7 +68,7 @@ export function useProgress() {
   const weekDays = computeLastSevenDays(sessions);
   const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length, monitorSessions);
   const level = computeLevel(xp);
-  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions);
+  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions, quizSessions);
   const achievements = computeAchievements(
     sessions,
     streak,

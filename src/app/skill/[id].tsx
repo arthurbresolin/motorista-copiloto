@@ -7,6 +7,7 @@ import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
+import { getQuizSessions, type QuizSession } from '@/api/quiz';
 import {
   OrganicButton,
   OrganicProgressBar,
@@ -16,7 +17,7 @@ import {
 } from '@/components/organic';
 import { MANEUVER_DONE_THRESHOLD, SKILLS } from '@/constants/skills';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { computeSkillProgress } from '@/lib/gamification';
+import { computeSkillProgress, getBestQuizRatio, QUIZ_PASS_RATIO } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -30,20 +31,23 @@ export default function SkillDetailScreen() {
   const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
+  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadAll = useCallback(async () => {
     setLoadState('loading');
     try {
-      const [practice, checklist, monitor] = await Promise.all([
+      const [practice, checklist, monitor, quiz] = await Promise.all([
         getPracticeSessions(),
         getChecklistSessions(),
         getMonitorSessions(),
+        getQuizSessions(),
       ]);
       setPracticeSessions(practice);
       setChecklistSessions(checklist);
       setMonitorSessions(monitor);
+      setQuizSessions(quiz);
       setLoadState('ready');
     } catch (error) {
       setErrorMessage(
@@ -78,10 +82,14 @@ export default function SkillDetailScreen() {
     );
   }
 
-  const progress = computeSkillProgress(practiceSessions, checklistSessions, monitorSessions).find(
-    (item) => item.skill.key === skill.key,
-  );
+  const progress = computeSkillProgress(
+    practiceSessions,
+    checklistSessions,
+    monitorSessions,
+    quizSessions,
+  ).find((item) => item.skill.key === skill.key);
   const count = progress?.count ?? 0;
+  const bestQuizRatio = getBestQuizRatio(quizSessions, skill.key);
 
   return (
     <ScreenBackground>
@@ -148,10 +156,19 @@ export default function SkillDetailScreen() {
               onPress={() => router.push('/nova-pratica')}
             />
             <OrganicButton
-              label="❓ Quiz rápido"
+              label={
+                bestQuizRatio !== null && bestQuizRatio >= QUIZ_PASS_RATIO
+                  ? '✅ Quiz aprovado — refazer'
+                  : '❓ Quiz rápido'
+              }
               variant="neutral"
               onPress={() => router.push(`/quiz/${skill.key}`)}
             />
+            {bestQuizRatio !== null && (
+              <OrganicText size="small" color="textSecondary" style={styles.centerText}>
+                Melhor resultado no quiz: {Math.round(bestQuizRatio * 100)}%
+              </OrganicText>
+            )}
             {!skill.maneuver && (
               <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
             )}

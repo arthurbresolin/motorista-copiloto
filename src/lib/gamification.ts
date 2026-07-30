@@ -1,6 +1,7 @@
 import type { ChecklistSession } from '@/api/checklist';
 import type { MonitorSession } from '@/api/monitor-sessions';
 import type { PracticeSession } from '@/api/practice-sessions';
+import type { QuizSession } from '@/api/quiz';
 import type { SkillNodeState } from '@/components/organic';
 import {
   MANEUVER_DONE_THRESHOLD,
@@ -66,10 +67,29 @@ function isSmoothDrivingSession(session: MonitorSession) {
   return session.event_count === 0 && session.duration_seconds >= SMOOTH_DRIVING_MIN_DURATION_SECONDS;
 }
 
+// Mesmo limiar usado pelo backend pra destravar a próxima fase do quiz
+// (backend/app/api/quiz.py QUIZ_PASS_THRESHOLD) — aqui só decide se o quiz
+// daquela habilidade conta como "feito" na trilha, não controla acesso.
+export const QUIZ_PASS_RATIO = 0.7;
+
+// Melhor proporção de acertos (0 a 1) que o aluno já tirou no quiz de uma
+// categoria, ou null se nunca tentou. As categorias do quiz usam as mesmas
+// chaves de SKILLS (exceto "geral", que não corresponde a nenhuma habilidade).
+export function getBestQuizRatio(quizSessions: QuizSession[], category: string): number | null {
+  const relevant = quizSessions.filter(
+    (session) => session.category === category && session.total_questions > 0,
+  );
+  if (relevant.length === 0) {
+    return null;
+  }
+  return Math.max(...relevant.map((session) => session.score / session.total_questions));
+}
+
 export function computeSkillProgress(
   practiceSessions: PracticeSession[],
   checklistSessions: ChecklistSession[],
   monitorSessions: MonitorSession[],
+  quizSessions: QuizSession[],
 ): SkillProgress[] {
   const maneuverCounts = new Map<string, number>();
   for (const session of practiceSessions) {
@@ -89,12 +109,14 @@ export function computeSkillProgress(
     } else if (skill.key === 'direcao-suave') {
       count = smoothDrivingCount;
     }
-    return { skill, count };
+    const quizRatio = getBestQuizRatio(quizSessions, skill.key);
+    const quizPassed = quizRatio !== null && quizRatio >= QUIZ_PASS_RATIO;
+    return { skill, count, quizPassed };
   });
 
   let currentAssigned = false;
-  return counted.map(({ skill, count }) => {
-    if (count >= MANEUVER_DONE_THRESHOLD) {
+  return counted.map(({ skill, count, quizPassed }) => {
+    if (count >= MANEUVER_DONE_THRESHOLD || quizPassed) {
       return { skill, count, state: 'done' as SkillNodeState };
     }
     if (!currentAssigned) {
