@@ -11,9 +11,11 @@ import {
   ScreenBackground,
   SkillNode,
 } from '@/components/organic';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, RadiusSm, Spacing } from '@/constants/theme';
 import { useProgress } from '@/hooks/use-progress';
 import { formatHoursMinutes } from '@/lib/format';
+
+const TREND_CHART_HEIGHT = 44;
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -22,7 +24,21 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const { loadState, errorMessage, reload, sessions, stats, streak, xp, level, achievements } = useProgress();
+  const {
+    loadState,
+    errorMessage,
+    reload,
+    sessions,
+    stats,
+    streak,
+    xp,
+    level,
+    weekDays,
+    eventTrend,
+    achievements,
+  } = useProgress();
+  const maxWeekKm = Math.max(1, ...weekDays.map((day) => day.km));
+  const maxTrendEvents = Math.max(1, ...eventTrend.map((session) => session.eventCount));
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -89,6 +105,68 @@ export default function PerfilScreen() {
                 </OrganicText>
               </OrganicSurface>
             </View>
+
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+              <OrganicText size="small">Km rodados (7 dias)</OrganicText>
+              <View style={styles.trendChart}>
+                {weekDays.map((day, index) => (
+                  <View key={index} style={styles.trendBarColumn}>
+                    <View style={[styles.trendBarTrack, { height: TREND_CHART_HEIGHT }]}>
+                      <OrganicSurface
+                        backgroundColor={day.km > 0 ? 'accent' : 'backgroundSelected'}
+                        inset={day.km === 0}
+                        shadow={false}
+                        borderRadius={RadiusSm * 0.5}
+                        style={{
+                          width: '100%',
+                          height: Math.max(4, (day.km / maxWeekKm) * TREND_CHART_HEIGHT),
+                        }}
+                      />
+                    </View>
+                    <OrganicText size="small" color="textSecondary">
+                      {day.label}
+                    </OrganicText>
+                  </View>
+                ))}
+              </View>
+            </OrganicSurface>
+
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+              <OrganicText size="small">Eventos bruscos por sessão monitorada</OrganicText>
+              {eventTrend.length === 0 ? (
+                <OrganicText size="small" color="textSecondary">
+                  Nenhuma sessão de monitoramento registrada ainda.
+                </OrganicText>
+              ) : (
+                <View style={styles.trendChart}>
+                  {eventTrend.map((session, index) => (
+                    <View key={index} style={styles.trendBarColumn}>
+                      <View style={[styles.trendBarTrack, { height: TREND_CHART_HEIGHT }]}>
+                        <OrganicSurface
+                          backgroundColor={
+                            session.severeEventCount > 0
+                              ? 'warning'
+                              : session.eventCount > 0
+                                ? 'accent'
+                                : 'backgroundSelected'
+                          }
+                          inset={session.eventCount === 0}
+                          shadow={false}
+                          borderRadius={RadiusSm * 0.5}
+                          style={{
+                            width: '100%',
+                            height: Math.max(4, (session.eventCount / maxTrendEvents) * TREND_CHART_HEIGHT),
+                          }}
+                        />
+                      </View>
+                      <OrganicText size="small" color="textSecondary">
+                        {session.label}
+                      </OrganicText>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </OrganicSurface>
 
             <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
               <OrganicText size="small">Conquistas</OrganicText>
@@ -178,6 +256,20 @@ const styles = StyleSheet.create({
   card: {
     gap: Spacing.three,
     padding: Spacing.three,
+  },
+  trendChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: Spacing.two,
+  },
+  trendBarColumn: {
+    flex: 1,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  trendBarTrack: {
+    width: '100%',
+    justifyContent: 'flex-end',
   },
   achievementsRow: {
     flexDirection: 'row',

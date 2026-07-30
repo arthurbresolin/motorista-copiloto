@@ -43,24 +43,46 @@ export function computeStreak(sessions: PracticeSession[]) {
 
 export function computeLastSevenDays(sessions: PracticeSession[]) {
   const minutesByDate = new Map<string, number>();
+  const kmByDate = new Map<string, number>();
   for (const session of sessions) {
     minutesByDate.set(
       session.practiced_at,
       (minutesByDate.get(session.practiced_at) ?? 0) + session.duration_minutes,
     );
+    kmByDate.set(session.practiced_at, (kmByDate.get(session.practiced_at) ?? 0) + session.distance_km);
   }
 
-  const days: { label: string; minutes: number }[] = [];
+  const days: { label: string; minutes: number; km: number }[] = [];
   const cursor = new Date();
   cursor.setDate(cursor.getDate() - 6);
   for (let i = 0; i < 7; i++) {
+    const date = isoDate(cursor);
     days.push({
       label: WEEKDAY_LABELS[cursor.getDay()],
-      minutes: minutesByDate.get(isoDate(cursor)) ?? 0,
+      minutes: minutesByDate.get(date) ?? 0,
+      km: Math.round((kmByDate.get(date) ?? 0) * 10) / 10,
     });
     cursor.setDate(cursor.getDate() + 1);
   }
   return days;
+}
+
+const EVENT_TREND_SESSION_COUNT = 6;
+
+// Últimas sessões de monitoramento, da mais antiga pra mais recente (ordem de
+// leitura de um gráfico), pra visualizar se os eventos bruscos estão caindo.
+export function computeMonitorEventTrend(monitorSessions: MonitorSession[]) {
+  return [...monitorSessions]
+    .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime())
+    .slice(-EVENT_TREND_SESSION_COUNT)
+    .map((session) => {
+      const date = new Date(session.started_at);
+      return {
+        label: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`,
+        eventCount: session.event_count,
+        severeEventCount: session.severe_event_count,
+      };
+    });
 }
 
 function isSmoothDrivingSession(session: MonitorSession) {

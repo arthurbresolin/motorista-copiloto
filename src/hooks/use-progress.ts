@@ -15,6 +15,7 @@ import {
   computeAchievements,
   computeLastSevenDays,
   computeLevel,
+  computeMonitorEventTrend,
   computeSkillProgress,
   computeStreak,
   computeXp,
@@ -68,6 +69,7 @@ export function useProgress() {
   const weekDays = computeLastSevenDays(sessions);
   const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length, monitorSessions);
   const level = computeLevel(xp);
+  const eventTrend = computeMonitorEventTrend(monitorSessions);
   const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions, quizSessions);
   const achievements = computeAchievements(
     sessions,
@@ -90,6 +92,7 @@ export function useProgress() {
     weekDays,
     xp,
     level,
+    eventTrend,
     skillProgress,
     achievements,
   };
