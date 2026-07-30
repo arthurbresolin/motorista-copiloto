@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -8,9 +8,25 @@ import { scheduleOnRN } from 'react-native-worklets';
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
 const DURATION = 600;
 
+const FALLBACK_HIDE_DELAY_MS = DURATION + 500;
+
 export function AnimatedSplashOverlay() {
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+
+  // Sem isso, se o callback de fim de animação do Reanimated não disparar
+  // (aconteceu de verdade em toque real de celular — nos testes com clique
+  // sintético de navegador desktop nunca pegava), esse overlay em tela cheia
+  // fica invisível mas continua ativo no topo, bloqueando todo toque do app
+  // pra sempre. pointerEvents="none" garante que ele nunca intercepta toque
+  // mesmo travado, e o timeout força o desmonte de qualquer forma.
+  useEffect(() => {
+    if (!animate) {
+      return;
+    }
+    const timeout = setTimeout(() => setVisible(false), FALLBACK_HIDE_DELAY_MS);
+    return () => clearTimeout(timeout);
+  }, [animate]);
 
   if (!visible) return null;
 
@@ -37,6 +53,7 @@ export function AnimatedSplashOverlay() {
 
   return animate ? (
     <Animated.View
+      pointerEvents="none"
       entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
         'worklet';
         if (finished) {
@@ -48,6 +65,7 @@ export function AnimatedSplashOverlay() {
     </Animated.View>
   ) : (
     <View
+      pointerEvents="none"
       onLayout={() => {
         SplashScreen.hideAsync().finally(() => {
           setAnimate(true);
