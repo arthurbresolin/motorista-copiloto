@@ -108,6 +108,9 @@ export function computeSkillProgress(
 const XP_PER_PRACTICE_SESSION = 10;
 const XP_PER_CHECKLIST_SESSION = 5;
 const XP_PER_QUIZ_SESSION = 15;
+const XP_PER_MONITOR_SESSION = 5;
+const XP_BONUS_SMOOTH_MONITOR_SESSION = 5;
+const XP_PER_LEVEL = 100;
 
 // XP é sempre derivado das sessões já buscadas, nunca persistido no backend -
 // mesmo raciocínio do streak/gráfico semanal: evita um contador mutável que
@@ -116,12 +119,23 @@ export function computeXp(
   practiceSessionCount: number,
   checklistSessionCount: number,
   quizSessionCount: number,
+  monitorSessions: MonitorSession[],
 ) {
+  const monitorXp = monitorSessions.reduce(
+    (total, session) =>
+      total + XP_PER_MONITOR_SESSION + (session.event_count === 0 ? XP_BONUS_SMOOTH_MONITOR_SESSION : 0),
+    0,
+  );
   return (
     practiceSessionCount * XP_PER_PRACTICE_SESSION +
     checklistSessionCount * XP_PER_CHECKLIST_SESSION +
-    quizSessionCount * XP_PER_QUIZ_SESSION
+    quizSessionCount * XP_PER_QUIZ_SESSION +
+    monitorXp
   );
+}
+
+export function computeLevel(xp: number) {
+  return Math.floor(xp / XP_PER_LEVEL) + 1;
 }
 
 export type Achievement = {
@@ -135,15 +149,19 @@ export function computeAchievements(
   streak: number,
   monitorSessions: MonitorSession[],
   quizSessionCount: number,
+  totalKm: number,
 ): Achievement[] {
   return [
     { key: 'primeira-pratica', label: 'Primeira prática', unlocked: practiceSessions.length >= 1 },
     { key: 'streak-3', label: '3 dias seguidos', unlocked: streak >= 3 },
+    { key: 'streak-7', label: '7 dias seguidos', unlocked: streak >= 7 },
     {
       key: 'sem-sustos',
       label: 'Sessão sem sustos',
       unlocked: monitorSessions.some(isSmoothDrivingSession),
     },
+    { key: 'dez-praticas', label: '10 práticas', unlocked: practiceSessions.length >= 10 },
+    { key: 'cinquenta-km', label: '50 km rodados', unlocked: totalKm >= 50 },
     { key: 'quiz-completo', label: 'Quiz completo', unlocked: quizSessionCount >= 1 },
   ];
 }

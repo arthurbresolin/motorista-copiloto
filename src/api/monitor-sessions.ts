@@ -11,6 +11,7 @@ export type MonitorSession = {
   started_at: string;
   duration_seconds: number;
   event_count: number;
+  severe_event_count: number;
   route: RoutePoint[] | null;
 };
 
@@ -18,6 +19,7 @@ export type MonitorSessionInput = {
   started_at: string;
   duration_seconds: number;
   event_count: number;
+  severe_event_count: number;
   route: RoutePoint[] | null;
 };
 

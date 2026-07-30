@@ -13,4 +13,5 @@ class MonitorSession(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     duration_seconds: Mapped[int] = mapped_column(Integer)
     event_count: Mapped[int] = mapped_column(Integer)
+    severe_event_count: Mapped[int] = mapped_column(Integer, default=0)
     route: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)

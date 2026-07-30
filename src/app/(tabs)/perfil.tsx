@@ -22,7 +22,7 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const { loadState, errorMessage, reload, sessions, stats, streak, xp, achievements } = useProgress();
+  const { loadState, errorMessage, reload, sessions, stats, streak, xp, level, achievements } = useProgress();
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -77,9 +77,9 @@ export default function PerfilScreen() {
                 </OrganicText>
               </OrganicSurface>
               <OrganicSurface backgroundColor="backgroundElement" style={styles.statCard}>
-                <OrganicText size="title">{xp}</OrganicText>
+                <OrganicText size="title">{`nível ${level}`}</OrganicText>
                 <OrganicText size="small" color="textSecondary">
-                  XP
+                  {xp} XP
                 </OrganicText>
               </OrganicSurface>
               <OrganicSurface backgroundColor="backgroundElement" style={styles.statCard}>

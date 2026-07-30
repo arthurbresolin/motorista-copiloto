@@ -14,6 +14,7 @@ import { getQuizSessions, type QuizSession } from '@/api/quiz';
 import {
   computeAchievements,
   computeLastSevenDays,
+  computeLevel,
   computeSkillProgress,
   computeStreak,
   computeXp,
@@ -65,9 +66,16 @@ export function useProgress() {
 
   const streak = computeStreak(sessions);
   const weekDays = computeLastSevenDays(sessions);
-  const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length);
+  const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length, monitorSessions);
+  const level = computeLevel(xp);
   const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions);
-  const achievements = computeAchievements(sessions, streak, monitorSessions, quizSessions.length);
+  const achievements = computeAchievements(
+    sessions,
+    streak,
+    monitorSessions,
+    quizSessions.length,
+    stats?.total_km ?? 0,
+  );
 
   return {
     loadState,
@@ -81,6 +89,7 @@ export function useProgress() {
     streak,
     weekDays,
     xp,
+    level,
     skillProgress,
     achievements,
   };

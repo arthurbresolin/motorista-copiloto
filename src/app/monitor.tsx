@@ -27,7 +27,7 @@ function formatDuration(totalSeconds: number) {
 
 export default function MonitorScreen() {
   const insets = useSafeAreaInsets();
-  const { state, eventCount, alertVisible, start, stop } = useDrivingMonitor();
+  const { state, eventCount, severeEventCount, alertVisible, start, stop } = useDrivingMonitor();
 
   const [history, setHistory] = useState<MonitorSession[]>([]);
   const [historyState, setHistoryState] = useState<HistoryState>('loading');
@@ -63,6 +63,7 @@ export default function MonitorScreen() {
       started_at: summary.startedAt.toISOString(),
       duration_seconds: summary.durationSeconds,
       event_count: summary.eventCount,
+      severe_event_count: summary.severeEventCount,
       route: summary.route.length > 0 ? summary.route : null,
     })
       .then(loadHistory)
@@ -130,7 +131,9 @@ export default function MonitorScreen() {
               <OrganicText color="textSecondary">
                 {eventCount === 0
                   ? 'Nenhum movimento brusco até agora.'
-                  : `${eventCount} movimento(s) brusco(s) detectado(s).`}
+                  : `${eventCount} movimento(s) brusco(s) detectado(s)${
+                      severeEventCount > 0 ? ` (${severeEventCount} grave(s))` : ''
+                    }.`}
               </OrganicText>
               <OrganicButton label="Parar monitoramento" variant="neutral" onPress={handleStop} />
             </View>
@@ -169,7 +172,9 @@ export default function MonitorScreen() {
                       {formatDuration(session.duration_seconds)} ·{' '}
                       {session.event_count === 0
                         ? 'nenhum movimento brusco'
-                        : `${session.event_count} movimento(s) brusco(s)`}
+                        : `${session.event_count} movimento(s) brusco(s)${
+                            session.severe_event_count > 0 ? ` (${session.severe_event_count} grave(s))` : ''
+                          }`}
                     </OrganicText>
                     {session.route && session.route.length > 0 && <RouteMap points={session.route} />}
                   </OrganicSurface>

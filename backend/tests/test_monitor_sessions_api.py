@@ -88,3 +88,27 @@ async def test_create_monitor_session_without_route(client, session_factory):
 
     assert response.status_code == 201
     assert response.json()["route"] is None
+
+
+async def test_create_monitor_session_defaults_severe_event_count_to_zero(client, session_factory):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+
+    assert response.status_code == 201
+    assert response.json()["severe_event_count"] == 0
+
+
+async def test_create_monitor_session_with_severe_event_count(client, session_factory):
+    payload = {**VALID_PAYLOAD, "event_count": 5, "severe_event_count": 2}
+
+    response = await client.post("/monitor-sessions", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["severe_event_count"] == 2
+
+
+async def test_create_monitor_session_rejects_negative_severe_event_count(client, session_factory):
+    payload = {**VALID_PAYLOAD, "severe_event_count": -1}
+
+    response = await client.post("/monitor-sessions", json=payload)
+
+    assert response.status_code == 422

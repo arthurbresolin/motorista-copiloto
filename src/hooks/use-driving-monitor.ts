@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import type { RoutePoint } from '@/api/monitor-sessions';
-import { isHarshEvent, type AccelerometerReading } from '@/lib/harsh-event-detector';
+import { classifyEvent, type AccelerometerReading, type EventSeverity } from '@/lib/harsh-event-detector';
 
 const LOCATION_OPTIONS: Location.LocationOptions = {
   accuracy: Location.Accuracy.Balanced,
@@ -22,15 +22,17 @@ export type DrivingMonitorSummary = {
   startedAt: Date;
   durationSeconds: number;
   eventCount: number;
+  severeEventCount: number;
   route: RoutePoint[];
 };
 
 // Sensor de acelerômetro + GPS, extraído de monitor.tsx pra ser reaproveitado
 // tanto pela tela de Monitor isolada quanto pelo Modo Copiloto (que liga o
 // sensor junto com a voz guiando o exercício).
-export function useDrivingMonitor(onHarshEvent?: () => void) {
+export function useDrivingMonitor(onHarshEvent?: (severity: EventSeverity) => void) {
   const [state, setState] = useState<DrivingMonitorState>('idle');
   const [eventCount, setEventCount] = useState(0);
+  const [severeEventCount, setSevereEventCount] = useState(0);
   const [alertVisible, setAlertVisible] = useState(false);
 
   const subscriptionRef = useRef<ReturnType<typeof Accelerometer.addListener> | null>(null);
@@ -107,16 +109,23 @@ export function useDrivingMonitor(onHarshEvent?: () => void) {
     previousReadingRef.current = null;
     startedAtRef.current = new Date();
     setEventCount(0);
+    setSevereEventCount(0);
 
     try {
       Accelerometer.setUpdateInterval(UPDATE_INTERVAL_MS);
       subscriptionRef.current = Accelerometer.addListener((reading) => {
         const previous = previousReadingRef.current;
-        if (previous && isHarshEvent(previous, reading)) {
-          setEventCount((count) => count + 1);
-          markLastRoutePointHarsh();
-          showAlert();
-          onHarshEventRef.current?.();
+        if (previous) {
+          const severity = classifyEvent(previous, reading);
+          if (severity !== 'none') {
+            setEventCount((count) => count + 1);
+            if (severity === 'severe') {
+              setSevereEventCount((count) => count + 1);
+            }
+            markLastRoutePointHarsh();
+            showAlert();
+            onHarshEventRef.current?.(severity);
+          }
         }
         previousReadingRef.current = reading;
       });
@@ -152,8 +161,8 @@ export function useDrivingMonitor(onHarshEvent?: () => void) {
     }
 
     const durationSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
-    return { startedAt, durationSeconds, eventCount, route };
-  }, [eventCount]);
+    return { startedAt, durationSeconds, eventCount, severeEventCount, route };
+  }, [eventCount, severeEventCount]);
 
   useEffect(() => {
     return () => {
@@ -165,5 +174,5 @@ export function useDrivingMonitor(onHarshEvent?: () => void) {
     };
   }, []);
 
-  return { state, eventCount, alertVisible, start, stop };
+  return { state, eventCount, severeEventCount, alertVisible, start, stop };
 }

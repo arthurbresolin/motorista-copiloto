@@ -16,7 +16,8 @@ import { computeRouteDistanceKm } from '@/lib/route-projection';
 
 type Phase = 'ready' | 'playing' | 'saving' | 'finished';
 
-const HARSH_EVENT_CUE = 'Freada ou aceleração brusca — tenta suavizar.';
+const MODERATE_EVENT_CUE = 'Freada ou aceleração brusca — tenta suavizar.';
+const SEVERE_EVENT_CUE = 'Movimento muito brusco! Vai com mais calma no acelerador e no freio.';
 const AUTO_ADVANCE_DELAY_MS = 2000;
 
 export default function CopilotoScreen() {
@@ -29,15 +30,20 @@ export default function CopilotoScreen() {
 
   const [phase, setPhase] = useState<Phase>('ready');
   const [stepIndex, setStepIndex] = useState(0);
-  const [savedSummary, setSavedSummary] = useState<{ minutes: number; km: number; events: number } | null>(
-    null,
-  );
+  const [savedSummary, setSavedSummary] = useState<{
+    minutes: number;
+    km: number;
+    events: number;
+    severeEvents: number;
+  } | null>(null);
   const [coachMessage, setCoachMessage] = useState<string | null>(null);
   const sessionStartedAtRef = useRef<Date | null>(null);
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleNextRef = useRef<() => void>(() => {});
 
-  const monitor = useDrivingMonitor(() => Speech.speak(HARSH_EVENT_CUE, { language: 'pt-BR' }));
+  const monitor = useDrivingMonitor((severity) =>
+    Speech.speak(severity === 'severe' ? SEVERE_EVENT_CUE : MODERATE_EVENT_CUE, { language: 'pt-BR' }),
+  );
 
   function clearAutoAdvance() {
     if (autoAdvanceTimeoutRef.current) {
@@ -86,6 +92,7 @@ export default function CopilotoScreen() {
     const durationMinutes = Math.max(1, Math.round((Date.now() - startedAt.getTime()) / 60000));
     const distanceKm = summary ? Math.round(computeRouteDistanceKm(summary.route) * 10) / 10 : 0;
     const eventCount = summary?.eventCount ?? 0;
+    const severeEventCount = summary?.severeEventCount ?? 0;
 
     try {
       if (summary) {
@@ -93,6 +100,7 @@ export default function CopilotoScreen() {
           started_at: summary.startedAt.toISOString(),
           duration_seconds: summary.durationSeconds,
           event_count: summary.eventCount,
+          severe_event_count: summary.severeEventCount,
           route: summary.route.length > 0 ? summary.route : null,
         });
       }
@@ -118,7 +126,7 @@ export default function CopilotoScreen() {
       // Sessão já foi vivida; falha ao salvar não pode travar a tela de conclusão.
     }
 
-    setSavedSummary({ minutes: durationMinutes, km: distanceKm, events: eventCount });
+    setSavedSummary({ minutes: durationMinutes, km: distanceKm, events: eventCount, severeEvents: severeEventCount });
     setPhase('finished');
   }, [monitor, skill]);
 
@@ -232,7 +240,9 @@ export default function CopilotoScreen() {
                 {savedSummary.minutes} min · {savedSummary.km} km ·{' '}
                 {savedSummary.events === 0
                   ? 'nenhum movimento brusco'
-                  : `${savedSummary.events} movimento(s) brusco(s)`}
+                  : `${savedSummary.events} movimento(s) brusco(s)${
+                      savedSummary.severeEvents > 0 ? ` (${savedSummary.severeEvents} grave(s))` : ''
+                    }`}
               </OrganicText>
               <OrganicText color="textSecondary" style={styles.centerText}>
                 Sessão já registrada — não precisa preencher nada.
