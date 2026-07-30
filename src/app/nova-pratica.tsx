@@ -16,16 +16,9 @@ import {
 import { MANEUVER_OPTIONS } from '@/constants/skills';
 import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, RadiusPill, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { todayIsoDate } from '@/lib/format';
 
 type CarsLoadState = 'loading' | 'error' | 'ready';
-
-function todayIsoDate() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 function parseDecimal(value: string) {
   return Number(value.trim().replace(',', '.'));

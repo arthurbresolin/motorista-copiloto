@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class PracticeSessionCreate(BaseModel):
     practiced_at: date
     duration_minutes: int = Field(gt=0)
-    distance_km: float = Field(gt=0)
+    distance_km: float = Field(ge=0)
     maneuvers: list[str] = []
     notes: str | None = None
     car_id: int | None = None

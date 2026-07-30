@@ -1,12 +1,21 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Speech from 'expo-speech';
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { createMonitorSession } from '@/api/monitor-sessions';
+import { createPracticeSession } from '@/api/practice-sessions';
 import { OrganicButton, OrganicProgressBar, OrganicText, ScreenBackground } from '@/components/organic';
 import { SKILLS } from '@/constants/skills';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useDrivingMonitor } from '@/hooks/use-driving-monitor';
+import { todayIsoDate } from '@/lib/format';
+import { computeRouteDistanceKm } from '@/lib/route-projection';
+
+type Phase = 'ready' | 'playing' | 'saving' | 'finished';
+
+const HARSH_EVENT_CUE = 'Freada ou aceleração brusca — tenta suavizar.';
 
 export default function CopilotoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,17 +25,72 @@ export default function CopilotoScreen() {
   const skill = SKILLS.find((candidate) => candidate.key === id && candidate.maneuver);
   const steps = skill?.tips ?? [];
 
+  const [phase, setPhase] = useState<Phase>('ready');
   const [stepIndex, setStepIndex] = useState(0);
-  const isFinished = stepIndex >= steps.length;
+  const [savedSummary, setSavedSummary] = useState<{ minutes: number; km: number; events: number } | null>(
+    null,
+  );
+  const sessionStartedAtRef = useRef<Date | null>(null);
 
-  useEffect(() => {
-    if (!isFinished && steps[stepIndex]) {
-      Speech.speak(steps[stepIndex], { language: 'pt-BR' });
+  const monitor = useDrivingMonitor(() => Speech.speak(HARSH_EVENT_CUE, { language: 'pt-BR' }));
+
+  function speakStep(index: number) {
+    if (steps[index]) {
+      Speech.speak(steps[index], { language: 'pt-BR' });
     }
-    return () => {
-      Speech.stop();
-    };
-  }, [stepIndex, isFinished, steps]);
+  }
+
+  function handleStart() {
+    sessionStartedAtRef.current = new Date();
+    monitor.start();
+    setPhase('playing');
+    speakStep(0);
+  }
+
+  const finishSession = useCallback(async () => {
+    setPhase('saving');
+    Speech.speak('Exercício concluído. Mandou bem!', { language: 'pt-BR' });
+
+    const summary = monitor.stop();
+    const startedAt = sessionStartedAtRef.current ?? new Date();
+    const durationMinutes = Math.max(1, Math.round((Date.now() - startedAt.getTime()) / 60000));
+    const distanceKm = summary ? Math.round(computeRouteDistanceKm(summary.route) * 10) / 10 : 0;
+    const eventCount = summary?.eventCount ?? 0;
+
+    try {
+      if (summary) {
+        await createMonitorSession({
+          started_at: summary.startedAt.toISOString(),
+          duration_seconds: summary.durationSeconds,
+          event_count: summary.eventCount,
+          route: summary.route.length > 0 ? summary.route : null,
+        });
+      }
+      await createPracticeSession({
+        practiced_at: todayIsoDate(),
+        duration_minutes: durationMinutes,
+        distance_km: distanceKm,
+        maneuvers: skill?.maneuver ? [skill.maneuver] : [],
+        notes: 'Registrado via Modo Copiloto',
+        car_id: null,
+      });
+    } catch {
+      // Sessão já foi vivida; falha ao salvar não pode travar a tela de conclusão.
+    }
+
+    setSavedSummary({ minutes: durationMinutes, km: distanceKm, events: eventCount });
+    setPhase('finished');
+  }, [monitor, skill]);
+
+  function handleNext() {
+    const nextIndex = stepIndex + 1;
+    if (nextIndex < steps.length) {
+      setStepIndex(nextIndex);
+      speakStep(nextIndex);
+      return;
+    }
+    finishSession();
+  }
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -56,11 +120,27 @@ export default function CopilotoScreen() {
         contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
         <Stack.Screen options={{ title: `Copiloto · ${skill.label}` }} />
         <View style={styles.container}>
-          {!isFinished && (
+          {phase === 'ready' && (
+            <View style={styles.stepWrapper}>
+              <OrganicText size="title" style={styles.centerText}>
+                {skill.label}
+              </OrganicText>
+              <OrganicText color="textSecondary" style={styles.centerText}>
+                O celular vai falar cada passo em voz alta e o sensor de movimento liga junto.
+                Encaixe o celular no painel antes de começar.
+              </OrganicText>
+              <View style={styles.actionsWrapper}>
+                <OrganicButton label="🎙️ Começar exercício" onPress={handleStart} />
+              </View>
+            </View>
+          )}
+
+          {phase === 'playing' && (
             <>
               <View style={styles.progressWrapper}>
                 <OrganicText size="small" color="textSecondary">
                   Passo {stepIndex + 1} de {steps.length}
+                  {monitor.state === 'monitoring' ? ' · sensor ativo' : ''}
                 </OrganicText>
                 <OrganicProgressBar progress={(stepIndex + 1) / steps.length} />
               </View>
@@ -75,28 +155,41 @@ export default function CopilotoScreen() {
                 <OrganicButton
                   label="🔊 Repetir"
                   variant="neutral"
-                  onPress={() => Speech.speak(steps[stepIndex], { language: 'pt-BR' })}
+                  onPress={() => speakStep(stepIndex)}
                 />
                 <OrganicButton
                   label={stepIndex + 1 < steps.length ? 'Próximo passo' : 'Concluir'}
-                  onPress={() => setStepIndex((current) => current + 1)}
+                  onPress={handleNext}
                 />
               </View>
             </>
           )}
 
-          {isFinished && (
+          {phase === 'saving' && (
+            <View style={styles.stepWrapper}>
+              <OrganicText size="title" style={styles.centerText}>
+                Salvando sessão…
+              </OrganicText>
+            </View>
+          )}
+
+          {phase === 'finished' && savedSummary && (
             <View style={styles.stepWrapper}>
               <OrganicText size="title" style={styles.centerText}>
                 Exercício concluído! 🎉
               </OrganicText>
               <OrganicText color="textSecondary" style={styles.centerText}>
-                Agora é hora de praticar de verdade.
+                {savedSummary.minutes} min · {savedSummary.km} km ·{' '}
+                {savedSummary.events === 0
+                  ? 'nenhum movimento brusco'
+                  : `${savedSummary.events} movimento(s) brusco(s)`}
+              </OrganicText>
+              <OrganicText color="textSecondary" style={styles.centerText}>
+                Sessão já registrada — não precisa preencher nada.
               </OrganicText>
 
               <View style={styles.actionsWrapper}>
-                <OrganicButton label="🚗 Praticar agora" onPress={() => router.push('/nova-pratica')} />
-                <OrganicButton label="Voltar" variant="neutral" onPress={() => router.back()} />
+                <OrganicButton label="Voltar pra trilha" onPress={() => router.back()} />
               </View>
             </View>
           )}

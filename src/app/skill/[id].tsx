@@ -143,7 +143,7 @@ export default function SkillDetailScreen() {
               />
             )}
             <OrganicButton
-              label="🚗 Praticar agora"
+              label={skill.maneuver ? '📝 Registrar prática manual' : '🚗 Praticar agora'}
               variant={skill.maneuver ? 'neutral' : 'accent'}
               onPress={() => router.push('/nova-pratica')}
             />
@@ -152,7 +152,9 @@ export default function SkillDetailScreen() {
               variant="neutral"
               onPress={() => router.push(`/quiz/${skill.key}`)}
             />
-            <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
+            {!skill.maneuver && (
+              <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
+            )}
           </View>
         )}
         </View>
