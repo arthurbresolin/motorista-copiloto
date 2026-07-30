@@ -136,7 +136,17 @@ export default function SkillDetailScreen() {
               ))}
             </OrganicSurface>
 
-            <OrganicButton label="🚗 Praticar agora" onPress={() => router.push('/nova-pratica')} />
+            {skill.maneuver && (
+              <OrganicButton
+                label="🎙️ Modo Copiloto"
+                onPress={() => router.push(`/copiloto/${skill.key}`)}
+              />
+            )}
+            <OrganicButton
+              label="🚗 Praticar agora"
+              variant={skill.maneuver ? 'neutral' : 'accent'}
+              onPress={() => router.push('/nova-pratica')}
+            />
             <OrganicButton
               label="❓ Quiz rápido"
               variant="neutral"
