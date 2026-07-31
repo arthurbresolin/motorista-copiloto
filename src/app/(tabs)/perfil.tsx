@@ -38,9 +38,11 @@ export default function PerfilScreen() {
       const invite = await createInstructorInvite();
       setInviteToken(invite.token);
       setInviteState('ready');
-      Share.share({
-        message: `Acompanha meu progresso no Motorista Copiloto! Abre o app, vai em "Área do instrutor" > "Tenho um código de convite" e usa este código: ${invite.token}`,
-      }).catch(() => {});
+      const webUrl = process.env.EXPO_PUBLIC_WEB_URL;
+      const message = webUrl
+        ? `Acompanha meu progresso no Motorista Copiloto! Abre este link: ${webUrl}/instrutor/aceitar?codigo=${invite.token}`
+        : `Acompanha meu progresso no Motorista Copiloto! Abre o app, vai em "Área do instrutor" > "Tenho um código de convite" e usa este código: ${invite.token}`;
+      Share.share({ message }).catch(() => {});
     } catch (error) {
       setInviteError(
         error instanceof ApiError ? error.message : 'Não foi possível gerar o convite.',
