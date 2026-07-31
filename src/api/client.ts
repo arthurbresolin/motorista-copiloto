@@ -14,8 +14,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
       ...options,
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
     });
   } catch {
     throw new ApiError('Não foi possível conectar ao servidor. Verifique sua conexão.');
@@ -33,7 +33,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  get: <T>(path: string, options?: RequestInit) => request<T>(path, options),
+  post: <T>(path: string, body: unknown, options?: RequestInit) =>
+    request<T>(path, { ...options, method: 'POST', body: JSON.stringify(body) }),
 };

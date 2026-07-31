@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ApiError } from '@/api/client';
+import { createInstructorInvite } from '@/api/instructors';
 import {
   MascPlaceholder,
   OrganicButton,
-  OrganicPill,
   OrganicSurface,
   OrganicText,
   ScreenBackground,
@@ -17,6 +19,8 @@ import { formatHoursMinutes } from '@/lib/format';
 
 const TREND_CHART_HEIGHT = 44;
 
+type InviteState = 'idle' | 'loading' | 'ready' | 'error';
+
 export default function PerfilScreen() {
   const router = useRouter();
   const safeAreaInsets = useSafeAreaInsets();
@@ -24,6 +28,27 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
+  const [inviteState, setInviteState] = useState<InviteState>('idle');
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState('');
+
+  async function handleInviteInstructor() {
+    setInviteState('loading');
+    try {
+      const invite = await createInstructorInvite();
+      setInviteToken(invite.token);
+      setInviteState('ready');
+      Share.share({
+        message: `Acompanha meu progresso no Motorista Copiloto! Abre o app, vai em "Área do instrutor" > "Tenho um código de convite" e usa este código: ${invite.token}`,
+      }).catch(() => {});
+    } catch (error) {
+      setInviteError(
+        error instanceof ApiError ? error.message : 'Não foi possível gerar o convite.',
+      );
+      setInviteState('error');
+    }
+  }
+
   const {
     loadState,
     errorMessage,
@@ -185,18 +210,69 @@ export default function PerfilScreen() {
               </View>
             </OrganicSurface>
 
-            <OrganicSurface backgroundColor="backgroundElement" shadow={false} style={styles.disabledCard}>
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
               <OrganicText size="small">Instrutor / acompanhante</OrganicText>
               <OrganicText size="small" color="textSecondary">
-                Convide quem te acompanha pra ver seu progresso e avaliar suas manobras.
+                Convide quem te acompanha pra ver seu progresso — ele cria uma conta própria
+                pra acessar um painel só de leitura.
               </OrganicText>
-              <OrganicPill label="em breve" backgroundColor="backgroundSelected" textColor="textSecondary" />
+
+              {inviteState === 'idle' && (
+                <OrganicButton
+                  label="🔗 Convidar instrutor"
+                  variant="neutral"
+                  onPress={handleInviteInstructor}
+                />
+              )}
+
+              {inviteState === 'loading' && (
+                <View style={styles.centerContent}>
+                  <ActivityIndicator />
+                </View>
+              )}
+
+              {inviteState === 'error' && (
+                <>
+                  <OrganicText size="small" color="textSecondary">
+                    {inviteError}
+                  </OrganicText>
+                  <OrganicButton
+                    label="Tentar novamente"
+                    variant="neutral"
+                    onPress={handleInviteInstructor}
+                  />
+                </>
+              )}
+
+              {inviteState === 'ready' && inviteToken && (
+                <>
+                  <OrganicSurface backgroundColor="backgroundSelected" inset shadow={false} style={styles.inviteCodeBox}>
+                    <OrganicText size="small" style={styles.inviteCode}>
+                      {inviteToken}
+                    </OrganicText>
+                  </OrganicSurface>
+                  <OrganicText size="small" color="textSecondary">
+                    Compartilhe este código — ele vale só uma vez. A pessoa usa em "Área do
+                    instrutor" dentro do app.
+                  </OrganicText>
+                  <OrganicButton
+                    label="Gerar outro código"
+                    variant="neutral"
+                    onPress={handleInviteInstructor}
+                  />
+                </>
+              )}
             </OrganicSurface>
 
             <OrganicButton
               label="🚗 Meus carros"
               variant="neutral"
               onPress={() => router.push('/meu-carro')}
+            />
+            <OrganicButton
+              label="🎓 Área do instrutor"
+              variant="neutral"
+              onPress={() => router.push('/instrutor')}
             />
           </View>
         )}
@@ -284,9 +360,11 @@ const styles = StyleSheet.create({
   achievementLabel: {
     textAlign: 'center',
   },
-  disabledCard: {
-    gap: Spacing.one,
+  inviteCodeBox: {
     padding: Spacing.three,
-    opacity: 0.6,
+    alignItems: 'center',
+  },
+  inviteCode: {
+    fontFamily: 'monospace',
   },
 });

@@ -38,7 +38,8 @@
         {
           "locationWhenInUsePermission": "Usado pra registrar o trajeto da sua sessão de prática no Monitor de direção."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
