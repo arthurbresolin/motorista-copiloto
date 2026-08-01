@@ -14,6 +14,10 @@ export type Skill = {
   maneuver?: string;
   description: string;
   tips: string[];
+  // Manobras cujo resultado é uma posição final (estacionar) se beneficiam
+  // de uma foto avaliada pela IA no fim do Modo Copiloto — não faz sentido
+  // pra manobras de trajeto (curva, rotatória) sem posição final clara.
+  supportsPhotoFeedback?: boolean;
 };
 
 export const MANEUVER_OPTIONS = ['Baliza', 'Rotatória', 'Estacionamento', 'Rodovia', 'Curva', 'Marcha à ré'];
@@ -29,6 +33,7 @@ export const SKILLS: Skill[] = [
       'Vire o volante todo pra direita ao começar a marcha à ré e observe os retrovisores.',
       'Endireite as rodas assim que o carro entrar na vaga, checando a distância dos dois lados.',
     ],
+    supportsPhotoFeedback: true,
   },
   {
     key: 'rotatoria',
@@ -51,6 +56,7 @@ export const SKILLS: Skill[] = [
       'Use os retrovisores e o espelho interno pra calcular a distância.',
       'Alinhe o carro devagar, corrigindo o volante aos poucos.',
     ],
+    supportsPhotoFeedback: true,
   },
   {
     key: 'rodovia',

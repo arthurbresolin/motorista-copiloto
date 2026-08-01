@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_db
 from app.models import MonitorSession, PracticeSession
-from app.schemas.coach import CoachFeedback
+from app.schemas.coach import CoachFeedback, PhotoFeedbackRequest
 
 router = APIRouter(prefix="/coach", tags=["coach"])
 
@@ -20,6 +20,16 @@ SYSTEM_PROMPT = (
     "fornecidos — não invente dados. Se a tendência estiver melhorando, celebre isso "
     "com um número concreto. Se não houver dado suficiente para comparar, apenas "
     "comente a sessão atual. Não use saudações nem se apresente."
+)
+
+PHOTO_SYSTEM_PROMPT = (
+    "Você é um instrutor de direção experiente e encorajador, olhando uma foto do "
+    "resultado de uma manobra de estacionamento que um aluno acabou de praticar. "
+    "Responda em português do Brasil, em 1 ou 2 frases curtas. Comente o alinhamento "
+    "do carro, a distância dos veículos ou meio-fio vizinhos, e qualquer coisa que "
+    "valha a pena ajustar da próxima vez. Se não der pra avaliar direito pela foto "
+    "(ângulo ruim, muito longe, não é possível ver um carro estacionado), diga isso "
+    "em vez de inventar uma avaliação. Não use saudações nem se apresente."
 )
 
 
@@ -90,6 +100,56 @@ async def get_practice_session_feedback(session_id: int, db: AsyncSession = Depe
             max_tokens=300,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}],
+        )
+    except anthropic.APIError:
+        return CoachFeedback(available=False)
+
+    if response.stop_reason == "refusal":
+        return CoachFeedback(available=False)
+
+    text = next((block.text for block in response.content if block.type == "text"), None)
+    if not text:
+        return CoachFeedback(available=False)
+
+    return CoachFeedback(available=True, message=text.strip())
+
+
+@router.post("/practice-sessions/{session_id}/photo-feedback", response_model=CoachFeedback)
+async def get_practice_session_photo_feedback(
+    session_id: int, payload: PhotoFeedbackRequest, db: AsyncSession = Depends(get_db)
+):
+    session = await db.get(PracticeSession, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="sessão de prática não encontrada")
+
+    if not settings.anthropic_api_key:
+        return CoachFeedback(available=False)
+
+    maneuver = ", ".join(session.maneuvers) if session.maneuvers else "estacionamento"
+    prompt_text = f"Manobra praticada: {maneuver}. Avalie o resultado nesta foto."
+
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=300,
+            system=PHOTO_SYSTEM_PROMPT,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": payload.media_type,
+                                "data": payload.image_base64,
+                            },
+                        },
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ],
         )
     except anthropic.APIError:
         return CoachFeedback(available=False)

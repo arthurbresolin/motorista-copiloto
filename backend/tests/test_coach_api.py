@@ -97,3 +97,76 @@ async def test_feedback_unavailable_on_api_error(client, session_factory, monkey
 
     assert response.status_code == 200
     assert response.json() == {"available": False, "message": None}
+
+
+PHOTO_PAYLOAD = {"image_base64": "ZmFrZS1pbWFnZS1kYXRh", "media_type": "image/jpeg"}
+
+
+async def test_photo_feedback_not_found(client, session_factory):
+    response = await client.post("/coach/practice-sessions/999/photo-feedback", json=PHOTO_PAYLOAD)
+
+    assert response.status_code == 404
+
+
+async def test_photo_feedback_requires_image(client, session_factory):
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback", json={"image_base64": ""}
+    )
+
+    assert response.status_code == 422
+
+
+async def test_photo_feedback_unavailable_without_api_key(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", None)
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback", json=PHOTO_PAYLOAD
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "message": None}
+
+
+async def test_photo_feedback_available_with_api_key(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", "fake-key")
+    monkeypatch.setattr(anthropic.Anthropic, "__init__", lambda self, **kwargs: None)
+    monkeypatch.setattr(
+        anthropic.resources.Messages,
+        "create",
+        lambda self, **kwargs: FakeMessage("Carro bem alinhado, só ficou um pouco longe do meio-fio."),
+    )
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback", json=PHOTO_PAYLOAD
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["available"] is True
+    assert "alinhado" in body["message"]
+
+
+async def test_photo_feedback_unavailable_on_refusal(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", "fake-key")
+    monkeypatch.setattr(anthropic.Anthropic, "__init__", lambda self, **kwargs: None)
+    monkeypatch.setattr(
+        anthropic.resources.Messages,
+        "create",
+        lambda self, **kwargs: FakeMessage("", stop_reason="refusal"),
+    )
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback", json=PHOTO_PAYLOAD
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "message": None}
