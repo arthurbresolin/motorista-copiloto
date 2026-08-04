@@ -18,9 +18,12 @@ router = APIRouter(prefix="/coach", tags=["coach"])
 TREND_SESSION_COUNT = 5
 MODEL = "claude-opus-4-8"
 # Gemini tem camada gratuita (Anthropic não) — usado só pra análise de foto,
-# que é o recurso que precisa rodar sem custo. "flash" é o modelo rápido e
-# leve da família, adequado pra essa avaliação simples de uma imagem.
-PHOTO_MODEL = "gemini-2.5-flash"
+# que é o recurso que precisa rodar sem custo. "gemini-flash-latest" é um
+# alias mantido pelo Google que sempre aponta pro modelo flash atual —
+# evita fixar uma versão datada que vira obsoleta e passa a dar 404
+# ("no longer available") depois de um tempo, como aconteceu com
+# "gemini-2.5-flash" ao testar.
+PHOTO_MODEL = "gemini-flash-latest"
 
 SYSTEM_PROMPT = (
     "Você é um instrutor de direção experiente e encorajador, dando feedback rápido "
@@ -151,7 +154,12 @@ async def get_practice_session_photo_feedback(
                 prompt_text,
             ],
             config=genai_types.GenerateContentConfig(
-                system_instruction=PHOTO_SYSTEM_PROMPT, max_output_tokens=300
+                system_instruction=PHOTO_SYSTEM_PROMPT,
+                # gemini-flash-latest gasta uma parte do orçamento de tokens
+                # "pensando" antes de responder (visto na prática: ~500 tokens
+                # de thinking para uma resposta de ~35 tokens) — um limite
+                # baixo cortava a resposta no meio da frase antes de terminar.
+                max_output_tokens=1024,
             ),
         )
     except genai_errors.APIError:
