@@ -10,6 +10,7 @@ dependencies = [
     "anthropic>=0.120.2",
     "bcrypt>=4.1",
     "fastapi[standard]>=0.139.0",
+    "google-genai>=2.16.0",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.9",
     "sqlalchemy[asyncio]>=2.0.51",

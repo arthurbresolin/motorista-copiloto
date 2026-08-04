@@ -1,5 +1,10 @@
+import base64
+
 import anthropic
 from fastapi import APIRouter, Depends, HTTPException
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +17,10 @@ router = APIRouter(prefix="/coach", tags=["coach"])
 
 TREND_SESSION_COUNT = 5
 MODEL = "claude-opus-4-8"
+# Gemini tem camada gratuita (Anthropic não) — usado só pra análise de foto,
+# que é o recurso que precisa rodar sem custo. "flash" é o modelo rápido e
+# leve da família, adequado pra essa avaliação simples de uma imagem.
+PHOTO_MODEL = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = (
     "Você é um instrutor de direção experiente e encorajador, dando feedback rápido "
@@ -122,42 +131,40 @@ async def get_practice_session_photo_feedback(
     if session is None:
         raise HTTPException(status_code=404, detail="sessão de prática não encontrada")
 
-    if not settings.anthropic_api_key:
+    if not settings.google_api_key:
         return CoachFeedback(available=False)
 
     maneuver = ", ".join(session.maneuvers) if session.maneuvers else "estacionamento"
     prompt_text = f"Manobra praticada: {maneuver}. Avalie o resultado nesta foto."
 
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=300,
-            system=PHOTO_SYSTEM_PROMPT,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": payload.media_type,
-                                "data": payload.image_base64,
-                            },
-                        },
-                        {"type": "text", "text": prompt_text},
-                    ],
-                }
+        image_bytes = base64.b64decode(payload.image_base64)
+    except (ValueError, base64.binascii.Error):
+        return CoachFeedback(available=False)
+
+    client = genai.Client(api_key=settings.google_api_key)
+    try:
+        response = client.models.generate_content(
+            model=PHOTO_MODEL,
+            contents=[
+                genai_types.Part.from_bytes(data=image_bytes, mime_type=payload.media_type),
+                prompt_text,
             ],
+            config=genai_types.GenerateContentConfig(
+                system_instruction=PHOTO_SYSTEM_PROMPT, max_output_tokens=300
+            ),
         )
-    except anthropic.APIError:
+    except genai_errors.APIError:
         return CoachFeedback(available=False)
 
-    if response.stop_reason == "refusal":
+    candidate = response.candidates[0] if response.candidates else None
+    if candidate is not None and candidate.finish_reason not in (
+        genai_types.FinishReason.STOP,
+        genai_types.FinishReason.MAX_TOKENS,
+    ):
         return CoachFeedback(available=False)
 
-    text = next((block.text for block in response.content if block.type == "text"), None)
+    text = response.text
     if not text:
         return CoachFeedback(available=False)
 

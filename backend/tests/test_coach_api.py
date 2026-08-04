@@ -1,5 +1,8 @@
 import anthropic
 import httpx
+from google import genai
+from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 
 from app.core.config import settings
 
@@ -23,6 +26,30 @@ class FakeMessage:
     def __init__(self, text, stop_reason="end_turn"):
         self.content = [FakeTextBlock(text)]
         self.stop_reason = stop_reason
+
+
+class FakeCandidate:
+    def __init__(self, finish_reason):
+        self.finish_reason = finish_reason
+
+
+class FakeGeminiResponse:
+    def __init__(self, text, finish_reason=genai_types.FinishReason.STOP):
+        self.text = text
+        self.candidates = [FakeCandidate(finish_reason)]
+
+
+class FakeGeminiModels:
+    def __init__(self, response):
+        self._response = response
+
+    def generate_content(self, **kwargs):
+        return self._response
+
+
+def patch_genai_client(monkeypatch, response):
+    monkeypatch.setattr(genai.Client, "__init__", lambda self, **kwargs: None)
+    monkeypatch.setattr(genai.Client, "models", property(lambda self: FakeGeminiModels(response)))
 
 
 async def test_feedback_not_found(client, session_factory):
@@ -120,7 +147,7 @@ async def test_photo_feedback_requires_image(client, session_factory):
 
 
 async def test_photo_feedback_unavailable_without_api_key(client, session_factory, monkeypatch):
-    monkeypatch.setattr(settings, "anthropic_api_key", None)
+    monkeypatch.setattr(settings, "google_api_key", None)
     created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
     session_id = created.json()["id"]
 
@@ -133,12 +160,10 @@ async def test_photo_feedback_unavailable_without_api_key(client, session_factor
 
 
 async def test_photo_feedback_available_with_api_key(client, session_factory, monkeypatch):
-    monkeypatch.setattr(settings, "anthropic_api_key", "fake-key")
-    monkeypatch.setattr(anthropic.Anthropic, "__init__", lambda self, **kwargs: None)
-    monkeypatch.setattr(
-        anthropic.resources.Messages,
-        "create",
-        lambda self, **kwargs: FakeMessage("Carro bem alinhado, só ficou um pouco longe do meio-fio."),
+    monkeypatch.setattr(settings, "google_api_key", "fake-key")
+    patch_genai_client(
+        monkeypatch,
+        FakeGeminiResponse("Carro bem alinhado, só ficou um pouco longe do meio-fio."),
     )
     created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
     session_id = created.json()["id"]
@@ -153,19 +178,51 @@ async def test_photo_feedback_available_with_api_key(client, session_factory, mo
     assert "alinhado" in body["message"]
 
 
-async def test_photo_feedback_unavailable_on_refusal(client, session_factory, monkeypatch):
-    monkeypatch.setattr(settings, "anthropic_api_key", "fake-key")
-    monkeypatch.setattr(anthropic.Anthropic, "__init__", lambda self, **kwargs: None)
-    monkeypatch.setattr(
-        anthropic.resources.Messages,
-        "create",
-        lambda self, **kwargs: FakeMessage("", stop_reason="refusal"),
+async def test_photo_feedback_unavailable_on_safety_block(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "google_api_key", "fake-key")
+    patch_genai_client(
+        monkeypatch, FakeGeminiResponse(None, finish_reason=genai_types.FinishReason.SAFETY)
     )
     created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
     session_id = created.json()["id"]
 
     response = await client.post(
         f"/coach/practice-sessions/{session_id}/photo-feedback", json=PHOTO_PAYLOAD
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "message": None}
+
+
+async def test_photo_feedback_unavailable_on_api_error(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "google_api_key", "fake-key")
+
+    class RaisingModels:
+        def generate_content(self, **kwargs):
+            raise genai_errors.APIError(503, {"error": {"message": "overloaded"}})
+
+    monkeypatch.setattr(genai.Client, "__init__", lambda self, **kwargs: None)
+    monkeypatch.setattr(genai.Client, "models", property(lambda self: RaisingModels()))
+
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback", json=PHOTO_PAYLOAD
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"available": False, "message": None}
+
+
+async def test_photo_feedback_unavailable_on_invalid_base64(client, session_factory, monkeypatch):
+    monkeypatch.setattr(settings, "google_api_key", "fake-key")
+    created = await client.post("/practice-sessions", json=PRACTICE_PAYLOAD)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/coach/practice-sessions/{session_id}/photo-feedback",
+        json={"image_base64": "not-valid-base64!!!", "media_type": "image/jpeg"},
     )
 
     assert response.status_code == 200
