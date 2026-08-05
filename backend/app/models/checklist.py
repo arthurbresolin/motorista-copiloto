@@ -26,6 +26,7 @@ class ChecklistSession(Base):
     __tablename__ = "checklist_sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    learner_id: Mapped[int] = mapped_column(ForeignKey("learners.id"))
     executed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

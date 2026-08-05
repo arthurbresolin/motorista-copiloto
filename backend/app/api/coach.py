@@ -8,9 +8,10 @@ from google.genai import types as genai_types
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.learners import get_current_learner
 from app.core.config import settings
 from app.db.session import get_db
-from app.models import MonitorSession, PracticeSession
+from app.models import Learner, MonitorSession, PracticeSession
 from app.schemas.coach import CoachFeedback, PhotoFeedbackRequest
 
 router = APIRouter(prefix="/coach", tags=["coach"])
@@ -77,8 +78,17 @@ def _build_prompt(
 
 
 @router.get("/practice-sessions/{session_id}/feedback", response_model=CoachFeedback)
-async def get_practice_session_feedback(session_id: int, db: AsyncSession = Depends(get_db)):
-    session = await db.get(PracticeSession, session_id)
+async def get_practice_session_feedback(
+    session_id: int,
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
+):
+    result = await db.execute(
+        select(PracticeSession).where(
+            PracticeSession.id == session_id, PracticeSession.learner_id == learner.id
+        )
+    )
+    session = result.scalar_one_or_none()
     if session is None:
         raise HTTPException(status_code=404, detail="sessão de prática não encontrada")
 
@@ -87,7 +97,7 @@ async def get_practice_session_feedback(session_id: int, db: AsyncSession = Depe
 
     previous_result = await db.execute(
         select(PracticeSession)
-        .where(PracticeSession.id != session_id)
+        .where(PracticeSession.id != session_id, PracticeSession.learner_id == learner.id)
         .order_by(PracticeSession.practiced_at.desc(), PracticeSession.id.desc())
         .limit(TREND_SESSION_COUNT)
     )
@@ -98,6 +108,7 @@ async def get_practice_session_feedback(session_id: int, db: AsyncSession = Depe
     # usamos as sessões de monitor mais recentes como aproximação da tendência.
     monitor_result = await db.execute(
         select(MonitorSession)
+        .where(MonitorSession.learner_id == learner.id)
         .order_by(MonitorSession.started_at.desc())
         .limit(TREND_SESSION_COUNT)
     )
@@ -128,9 +139,17 @@ async def get_practice_session_feedback(session_id: int, db: AsyncSession = Depe
 
 @router.post("/practice-sessions/{session_id}/photo-feedback", response_model=CoachFeedback)
 async def get_practice_session_photo_feedback(
-    session_id: int, payload: PhotoFeedbackRequest, db: AsyncSession = Depends(get_db)
+    session_id: int,
+    payload: PhotoFeedbackRequest,
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
 ):
-    session = await db.get(PracticeSession, session_id)
+    result = await db.execute(
+        select(PracticeSession).where(
+            PracticeSession.id == session_id, PracticeSession.learner_id == learner.id
+        )
+    )
+    session = result.scalar_one_or_none()
     if session is None:
         raise HTTPException(status_code=404, detail="sessão de prática não encontrada")
 

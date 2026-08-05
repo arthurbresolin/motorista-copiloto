@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { Colors } from '@/constants/theme';
+import { LearnerSessionProvider, useLearnerSession } from '@/hooks/use-learner-session';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,6 +38,37 @@ const ClayDarkNavTheme: typeof DefaultTheme = {
   fonts: DarkTheme.fonts,
 };
 
+function RootNavigator() {
+  const { isLoggedIn, isChecking } = useLearnerSession();
+
+  if (isChecking) {
+    return null;
+  }
+
+  return (
+    <>
+      <AnimatedSplashOverlay />
+      <Stack>
+        <Stack.Protected guard={isLoggedIn}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="nova-pratica"
+            options={{ presentation: 'modal', title: 'Nova sessão de prática' }}
+          />
+          <Stack.Screen name="meu-carro" options={{ presentation: 'modal', title: 'Meus carros' }} />
+          <Stack.Screen
+            name="checklist"
+            options={{ presentation: 'modal', title: 'Checklist pré-direção' }}
+          />
+        </Stack.Protected>
+        <Stack.Protected guard={!isLoggedIn}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack.Protected>
+      </Stack>
+    </>
+  );
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useArchivo({
@@ -53,22 +85,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? ClayDarkNavTheme : ClayLightNavTheme}>
-      <AnimatedSplashOverlay />
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="nova-pratica"
-          options={{ presentation: 'modal', title: 'Nova sessão de prática' }}
-        />
-        <Stack.Screen
-          name="meu-carro"
-          options={{ presentation: 'modal', title: 'Meus carros' }}
-        />
-        <Stack.Screen
-          name="checklist"
-          options={{ presentation: 'modal', title: 'Checklist pré-direção' }}
-        />
-      </Stack>
+      <LearnerSessionProvider>
+        <RootNavigator />
+      </LearnerSessionProvider>
     </ThemeProvider>
   );
 }

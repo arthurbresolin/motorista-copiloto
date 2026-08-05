@@ -20,10 +20,12 @@ async def test_get_checklist_returns_items_in_order(client, session_factory):
     assert [item["title"] for item in response.json()] == ["Cinto", "Espelhos"]
 
 
-async def test_create_checklist_session_with_marked_items(client, session_factory):
+async def test_create_checklist_session_with_marked_items(client, session_factory, auth_headers):
     item_ids = await _add_items(session_factory, ["Cinto", "Espelhos"])
 
-    response = await client.post("/checklist/sessions", json={"item_ids": item_ids})
+    response = await client.post(
+        "/checklist/sessions", json={"item_ids": item_ids}, headers=auth_headers
+    )
 
     assert response.status_code == 201
     body = response.json()
@@ -32,19 +34,31 @@ async def test_create_checklist_session_with_marked_items(client, session_factor
     assert {item["title"] for item in body["items"]} == {"Cinto", "Espelhos"}
 
 
-async def test_create_checklist_session_rejects_unknown_item_id(client, session_factory):
-    response = await client.post("/checklist/sessions", json={"item_ids": [999]})
+async def test_create_checklist_session_requires_auth(client, session_factory):
+    item_ids = await _add_items(session_factory, ["Cinto"])
+
+    response = await client.post("/checklist/sessions", json={"item_ids": item_ids})
+
+    assert response.status_code == 401
+
+
+async def test_create_checklist_session_rejects_unknown_item_id(client, session_factory, auth_headers):
+    response = await client.post(
+        "/checklist/sessions", json={"item_ids": [999]}, headers=auth_headers
+    )
 
     assert response.status_code == 422
 
 
-async def test_list_checklist_sessions_most_recent_first(client, session_factory):
+async def test_list_checklist_sessions_most_recent_first(client, session_factory, auth_headers):
     item_ids = await _add_items(session_factory, ["Cinto"])
 
-    await client.post("/checklist/sessions", json={"item_ids": item_ids})
-    second = await client.post("/checklist/sessions", json={"item_ids": item_ids})
+    await client.post("/checklist/sessions", json={"item_ids": item_ids}, headers=auth_headers)
+    second = await client.post(
+        "/checklist/sessions", json={"item_ids": item_ids}, headers=auth_headers
+    )
 
-    response = await client.get("/checklist/sessions")
+    response = await client.get("/checklist/sessions", headers=auth_headers)
 
     assert response.status_code == 200
     body = response.json()

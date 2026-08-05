@@ -6,9 +6,18 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 
+from app.api.learners import get_current_learner
 from app.core.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.db.session import get_db
-from app.models import ChecklistSession, Instructor, InstructorInvite, MonitorSession, PracticeSession, QuizSession
+from app.models import (
+    ChecklistSession,
+    Instructor,
+    InstructorInvite,
+    Learner,
+    MonitorSession,
+    PracticeSession,
+    QuizSession,
+)
 from app.schemas.instructor import (
     InstructorAuthResponse,
     InstructorInviteRead,
@@ -29,7 +38,7 @@ async def get_current_instructor(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> Instructor:
-    instructor_id = decode_access_token(credentials.credentials)
+    instructor_id = decode_access_token(credentials.credentials, expected_role="instructor")
     if instructor_id is None:
         raise HTTPException(status_code=401, detail="token inválido ou expirado")
     instructor = await db.get(Instructor, instructor_id)
@@ -39,8 +48,10 @@ async def get_current_instructor(
 
 
 @router.post("/invites", response_model=InstructorInviteRead, status_code=201)
-async def create_instructor_invite(db: AsyncSession = Depends(get_db)):
-    invite = InstructorInvite(token=secrets.token_urlsafe(24))
+async def create_instructor_invite(
+    db: AsyncSession = Depends(get_db), learner: Learner = Depends(get_current_learner)
+):
+    invite = InstructorInvite(token=secrets.token_urlsafe(24), learner_id=learner.id)
     db.add(invite)
     await db.commit()
     await db.refresh(invite)
@@ -68,14 +79,17 @@ async def accept_instructor_invite(
         raise HTTPException(status_code=409, detail="já existe uma conta com este e-mail")
 
     instructor = Instructor(
-        email=payload.email, password_hash=hash_password(payload.password), name=payload.name
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        name=payload.name,
+        learner_id=invite.learner_id,
     )
     db.add(instructor)
     invite.used_at = sql_func.now()
     await db.commit()
     await db.refresh(instructor)
 
-    return InstructorAuthResponse(access_token=create_access_token(instructor.id))
+    return InstructorAuthResponse(access_token=create_access_token(instructor.id, role="instructor"))
 
 
 @router.post("/login", response_model=InstructorAuthResponse)
@@ -84,7 +98,7 @@ async def login_instructor(payload: InstructorLogin, db: AsyncSession = Depends(
     instructor = result.scalar_one_or_none()
     if instructor is None or not verify_password(payload.password, instructor.password_hash):
         raise HTTPException(status_code=401, detail="e-mail ou senha inválidos")
-    return InstructorAuthResponse(access_token=create_access_token(instructor.id))
+    return InstructorAuthResponse(access_token=create_access_token(instructor.id, role="instructor"))
 
 
 @router.get("/me", response_model=InstructorRead)
@@ -97,23 +111,31 @@ async def get_instructor_overview(
     instructor: Instructor = Depends(get_current_instructor), db: AsyncSession = Depends(get_db)
 ):
     practice_result = await db.execute(
-        select(PracticeSession).order_by(PracticeSession.practiced_at.desc(), PracticeSession.id.desc())
+        select(PracticeSession)
+        .where(PracticeSession.learner_id == instructor.learner_id)
+        .order_by(PracticeSession.practiced_at.desc(), PracticeSession.id.desc())
     )
     checklist_result = await db.execute(
-        select(ChecklistSession).order_by(ChecklistSession.executed_at.desc(), ChecklistSession.id.desc())
+        select(ChecklistSession)
+        .where(ChecklistSession.learner_id == instructor.learner_id)
+        .order_by(ChecklistSession.executed_at.desc(), ChecklistSession.id.desc())
     )
     monitor_result = await db.execute(
-        select(MonitorSession).order_by(MonitorSession.started_at.desc(), MonitorSession.id.desc())
+        select(MonitorSession)
+        .where(MonitorSession.learner_id == instructor.learner_id)
+        .order_by(MonitorSession.started_at.desc(), MonitorSession.id.desc())
     )
     quiz_result = await db.execute(
-        select(QuizSession).order_by(QuizSession.completed_at.desc(), QuizSession.id.desc())
+        select(QuizSession)
+        .where(QuizSession.learner_id == instructor.learner_id)
+        .order_by(QuizSession.completed_at.desc(), QuizSession.id.desc())
     )
     stats_result = await db.execute(
         select(
             func.count(PracticeSession.id),
             func.coalesce(func.sum(PracticeSession.duration_minutes), 0),
             func.coalesce(func.sum(PracticeSession.distance_km), 0.0),
-        )
+        ).where(PracticeSession.learner_id == instructor.learner_id)
     )
     total_sessions, total_minutes, total_km = stats_result.one()
 

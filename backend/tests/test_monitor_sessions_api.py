@@ -5,8 +5,8 @@ VALID_PAYLOAD = {
 }
 
 
-async def test_create_monitor_session(client, session_factory):
-    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+async def test_create_monitor_session(client, session_factory, auth_headers):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD, headers=auth_headers)
 
     assert response.status_code == 201
     body = response.json()
@@ -15,37 +15,47 @@ async def test_create_monitor_session(client, session_factory):
     assert body["event_count"] == 3
 
 
-async def test_create_monitor_session_rejects_missing_required_fields(client, session_factory):
-    response = await client.post("/monitor-sessions", json={"started_at": "2026-07-10T08:30:00Z"})
+async def test_create_monitor_session_requires_auth(client, session_factory):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+
+    assert response.status_code == 401
+
+
+async def test_create_monitor_session_rejects_missing_required_fields(
+    client, session_factory, auth_headers
+):
+    response = await client.post(
+        "/monitor-sessions", json={"started_at": "2026-07-10T08:30:00Z"}, headers=auth_headers
+    )
 
     assert response.status_code == 422
 
 
-async def test_create_monitor_session_rejects_negative_numbers(client, session_factory):
+async def test_create_monitor_session_rejects_negative_numbers(client, session_factory, auth_headers):
     payload = {**VALID_PAYLOAD, "event_count": -1}
 
-    response = await client.post("/monitor-sessions", json=payload)
+    response = await client.post("/monitor-sessions", json=payload, headers=auth_headers)
 
     assert response.status_code == 422
 
 
-async def test_create_monitor_session_allows_zero_events(client, session_factory):
+async def test_create_monitor_session_allows_zero_events(client, session_factory, auth_headers):
     payload = {**VALID_PAYLOAD, "event_count": 0}
 
-    response = await client.post("/monitor-sessions", json=payload)
+    response = await client.post("/monitor-sessions", json=payload, headers=auth_headers)
 
     assert response.status_code == 201
     assert response.json()["event_count"] == 0
 
 
-async def test_list_monitor_sessions_most_recent_first(client, session_factory):
+async def test_list_monitor_sessions_most_recent_first(client, session_factory, auth_headers):
     older = {**VALID_PAYLOAD, "started_at": "2026-07-01T08:00:00Z"}
     newer = {**VALID_PAYLOAD, "started_at": "2026-07-10T08:00:00Z"}
 
-    await client.post("/monitor-sessions", json=older)
-    await client.post("/monitor-sessions", json=newer)
+    await client.post("/monitor-sessions", json=older, headers=auth_headers)
+    await client.post("/monitor-sessions", json=newer, headers=auth_headers)
 
-    response = await client.get("/monitor-sessions")
+    response = await client.get("/monitor-sessions", headers=auth_headers)
 
     assert response.status_code == 200
     body = response.json()
@@ -54,61 +64,67 @@ async def test_list_monitor_sessions_most_recent_first(client, session_factory):
     assert body[1]["started_at"].startswith("2026-07-01")
 
 
-async def test_get_monitor_session_by_id(client, session_factory):
-    created = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+async def test_get_monitor_session_by_id(client, session_factory, auth_headers):
+    created = await client.post("/monitor-sessions", json=VALID_PAYLOAD, headers=auth_headers)
     session_id = created.json()["id"]
 
-    response = await client.get(f"/monitor-sessions/{session_id}")
+    response = await client.get(f"/monitor-sessions/{session_id}", headers=auth_headers)
 
     assert response.status_code == 200
     assert response.json()["id"] == session_id
 
 
-async def test_get_monitor_session_by_id_not_found(client, session_factory):
-    response = await client.get("/monitor-sessions/999")
+async def test_get_monitor_session_by_id_not_found(client, session_factory, auth_headers):
+    response = await client.get("/monitor-sessions/999", headers=auth_headers)
 
     assert response.status_code == 404
 
 
-async def test_create_monitor_session_with_route(client, session_factory):
+async def test_create_monitor_session_with_route(client, session_factory, auth_headers):
     route = [
         {"lat": -23.55, "lng": -46.63, "harsh": False},
         {"lat": -23.551, "lng": -46.631, "harsh": True},
     ]
 
-    response = await client.post("/monitor-sessions", json={**VALID_PAYLOAD, "route": route})
+    response = await client.post(
+        "/monitor-sessions", json={**VALID_PAYLOAD, "route": route}, headers=auth_headers
+    )
 
     assert response.status_code == 201
     body = response.json()
     assert body["route"] == route
 
 
-async def test_create_monitor_session_without_route(client, session_factory):
-    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+async def test_create_monitor_session_without_route(client, session_factory, auth_headers):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD, headers=auth_headers)
 
     assert response.status_code == 201
     assert response.json()["route"] is None
 
 
-async def test_create_monitor_session_defaults_severe_event_count_to_zero(client, session_factory):
-    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD)
+async def test_create_monitor_session_defaults_severe_event_count_to_zero(
+    client, session_factory, auth_headers
+):
+    response = await client.post("/monitor-sessions", json=VALID_PAYLOAD, headers=auth_headers)
 
     assert response.status_code == 201
     assert response.json()["severe_event_count"] == 0
 
 
-async def test_create_monitor_session_with_severe_event_count(client, session_factory):
+async def test_create_monitor_session_with_severe_event_count(client, session_factory, auth_headers):
     payload = {**VALID_PAYLOAD, "event_count": 5, "severe_event_count": 2}
 
-    response = await client.post("/monitor-sessions", json=payload)
+    response = await client.post("/monitor-sessions", json=payload, headers=auth_headers)
 
     assert response.status_code == 201
     assert response.json()["severe_event_count"] == 2
 
 
-async def test_create_monitor_session_rejects_negative_severe_event_count(client, session_factory):
+async def test_create_monitor_session_rejects_negative_severe_event_count(
+    client, session_factory, auth_headers
+):
     payload = {**VALID_PAYLOAD, "severe_event_count": -1}
 
-    response = await client.post("/monitor-sessions", json=payload)
+    response = await client.post("/monitor-sessions", json=payload, headers=auth_headers)
 
     assert response.status_code == 422

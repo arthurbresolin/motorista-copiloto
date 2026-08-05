@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.learners import get_current_learner
 from app.db.session import get_db
-from app.models import QuizQuestion, QuizSession
+from app.models import Learner, QuizQuestion, QuizSession
 from app.schemas.quiz import QuizPhaseRead, QuizQuestionRead, QuizSessionCreate, QuizSessionRead
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -34,14 +35,16 @@ def _phase_key(db_category: str | None) -> str:
     return "geral" if db_category is None else db_category
 
 
-async def _build_phases(db: AsyncSession) -> list[QuizPhaseRead]:
+async def _build_phases(db: AsyncSession, learner_id: int) -> list[QuizPhaseRead]:
     question_counts_result = await db.execute(
         select(QuizQuestion.category, func.count(QuizQuestion.id)).group_by(QuizQuestion.category)
     )
     question_counts = {_phase_key(category): count for category, count in question_counts_result.all()}
 
     sessions_result = await db.execute(
-        select(QuizSession.category, QuizSession.score, QuizSession.total_questions)
+        select(QuizSession.category, QuizSession.score, QuizSession.total_questions).where(
+            QuizSession.learner_id == learner_id
+        )
     )
     best_ratios: dict[str, tuple[int, int]] = {}
     for category, score, total_questions in sessions_result.all():
@@ -82,22 +85,26 @@ async def _build_phases(db: AsyncSession) -> list[QuizPhaseRead]:
     return phases
 
 
-async def _is_phase_unlocked(db: AsyncSession, phase_key: str) -> bool:
-    phases = await _build_phases(db)
+async def _is_phase_unlocked(db: AsyncSession, learner_id: int, phase_key: str) -> bool:
+    phases = await _build_phases(db, learner_id)
     phase = next((candidate for candidate in phases if _phase_key(candidate.category) == phase_key), None)
     return phase is not None and phase.unlocked
 
 
 @router.get("/phases", response_model=list[QuizPhaseRead])
-async def list_quiz_phases(db: AsyncSession = Depends(get_db)):
-    return await _build_phases(db)
+async def list_quiz_phases(
+    db: AsyncSession = Depends(get_db), learner: Learner = Depends(get_current_learner)
+):
+    return await _build_phases(db, learner.id)
 
 
 @router.get("/questions", response_model=list[QuizQuestionRead])
 async def list_quiz_questions(
-    category: str | None = Query(default=None), db: AsyncSession = Depends(get_db)
+    category: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
 ):
-    if category is not None and not await _is_phase_unlocked(db, category):
+    if category is not None and not await _is_phase_unlocked(db, learner.id, category):
         raise HTTPException(
             status_code=403, detail="Complete a fase anterior com pelo menos 70% para liberar esta."
         )
@@ -110,8 +117,12 @@ async def list_quiz_questions(
 
 
 @router.post("/sessions", response_model=QuizSessionRead, status_code=201)
-async def create_quiz_session(payload: QuizSessionCreate, db: AsyncSession = Depends(get_db)):
-    if payload.category is not None and not await _is_phase_unlocked(db, payload.category):
+async def create_quiz_session(
+    payload: QuizSessionCreate,
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
+):
+    if payload.category is not None and not await _is_phase_unlocked(db, learner.id, payload.category):
         raise HTTPException(
             status_code=403, detail="Complete a fase anterior com pelo menos 70% para liberar esta."
         )
@@ -131,6 +142,7 @@ async def create_quiz_session(payload: QuizSessionCreate, db: AsyncSession = Dep
         score=score,
         total_questions=len(payload.answers),
         category=_db_category(payload.category) if payload.category is not None else None,
+        learner_id=learner.id,
     )
     db.add(session)
     await db.commit()
@@ -139,9 +151,12 @@ async def create_quiz_session(payload: QuizSessionCreate, db: AsyncSession = Dep
 
 
 @router.get("/sessions", response_model=list[QuizSessionRead])
-async def list_quiz_sessions(db: AsyncSession = Depends(get_db)):
+async def list_quiz_sessions(
+    db: AsyncSession = Depends(get_db), learner: Learner = Depends(get_current_learner)
+):
     result = await db.execute(
         select(QuizSession)
+        .where(QuizSession.learner_id == learner.id)
         .order_by(QuizSession.completed_at.desc(), QuizSession.id.desc())
         .limit(MAX_LISTED_SESSIONS)
     )

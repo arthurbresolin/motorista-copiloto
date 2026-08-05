@@ -17,10 +17,10 @@ async def _seed_question(session_factory, **overrides):
         return question
 
 
-async def test_list_quiz_questions_hides_correct_index(client, session_factory):
+async def test_list_quiz_questions_hides_correct_index(client, session_factory, auth_headers):
     await _seed_question(session_factory)
 
-    response = await client.get("/quiz/questions")
+    response = await client.get("/quiz/questions", headers=auth_headers)
 
     assert response.status_code == 200
     body = response.json()
@@ -30,7 +30,15 @@ async def test_list_quiz_questions_hides_correct_index(client, session_factory):
     assert "correct_index" not in body[0]
 
 
-async def test_create_quiz_session_scores_correct_answers(client, session_factory):
+async def test_list_quiz_questions_requires_auth(client, session_factory):
+    await _seed_question(session_factory)
+
+    response = await client.get("/quiz/questions")
+
+    assert response.status_code == 401
+
+
+async def test_create_quiz_session_scores_correct_answers(client, session_factory, auth_headers):
     q1 = await _seed_question(session_factory, prompt="P1", correct_index=1)
     q2 = await _seed_question(session_factory, prompt="P2", correct_index=2)
 
@@ -42,6 +50,7 @@ async def test_create_quiz_session_scores_correct_answers(client, session_factor
                 {"question_id": q2.id, "selected_index": 0},
             ]
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 201
@@ -50,9 +59,11 @@ async def test_create_quiz_session_scores_correct_answers(client, session_factor
     assert body["total_questions"] == 2
 
 
-async def test_create_quiz_session_ignores_unknown_question_id(client, session_factory):
+async def test_create_quiz_session_ignores_unknown_question_id(client, session_factory, auth_headers):
     response = await client.post(
-        "/quiz/sessions", json={"answers": [{"question_id": 999, "selected_index": 0}]}
+        "/quiz/sessions",
+        json={"answers": [{"question_id": 999, "selected_index": 0}]},
+        headers=auth_headers,
     )
 
     assert response.status_code == 201
@@ -61,13 +72,21 @@ async def test_create_quiz_session_ignores_unknown_question_id(client, session_f
     assert body["total_questions"] == 1
 
 
-async def test_list_quiz_sessions_most_recent_first(client, session_factory):
+async def test_list_quiz_sessions_most_recent_first(client, session_factory, auth_headers):
     q1 = await _seed_question(session_factory, correct_index=0)
 
-    await client.post("/quiz/sessions", json={"answers": [{"question_id": q1.id, "selected_index": 0}]})
-    await client.post("/quiz/sessions", json={"answers": [{"question_id": q1.id, "selected_index": 1}]})
+    await client.post(
+        "/quiz/sessions",
+        json={"answers": [{"question_id": q1.id, "selected_index": 0}]},
+        headers=auth_headers,
+    )
+    await client.post(
+        "/quiz/sessions",
+        json={"answers": [{"question_id": q1.id, "selected_index": 1}]},
+        headers=auth_headers,
+    )
 
-    response = await client.get("/quiz/sessions")
+    response = await client.get("/quiz/sessions", headers=auth_headers)
 
     assert response.status_code == 200
     body = response.json()
@@ -76,11 +95,13 @@ async def test_list_quiz_sessions_most_recent_first(client, session_factory):
     assert body[1]["score"] == 1
 
 
-async def test_list_quiz_phases_only_first_unlocked_with_no_sessions(client, session_factory):
+async def test_list_quiz_phases_only_first_unlocked_with_no_sessions(
+    client, session_factory, auth_headers
+):
     await _seed_question(session_factory, category=None)
     await _seed_question(session_factory, category="checklist")
 
-    response = await client.get("/quiz/phases")
+    response = await client.get("/quiz/phases", headers=auth_headers)
 
     assert response.status_code == 200
     body = response.json()
@@ -89,7 +110,7 @@ async def test_list_quiz_phases_only_first_unlocked_with_no_sessions(client, ses
     assert body[1]["unlocked"] is False
 
 
-async def test_passing_phase_with_70_percent_unlocks_next(client, session_factory):
+async def test_passing_phase_with_70_percent_unlocks_next(client, session_factory, auth_headers):
     q_geral = await _seed_question(session_factory, category=None, correct_index=0)
     await _seed_question(session_factory, category="checklist")
 
@@ -99,15 +120,16 @@ async def test_passing_phase_with_70_percent_unlocks_next(client, session_factor
             "answers": [{"question_id": q_geral.id, "selected_index": 0}],
             "category": "geral",
         },
+        headers=auth_headers,
     )
     assert response.status_code == 201
 
-    phases = (await client.get("/quiz/phases")).json()
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
     checklist_phase = next(phase for phase in phases if phase["category"] == "checklist")
     assert checklist_phase["unlocked"] is True
 
 
-async def test_failing_phase_keeps_next_locked(client, session_factory):
+async def test_failing_phase_keeps_next_locked(client, session_factory, auth_headers):
     q_geral = await _seed_question(session_factory, category=None, correct_index=0)
     await _seed_question(session_factory, category="checklist")
 
@@ -117,24 +139,27 @@ async def test_failing_phase_keeps_next_locked(client, session_factory):
             "answers": [{"question_id": q_geral.id, "selected_index": 1}],
             "category": "geral",
         },
+        headers=auth_headers,
     )
     assert response.status_code == 201
 
-    phases = (await client.get("/quiz/phases")).json()
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
     checklist_phase = next(phase for phase in phases if phase["category"] == "checklist")
     assert checklist_phase["unlocked"] is False
 
 
-async def test_get_questions_for_locked_category_is_rejected(client, session_factory):
+async def test_get_questions_for_locked_category_is_rejected(client, session_factory, auth_headers):
     await _seed_question(session_factory, category=None)
     await _seed_question(session_factory, category="checklist")
 
-    response = await client.get("/quiz/questions", params={"category": "checklist"})
+    response = await client.get(
+        "/quiz/questions", params={"category": "checklist"}, headers=auth_headers
+    )
 
     assert response.status_code == 403
 
 
-async def test_create_session_for_locked_category_is_rejected(client, session_factory):
+async def test_create_session_for_locked_category_is_rejected(client, session_factory, auth_headers):
     await _seed_question(session_factory, category=None)
     q_checklist = await _seed_question(session_factory, category="checklist")
 
@@ -144,6 +169,7 @@ async def test_create_session_for_locked_category_is_rejected(client, session_fa
             "answers": [{"question_id": q_checklist.id, "selected_index": 0}],
             "category": "checklist",
         },
+        headers=auth_headers,
     )
 
     assert response.status_code == 403

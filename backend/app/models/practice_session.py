@@ -10,6 +10,7 @@ class PracticeSession(Base):
     __tablename__ = "practice_sessions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    learner_id: Mapped[int] = mapped_column(ForeignKey("learners.id"))
     practiced_at: Mapped[date] = mapped_column(Date)
     duration_minutes: Mapped[int] = mapped_column(Integer)
     distance_km: Mapped[float] = mapped_column(Float)

@@ -14,8 +14,10 @@ import {
   SkillNode,
 } from '@/components/organic';
 import { BottomTabInset, MaxContentWidth, RadiusSm, Spacing } from '@/constants/theme';
+import { useLearnerSession } from '@/hooks/use-learner-session';
 import { useProgress } from '@/hooks/use-progress';
 import { formatHoursMinutes } from '@/lib/format';
+import { clearLearnerToken } from '@/lib/learner-auth-storage';
 
 const TREND_CHART_HEIGHT = 44;
 
@@ -28,9 +30,16 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
+  const { refresh: refreshLearnerSession } = useLearnerSession();
   const [inviteState, setInviteState] = useState<InviteState>('idle');
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState('');
+
+  async function handleLogout() {
+    await clearLearnerToken();
+    await refreshLearnerSession();
+    router.replace('/entrar');
+  }
 
   async function handleInviteInstructor() {
     setInviteState('loading');
@@ -276,6 +285,7 @@ export default function PerfilScreen() {
               variant="neutral"
               onPress={() => router.push('/instrutor')}
             />
+            <OrganicButton label="Sair" variant="neutral" onPress={handleLogout} />
           </View>
         )}
         </View>

@@ -36,3 +36,17 @@ async def client(session_factory):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def auth_headers(client):
+    """Header de Authorization de um aluno descartável, pra testes de
+    endpoints que hoje exigem conta de aluno."""
+    await client.post(
+        "/learners/register", json={"email": "aluno-teste@example.com", "password": "senha1234"}
+    )
+    login = await client.post(
+        "/learners/login", json={"email": "aluno-teste@example.com", "password": "senha1234"}
+    )
+    token = login.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
