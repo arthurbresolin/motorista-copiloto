@@ -1,20 +1,89 @@
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Line, Svg } from 'react-native-svg';
 
+import { FadeSlideIn } from './fade-slide-in';
 import { OrganicPill } from './pill';
-import { SkillNode } from './skill-node';
+import { SkillNode, type SkillNodeState } from './skill-node';
 import { OrganicText } from './text';
+import { PRACTICE_ICON_BY_SKILL, QUIZ_ICON } from '@/constants/skill-icons';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { SkillProgress } from '@/lib/gamification';
-import type { SkillKey } from '@/constants/skills';
+import type { Skill, SkillKey } from '@/constants/skills';
 
 const NODE_SIZE = 44;
 const CURRENT_NODE_SIZE = 64;
 const OFFSET_STEP = 56;
+const PRESS_SCALE = 0.94;
+const PRESS_DURATION = 100;
+const ENTRANCE_STAGGER_MS = 50;
 
 // Tabela cíclica de offsets — lê como um caminho sinuoso sem trigonometria nem onLayout.
 const TRAIL_OFFSETS = [0, 1, 1, 0, -1, -1, 0, 1];
+
+function TrailNode({
+  skill,
+  state,
+  phase,
+  index,
+  offset,
+  onPress,
+}: {
+  skill: Skill;
+  state: SkillNodeState;
+  phase: 'quiz' | 'practice';
+  index: number;
+  offset: number;
+  onPress: () => void;
+}) {
+  const isCurrent = state === 'current';
+  const size = isCurrent ? CURRENT_NODE_SIZE : NODE_SIZE;
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  // Selo só faz sentido pra sub-fase de uma habilidade "atual" (quiz
+  // pendente) — feita/travada já ficam claras só pelo ícone principal
+  // (✓/🔒), duplicar o selo ali só teria poluído visualmente.
+  const badge = state === 'current' && phase === 'quiz' ? QUIZ_ICON : undefined;
+
+  return (
+    <FadeSlideIn delay={index * ENTRANCE_STAGGER_MS} style={[styles.row, { marginLeft: offset }]}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => {
+          scale.value = withTiming(PRESS_SCALE, { duration: PRESS_DURATION });
+        }}
+        onPressOut={() => {
+          scale.value = withTiming(1, { duration: PRESS_DURATION });
+        }}
+        style={styles.node}>
+        <Animated.View style={[styles.nodeContent, animatedStyle]}>
+          <SkillNode
+            state={state}
+            label={skill.label}
+            size={size}
+            icon={PRACTICE_ICON_BY_SKILL[skill.key]}
+            badge={badge}
+          />
+          <OrganicText size="small" color="textSecondary" style={styles.nodeLabel}>
+            {skill.label}
+          </OrganicText>
+          {isCurrent && (
+            <OrganicPill
+              label={phase === 'quiz' ? 'Fazer o quiz' : 'Praticar agora'}
+              backgroundColor="accent"
+              textColor="onAccent"
+            />
+          )}
+        </Animated.View>
+      </Pressable>
+    </FadeSlideIn>
+  );
+}
 
 export function SkillTrail({
   items,
@@ -47,25 +116,17 @@ export function SkillTrail({
           </Svg>
         )}
 
-        {items.map(({ skill, state }, index) => {
-          const offset = TRAIL_OFFSETS[index % TRAIL_OFFSETS.length] * OFFSET_STEP;
-          const isCurrent = state === 'current';
-          const size = isCurrent ? CURRENT_NODE_SIZE : NODE_SIZE;
-
-          return (
-            <View key={skill.key} style={[styles.row, { marginLeft: offset }]}>
-              <Pressable
-                onPress={() => onPressSkill(skill.key)}
-                style={({ pressed }) => [styles.node, pressed && styles.pressed]}>
-                <SkillNode state={state} label={skill.label} size={size} />
-                <OrganicText size="small" color="textSecondary" style={styles.nodeLabel}>
-                  {skill.label}
-                </OrganicText>
-                {isCurrent && <OrganicPill label="Continue aqui" backgroundColor="accent" textColor="onAccent" />}
-              </Pressable>
-            </View>
-          );
-        })}
+        {items.map(({ skill, state, phase }, index) => (
+          <TrailNode
+            key={skill.key}
+            skill={skill}
+            state={state}
+            phase={phase}
+            index={index}
+            offset={TRAIL_OFFSETS[index % TRAIL_OFFSETS.length] * OFFSET_STEP}
+            onPress={() => onPressSkill(skill.key)}
+          />
+        ))}
       </View>
 
       <OrganicText size="small" color="textSecondary" style={styles.centerText}>
@@ -99,12 +160,12 @@ const styles = StyleSheet.create({
   },
   node: {
     alignItems: 'center',
+  },
+  nodeContent: {
+    alignItems: 'center',
     gap: Spacing.one,
   },
   nodeLabel: {
     textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

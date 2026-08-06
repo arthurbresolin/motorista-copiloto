@@ -10,9 +10,18 @@ import {
   type Skill,
 } from '@/constants/skills';
 
+// Dentro de uma habilidade, o quiz (teórico) vem antes da prática — precisa
+// passar no quiz pra desbloquear a prática, não o contrário.
+export type SkillPhase = 'quiz' | 'practice';
+
 export type SkillProgress = {
   skill: Skill;
   count: number;
+  quizPassed: boolean;
+  practiceDone: boolean;
+  // Fase ativa/próxima dessa habilidade — só é realmente relevante quando
+  // state === 'current', mas é computada pra todas por simplicidade.
+  phase: SkillPhase;
   state: SkillNodeState;
 };
 
@@ -133,19 +142,23 @@ export function computeSkillProgress(
     }
     const quizRatio = getBestQuizRatio(quizSessions, skill.key);
     const quizPassed = quizRatio !== null && quizRatio >= QUIZ_PASS_RATIO;
-    return { skill, count, quizPassed };
+    const practiceDone = count >= MANEUVER_DONE_THRESHOLD;
+    return { skill, count, quizPassed, practiceDone };
   });
 
   let currentAssigned = false;
-  return counted.map(({ skill, count, quizPassed }) => {
-    if (count >= MANEUVER_DONE_THRESHOLD || quizPassed) {
-      return { skill, count, state: 'done' as SkillNodeState };
+  return counted.map(({ skill, count, quizPassed, practiceDone }) => {
+    // Quiz sempre antes da prática — a fase "atual" da habilidade é o quiz
+    // até ele ser aprovado, só depois passa a ser a prática.
+    const phase: SkillPhase = quizPassed ? 'practice' : 'quiz';
+    if (quizPassed && practiceDone) {
+      return { skill, count, quizPassed, practiceDone, phase, state: 'done' as SkillNodeState };
     }
     if (!currentAssigned) {
       currentAssigned = true;
-      return { skill, count, state: 'current' as SkillNodeState };
+      return { skill, count, quizPassed, practiceDone, phase, state: 'current' as SkillNodeState };
     }
-    return { skill, count, state: 'locked' as SkillNodeState };
+    return { skill, count, quizPassed, practiceDone, phase, state: 'locked' as SkillNodeState };
   });
 }
 

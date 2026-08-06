@@ -1,11 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ApiError } from '@/api/client';
+import { API_BASE_URL, ApiError } from '@/api/client';
 import { createInstructorInvite } from '@/api/instructors';
 import {
+  FadeSlideIn,
+  FlameFlicker,
+  ListRow,
   MascPlaceholder,
   OrganicButton,
   OrganicSurface,
@@ -30,7 +33,9 @@ export default function PerfilScreen() {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
-  const { refresh: refreshLearnerSession } = useLearnerSession();
+  const { learner, refresh: refreshLearnerSession } = useLearnerSession();
+  const avatarUri = learner?.avatar_url ? `${API_BASE_URL}${learner.avatar_url}` : null;
+  const displayName = learner?.display_name || learner?.name;
   const [inviteState, setInviteState] = useState<InviteState>('idle');
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState('');
@@ -98,10 +103,14 @@ export default function PerfilScreen() {
         <View style={styles.container}>
         <View style={[styles.titleContainer, styles.titleRow]}>
           <View>
-            <OrganicText size="title">Perfil</OrganicText>
+            <OrganicText size="title">{displayName || 'Perfil'}</OrganicText>
             <OrganicText color="textSecondary">aprendiz · {sessions.length} práticas</OrganicText>
           </View>
-          <MascPlaceholder size={52} />
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          ) : (
+            <MascPlaceholder size={52} />
+          )}
         </View>
 
         {loadState === 'loading' && (
@@ -121,9 +130,18 @@ export default function PerfilScreen() {
 
         {loadState === 'ready' && (
           <View style={styles.sectionsWrapper}>
-            <View style={styles.statsRow}>
+            <FadeSlideIn style={styles.statsRow}>
               <OrganicSurface backgroundColor="backgroundElement" style={styles.statCard}>
-                <OrganicText size="title">{streak > 0 ? `🔥 ${streak}` : '👋'}</OrganicText>
+                {streak > 0 ? (
+                  <View style={styles.streakStatRow}>
+                    <FlameFlicker>
+                      <OrganicText size="title">🔥</OrganicText>
+                    </FlameFlicker>
+                    <OrganicText size="title">{streak}</OrganicText>
+                  </View>
+                ) : (
+                  <OrganicText size="title">👋</OrganicText>
+                )}
                 <OrganicText size="small" color="textSecondary">
                   streak
                 </OrganicText>
@@ -140,161 +158,163 @@ export default function PerfilScreen() {
                   no volante
                 </OrganicText>
               </OrganicSurface>
-            </View>
+            </FadeSlideIn>
 
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Km rodados (7 dias)</OrganicText>
-              <View style={styles.trendChart}>
-                {weekDays.map((day, index) => (
-                  <View key={index} style={styles.trendBarColumn}>
-                    <View style={[styles.trendBarTrack, { height: TREND_CHART_HEIGHT }]}>
-                      <OrganicSurface
-                        backgroundColor={day.km > 0 ? 'accent' : 'backgroundSelected'}
-                        inset={day.km === 0}
-                        shadow={false}
-                        borderRadius={RadiusSm * 0.5}
-                        style={{
-                          width: '100%',
-                          height: Math.max(4, (day.km / maxWeekKm) * TREND_CHART_HEIGHT),
-                        }}
-                      />
-                    </View>
-                    <OrganicText size="small" color="textSecondary">
-                      {day.label}
-                    </OrganicText>
-                  </View>
-                ))}
-              </View>
-            </OrganicSurface>
-
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Eventos bruscos por sessão monitorada</OrganicText>
-              {eventTrend.length === 0 ? (
-                <OrganicText size="small" color="textSecondary">
-                  Nenhuma sessão de monitoramento registrada ainda.
-                </OrganicText>
-              ) : (
+            <FadeSlideIn delay={80}>
+              <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+                <OrganicText size="small">Km rodados (7 dias)</OrganicText>
                 <View style={styles.trendChart}>
-                  {eventTrend.map((session, index) => (
+                  {weekDays.map((day, index) => (
                     <View key={index} style={styles.trendBarColumn}>
                       <View style={[styles.trendBarTrack, { height: TREND_CHART_HEIGHT }]}>
                         <OrganicSurface
-                          backgroundColor={
-                            session.severeEventCount > 0
-                              ? 'warning'
-                              : session.eventCount > 0
-                                ? 'accent'
-                                : 'backgroundSelected'
-                          }
-                          inset={session.eventCount === 0}
+                          backgroundColor={day.km > 0 ? 'accent' : 'backgroundSelected'}
+                          inset={day.km === 0}
                           shadow={false}
                           borderRadius={RadiusSm * 0.5}
                           style={{
                             width: '100%',
-                            height: Math.max(4, (session.eventCount / maxTrendEvents) * TREND_CHART_HEIGHT),
+                            height: Math.max(4, (day.km / maxWeekKm) * TREND_CHART_HEIGHT),
                           }}
                         />
                       </View>
                       <OrganicText size="small" color="textSecondary">
-                        {session.label}
+                        {day.label}
                       </OrganicText>
                     </View>
                   ))}
                 </View>
-              )}
-            </OrganicSurface>
+              </OrganicSurface>
+            </FadeSlideIn>
 
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Conquistas</OrganicText>
-              <View style={styles.achievementsRow}>
-                {achievements.map((achievement) => (
-                  <View key={achievement.key} style={styles.achievementItem}>
-                    <SkillNode
-                      state={achievement.unlocked ? 'done' : 'locked'}
-                      label={achievement.label}
-                    />
-                    <OrganicText size="small" color="textSecondary" style={styles.achievementLabel}>
-                      {achievement.label}
-                    </OrganicText>
+            <FadeSlideIn delay={160}>
+              <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+                <OrganicText size="small">Eventos bruscos por sessão monitorada</OrganicText>
+                {eventTrend.length === 0 ? (
+                  <OrganicText size="small" color="textSecondary">
+                    Nenhuma sessão de monitoramento registrada ainda.
+                  </OrganicText>
+                ) : (
+                  <View style={styles.trendChart}>
+                    {eventTrend.map((session, index) => (
+                      <View key={index} style={styles.trendBarColumn}>
+                        <View style={[styles.trendBarTrack, { height: TREND_CHART_HEIGHT }]}>
+                          <OrganicSurface
+                            backgroundColor={
+                              session.severeEventCount > 0
+                                ? 'warning'
+                                : session.eventCount > 0
+                                  ? 'accent'
+                                  : 'backgroundSelected'
+                            }
+                            inset={session.eventCount === 0}
+                            shadow={false}
+                            borderRadius={RadiusSm * 0.5}
+                            style={{
+                              width: '100%',
+                              height: Math.max(4, (session.eventCount / maxTrendEvents) * TREND_CHART_HEIGHT),
+                            }}
+                          />
+                        </View>
+                        <OrganicText size="small" color="textSecondary">
+                          {session.label}
+                        </OrganicText>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            </OrganicSurface>
+                )}
+              </OrganicSurface>
+            </FadeSlideIn>
 
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Instrutor / acompanhante</OrganicText>
-              <OrganicText size="small" color="textSecondary">
-                Convide quem te acompanha pra ver seu progresso — ele cria uma conta própria
-                pra acessar um painel só de leitura.
-              </OrganicText>
-
-              {inviteState === 'idle' && (
-                <OrganicButton
-                  label="🔗 Convidar instrutor"
-                  variant="neutral"
-                  onPress={handleInviteInstructor}
-                />
-              )}
-
-              {inviteState === 'loading' && (
-                <View style={styles.centerContent}>
-                  <ActivityIndicator />
+            <FadeSlideIn delay={240}>
+              <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+                <OrganicText size="small">Conquistas</OrganicText>
+                <View style={styles.achievementsRow}>
+                  {achievements.map((achievement) => (
+                    <View key={achievement.key} style={styles.achievementItem}>
+                      <SkillNode
+                        state={achievement.unlocked ? 'done' : 'locked'}
+                        label={achievement.label}
+                      />
+                      <OrganicText size="small" color="textSecondary" style={styles.achievementLabel}>
+                        {achievement.label}
+                      </OrganicText>
+                    </View>
+                  ))}
                 </View>
-              )}
+              </OrganicSurface>
+            </FadeSlideIn>
 
-              {inviteState === 'error' && (
-                <>
-                  <OrganicText size="small" color="textSecondary">
-                    {inviteError}
-                  </OrganicText>
+            <FadeSlideIn delay={320}>
+              <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+                <OrganicText size="small">Instrutor / acompanhante</OrganicText>
+                <OrganicText size="small" color="textSecondary">
+                  Convide quem te acompanha pra ver seu progresso — ele cria uma conta própria
+                  pra acessar um painel só de leitura.
+                </OrganicText>
+
+                {inviteState === 'idle' && (
                   <OrganicButton
-                    label="Tentar novamente"
+                    label="🔗 Convidar instrutor"
                     variant="neutral"
                     onPress={handleInviteInstructor}
                   />
-                </>
-              )}
+                )}
 
-              {inviteState === 'ready' && inviteToken && (
-                <>
-                  <OrganicSurface backgroundColor="backgroundSelected" inset shadow={false} style={styles.inviteCodeBox}>
-                    <OrganicText size="small" style={styles.inviteCode}>
-                      {inviteToken}
+                {inviteState === 'loading' && (
+                  <View style={styles.centerContent}>
+                    <ActivityIndicator />
+                  </View>
+                )}
+
+                {inviteState === 'error' && (
+                  <>
+                    <OrganicText size="small" color="textSecondary">
+                      {inviteError}
                     </OrganicText>
-                  </OrganicSurface>
-                  <OrganicText size="small" color="textSecondary">
-                    Compartilhe este código — ele vale só uma vez. A pessoa usa em "Área do
-                    instrutor" dentro do app.
-                  </OrganicText>
-                  <OrganicButton
-                    label="Gerar outro código"
-                    variant="neutral"
-                    onPress={handleInviteInstructor}
-                  />
-                </>
-              )}
-            </OrganicSurface>
+                    <OrganicButton
+                      label="Tentar novamente"
+                      variant="neutral"
+                      onPress={handleInviteInstructor}
+                    />
+                  </>
+                )}
 
-            <OrganicButton
-              label="🚗 Meus carros"
-              variant="neutral"
-              onPress={() => router.push('/meu-carro')}
-            />
-            <OrganicButton
-              label="🎓 Área do instrutor"
-              variant="neutral"
-              onPress={() => router.push('/instrutor')}
-            />
-            <OrganicButton
-              label="📸 Feedback da IA"
-              variant="neutral"
-              onPress={() => router.push('/feedback-historico')}
-            />
-            <OrganicButton
-              label="⚙️ Configurações"
-              variant="neutral"
-              onPress={() => router.push('/configuracoes')}
-            />
+                {inviteState === 'ready' && inviteToken && (
+                  <>
+                    <OrganicSurface backgroundColor="backgroundSelected" inset shadow={false} style={styles.inviteCodeBox}>
+                      <OrganicText size="small" style={styles.inviteCode}>
+                        {inviteToken}
+                      </OrganicText>
+                    </OrganicSurface>
+                    <OrganicText size="small" color="textSecondary">
+                      Compartilhe este código — ele vale só uma vez. A pessoa usa em "Área do
+                      instrutor" dentro do app.
+                    </OrganicText>
+                    <OrganicButton
+                      label="Gerar outro código"
+                      variant="neutral"
+                      onPress={handleInviteInstructor}
+                    />
+                  </>
+                )}
+              </OrganicSurface>
+            </FadeSlideIn>
+
+            <FadeSlideIn delay={400}>
+              <OrganicSurface backgroundColor="backgroundElement" style={styles.actionsCard}>
+                <ListRow icon="🚗" label="Meus carros" onPress={() => router.push('/meu-carro')} />
+                <ListRow icon="🎓" label="Área do instrutor" onPress={() => router.push('/instrutor')} />
+                <ListRow icon="📸" label="Feedback da IA" onPress={() => router.push('/feedback-historico')} />
+                <ListRow
+                  icon="⚙️"
+                  label="Configurações"
+                  onPress={() => router.push('/configuracoes')}
+                  showDivider={false}
+                />
+              </OrganicSurface>
+            </FadeSlideIn>
+
             <OrganicButton label="Sair" variant="neutral" onPress={handleLogout} />
           </View>
         )}
@@ -328,6 +348,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
   centerContent: {
     alignItems: 'center',
     gap: Spacing.three,
@@ -350,6 +375,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.half,
     padding: Spacing.three,
+  },
+  streakStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
   },
   card: {
     gap: Spacing.three,
@@ -388,5 +418,8 @@ const styles = StyleSheet.create({
   },
   inviteCode: {
     fontFamily: 'monospace',
+  },
+  actionsCard: {
+    paddingHorizontal: Spacing.three,
   },
 });

@@ -20,12 +20,17 @@ import {
   OrganicText,
   ScreenBackground,
 } from '@/components/organic';
+import { SKILLS } from '@/constants/skills';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useSkillDetailSheet } from '@/hooks/use-skill-detail-sheet';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type QuizStage = 'playing' | 'submitting' | 'finished';
 
 const QUIZ_PASS_RATIO = 0.7;
+// A partir da 2ª falha seguida na mesma fase, o card de resultado troca o
+// tom sério por um mais leve e sugere revisar em vez de só "tente de novo".
+const ENCOURAGEMENT_THRESHOLD = 2;
 
 export default function QuizPhaseScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -44,6 +49,10 @@ export default function QuizPhaseScreen() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [result, setResult] = useState<QuizSession | null>(null);
   const [submitError, setSubmitError] = useState('');
+  const [consecutiveFails, setConsecutiveFails] = useState(0);
+
+  const { open: openSkillDetail } = useSkillDetailSheet();
+  const skillForCategory = SKILLS.find((skill) => skill.key === category);
 
   const loadQuestions = useCallback(async () => {
     setLoadState('loading');
@@ -95,6 +104,8 @@ export default function QuizPhaseScreen() {
     setSubmitError('');
     try {
       const session = await createQuizSession(nextAnswers, category);
+      const sessionPassed = session.total_questions > 0 && session.score / session.total_questions >= QUIZ_PASS_RATIO;
+      setConsecutiveFails((count) => (sessionPassed ? 0 : count + 1));
       setResult(session);
       setStage('finished');
     } catch (error) {
@@ -127,6 +138,7 @@ export default function QuizPhaseScreen() {
   });
 
   const passed = result !== null && result.total_questions > 0 && result.score / result.total_questions >= QUIZ_PASS_RATIO;
+  const showEncouragement = !passed && consecutiveFails >= ENCOURAGEMENT_THRESHOLD;
 
   return (
     <ScreenBackground>
@@ -225,10 +237,19 @@ export default function QuizPhaseScreen() {
                   ? nextPhase
                     ? `Passou! "${nextPhase.label}" foi liberada.`
                     : 'Passou! Essa era a última fase.'
-                  : 'Não chegou a 70% — tente de novo pra liberar a próxima fase.'}
+                  : showEncouragement
+                    ? 'Essa tá osso, hein? 😅 Bora dar uma revisada antes de tentar de novo?'
+                    : 'Não chegou a 70% — tente de novo pra liberar a próxima fase.'}
               </OrganicText>
             </OrganicSurface>
             <OrganicButton label="Tentar de novo" onPress={handleRestart} />
+            {showEncouragement && skillForCategory && (
+              <OrganicButton
+                label="📖 Rever dicas"
+                variant="neutral"
+                onPress={() => openSkillDetail(skillForCategory.key)}
+              />
+            )}
             <OrganicButton label="Voltar pras fases" variant="neutral" onPress={() => router.back()} />
           </View>
         )}

@@ -7,6 +7,7 @@ import { useColorScheme } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { Colors } from '@/constants/theme';
 import { LearnerSessionProvider, useLearnerSession } from '@/hooks/use-learner-session';
+import { SkillDetailSheetProvider } from '@/hooks/use-skill-detail-sheet';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -46,7 +47,7 @@ function RootNavigator() {
   }
 
   return (
-    <>
+    <SkillDetailSheetProvider>
       <AnimatedSplashOverlay />
       <Stack>
         <Stack.Protected guard={isLoggedIn}>
@@ -73,7 +74,7 @@ function RootNavigator() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
-    </>
+    </SkillDetailSheetProvider>
   );
 }
 

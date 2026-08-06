@@ -9,7 +9,7 @@ export function MascPlaceholder({ size = 40, label = '🐨' }: { size?: number; 
       circle
       backgroundColor="accent"
       style={[styles.wrapper, { width: size, height: size }]}>
-      <OrganicText style={{ fontSize: size * 0.5 }}>{label}</OrganicText>
+      <OrganicText style={{ fontSize: size * 0.5, lineHeight: size * 0.58 }}>{label}</OrganicText>
     </OrganicSurface>
   );
 }

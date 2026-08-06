@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 19,
+    lineHeight: 23,
   },
   iconDimmed: {
     opacity: 0.45,

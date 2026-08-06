@@ -22,6 +22,9 @@ export const Colors = {
     barFill: '#FF9351',
     mapPatternA: '#E9EFE6',
     mapPatternB: '#E2E9DE',
+    // Pontinhos sutis sobre o fundo (ver TextureOverlay) — mesma família do
+    // texto secundário, opacidade baixa aplicada no componente, não aqui.
+    patternDot: '#A98A72',
     danger: '#CC0000',
     warning: '#E0B400',
     onWarning: '#000000',
@@ -40,6 +43,7 @@ export const Colors = {
     barFill: '#8ECB8F',
     mapPatternA: '#1B241E',
     mapPatternB: '#18211B',
+    patternDot: '#8B929C',
     danger: '#CC0000',
     warning: '#E0B400',
     onWarning: '#000000',

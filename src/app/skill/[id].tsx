@@ -1,65 +1,18 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
-import { ApiError } from '@/api/client';
-import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
-import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { getQuizSessions, type QuizSession } from '@/api/quiz';
-import {
-  OrganicButton,
-  OrganicProgressBar,
-  OrganicSurface,
-  OrganicText,
-  ScreenBackground,
-} from '@/components/organic';
-import { MANEUVER_DONE_THRESHOLD, SKILLS } from '@/constants/skills';
+import { ScreenBackground, SkillDetailContent } from '@/components/organic';
+import { SKILLS, type SkillKey } from '@/constants/skills';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { computeSkillProgress, getBestQuizRatio, QUIZ_PASS_RATIO } from '@/lib/gamification';
 
-type LoadState = 'loading' | 'error' | 'ready';
-
+// Fluxo principal agora é o SkillDetailSheet (popup) aberto direto da
+// Trilha — essa rota só existe pra deep links diretos (`/skill/baliza`)
+// continuarem funcionando, renderizando o mesmo conteúdo em tela cheia.
 export default function SkillDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-
   const skill = SKILLS.find((candidate) => candidate.key === id);
-
-  const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>([]);
-  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
-  const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
-  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const loadAll = useCallback(async () => {
-    setLoadState('loading');
-    try {
-      const [practice, checklist, monitor, quiz] = await Promise.all([
-        getPracticeSessions(),
-        getChecklistSessions(),
-        getMonitorSessions(),
-        getQuizSessions(),
-      ]);
-      setPracticeSessions(practice);
-      setChecklistSessions(checklist);
-      setMonitorSessions(monitor);
-      setQuizSessions(quiz);
-      setLoadState('ready');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar seu progresso.',
-      );
-      setLoadState('error');
-    }
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -74,106 +27,14 @@ export default function SkillDetailScreen() {
     },
   });
 
-  if (!skill) {
-    return (
-      <ScreenBackground style={styles.centerContent}>
-        <OrganicText color="textSecondary">Habilidade não encontrada.</OrganicText>
-      </ScreenBackground>
-    );
-  }
-
-  const progress = computeSkillProgress(
-    practiceSessions,
-    checklistSessions,
-    monitorSessions,
-    quizSessions,
-  ).find((item) => item.skill.key === skill.key);
-  const count = progress?.count ?? 0;
-  const bestQuizRatio = getBestQuizRatio(quizSessions, skill.key);
-
   return (
     <ScreenBackground>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-        <Stack.Screen options={{ title: skill.label }} />
+        <Stack.Screen options={{ title: skill?.label ?? 'Habilidade' }} />
         <View style={styles.container}>
-        <View style={styles.titleContainer}>
-          <OrganicText size="subtitle">{skill.label}</OrganicText>
-          {loadState === 'ready' && (
-            <>
-              <OrganicProgressBar progress={count / MANEUVER_DONE_THRESHOLD} />
-              <OrganicText size="small" color="textSecondary">
-                {Math.min(count, MANEUVER_DONE_THRESHOLD)} de {MANEUVER_DONE_THRESHOLD} pra destravar
-              </OrganicText>
-            </>
-          )}
-        </View>
-
-        {loadState === 'loading' && (
-          <View style={styles.centerContent}>
-            <ActivityIndicator />
-          </View>
-        )}
-
-        {loadState === 'error' && (
-          <View style={styles.centerContent}>
-            <OrganicText color="textSecondary" style={styles.centerText}>
-              {errorMessage}
-            </OrganicText>
-            <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadAll} />
-          </View>
-        )}
-
-        {loadState === 'ready' && (
-          <View style={styles.sectionsWrapper}>
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Sobre essa habilidade</OrganicText>
-              <OrganicText color="textSecondary">{skill.description}</OrganicText>
-            </OrganicSurface>
-
-            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
-              <OrganicText size="small">Antes de praticar</OrganicText>
-              {skill.tips.map((tip, index) => (
-                <View key={index} style={styles.tipRow}>
-                  <OrganicText color="textSecondary">•</OrganicText>
-                  <OrganicText color="textSecondary" style={styles.tipText}>
-                    {tip}
-                  </OrganicText>
-                </View>
-              ))}
-            </OrganicSurface>
-
-            {skill.maneuver && (
-              <OrganicButton
-                label="🎙️ Modo Copiloto"
-                onPress={() => router.push(`/copiloto/${skill.key}`)}
-              />
-            )}
-            <OrganicButton
-              label={skill.maneuver ? '📝 Registrar prática manual' : '🚗 Praticar agora'}
-              variant={skill.maneuver ? 'neutral' : 'accent'}
-              onPress={() => router.push('/nova-pratica')}
-            />
-            <OrganicButton
-              label={
-                bestQuizRatio !== null && bestQuizRatio >= QUIZ_PASS_RATIO
-                  ? '✅ Quiz aprovado — refazer'
-                  : '❓ Quiz rápido'
-              }
-              variant="neutral"
-              onPress={() => router.push(`/quiz/${skill.key}`)}
-            />
-            {bestQuizRatio !== null && (
-              <OrganicText size="small" color="textSecondary" style={styles.centerText}>
-                Melhor resultado no quiz: {Math.round(bestQuizRatio * 100)}%
-              </OrganicText>
-            )}
-            {!skill.maneuver && (
-              <OrganicButton label="🚦 Monitorar" variant="neutral" onPress={() => router.push('/monitor')} />
-            )}
-          </View>
-        )}
+          <SkillDetailContent skillKey={id as SkillKey} />
         </View>
       </ScrollView>
     </ScreenBackground>
@@ -193,31 +54,5 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     flexGrow: 1,
     width: '100%',
-    gap: Spacing.four,
-  },
-  titleContainer: {
-    gap: Spacing.two,
-  },
-  centerContent: {
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingVertical: Spacing.five,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
-  sectionsWrapper: {
-    gap: Spacing.three,
-  },
-  card: {
-    gap: Spacing.two,
-    padding: Spacing.three,
-  },
-  tipRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  tipText: {
-    flex: 1,
   },
 });

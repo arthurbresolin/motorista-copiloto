@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, type ViewProps } from 'react-native';
 
 import { useGradients } from '@/hooks/use-theme';
+import { TextureOverlay } from './texture-overlay';
 
 export function ScreenBackground({ children, style, ...rest }: ViewProps) {
   const gradients = useGradients();
@@ -13,6 +14,7 @@ export function ScreenBackground({ children, style, ...rest }: ViewProps) {
       end={{ x: 1, y: 1 }}
       style={[styles.fill, style]}
       {...rest}>
+      <TextureOverlay />
       {children}
     </LinearGradient>
   );

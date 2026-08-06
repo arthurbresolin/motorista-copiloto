@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import { api } from '@/api/client';
 
 export type LearnerRegisterInput = {
@@ -66,11 +68,19 @@ export const updateLearnerProfile = (input: LearnerUpdateInput) =>
 export const changeLearnerPassword = (input: ChangePasswordInput) =>
   api.post<MessageResponse>('/learners/me/change-password', input);
 
-export const uploadLearnerAvatar = (image: PickedImage) => {
+export const uploadLearnerAvatar = async (image: PickedImage) => {
   const formData = new FormData();
-  // React Native aceita esse formato de objeto (uri/name/type) no FormData —
-  // não é o Blob/File do DOM, mas é o padrão usado pelo Expo pra upload.
-  formData.append('file', image as unknown as Blob);
+  if (Platform.OS === 'web') {
+    // Na web, expo-image-picker devolve uma blob:/data: URL, não um caminho de
+    // arquivo — precisa buscar e converter num Blob de verdade antes de anexar,
+    // já que o FormData do navegador não entende o formato {uri, name, type}.
+    const blob = await (await fetch(image.uri)).blob();
+    formData.append('file', blob, image.name);
+  } else {
+    // No nativo, esse formato de objeto (uri/name/type) é o padrão aceito
+    // pelo FormData do React Native pra fazer upload de arquivo local.
+    formData.append('file', image as unknown as Blob);
+  }
   return api.postForm<Learner>('/learners/me/avatar', formData);
 };
 
