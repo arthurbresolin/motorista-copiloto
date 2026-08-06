@@ -1,7 +1,7 @@
 import type { ChecklistSession } from '@/api/checklist';
 import type { MonitorSession } from '@/api/monitor-sessions';
 import type { PracticeSession } from '@/api/practice-sessions';
-import type { QuizSession } from '@/api/quiz';
+import type { QuizPhase, QuizSession } from '@/api/quiz';
 import type { SkillNodeState } from '@/components/organic';
 import {
   MANEUVER_DONE_THRESHOLD,
@@ -106,6 +106,14 @@ export const QUIZ_PASS_RATIO = 0.7;
 // Melhor proporção de acertos (0 a 1) que o aluno já tirou no quiz de uma
 // categoria, ou null se nunca tentou. As categorias do quiz usam as mesmas
 // chaves de SKILLS (exceto "geral", que não corresponde a nenhuma habilidade).
+//
+// ATENÇÃO: isso conta QUALQUER sessão salva pra categoria, mesmo uma sessão
+// antiga de um quiz que já mudou de tamanho (ex: um teste de 1 pergunta de
+// quando o quiz de "baliza" só tinha 1, hoje tem 6) — o backend (quiz.py,
+// _build_phases) já filtra isso comparando total_questions com a contagem
+// atual de perguntas, e essa validação não é reproduzida aqui. Use
+// `getQuizPhaseRatio` (abaixo) sempre que o resultado for usado pra liberar
+// algo — é o mesmo cálculo que o backend usa pra destravar as fases.
 export function getBestQuizRatio(quizSessions: QuizSession[], category: string): number | null {
   const relevant = quizSessions.filter(
     (session) => session.category === category && session.total_questions > 0,
@@ -116,11 +124,23 @@ export function getBestQuizRatio(quizSessions: QuizSession[], category: string):
   return Math.max(...relevant.map((session) => session.score / session.total_questions));
 }
 
+// Mesma ideia de getBestQuizRatio, mas lida a partir de `GET /quiz/phases`
+// (QuizPhase.best_score/best_total) em vez das sessões brutas — o backend já
+// descarta ali sessões cujo total_questions não bate mais com o quiz atual,
+// então isso reflete o que realmente conta pra destravar a próxima fase.
+export function getQuizPhaseRatio(quizPhases: QuizPhase[], category: string): number | null {
+  const phase = quizPhases.find((candidate) => (candidate.category ?? 'geral') === category);
+  if (!phase || phase.best_score === null || phase.best_total === null || phase.best_total === 0) {
+    return null;
+  }
+  return phase.best_score / phase.best_total;
+}
+
 export function computeSkillProgress(
   practiceSessions: PracticeSession[],
   checklistSessions: ChecklistSession[],
   monitorSessions: MonitorSession[],
-  quizSessions: QuizSession[],
+  quizPhases: QuizPhase[],
 ): SkillProgress[] {
   const maneuverCounts = new Map<string, number>();
   for (const session of practiceSessions) {
@@ -140,7 +160,7 @@ export function computeSkillProgress(
     } else if (skill.key === 'direcao-suave') {
       count = smoothDrivingCount;
     }
-    const quizRatio = getBestQuizRatio(quizSessions, skill.key);
+    const quizRatio = getQuizPhaseRatio(quizPhases, skill.key);
     const quizPassed = quizRatio !== null && quizRatio >= QUIZ_PASS_RATIO;
     const practiceDone = count >= MANEUVER_DONE_THRESHOLD;
     return { skill, count, quizPassed, practiceDone };

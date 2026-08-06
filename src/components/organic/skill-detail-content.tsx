@@ -6,14 +6,14 @@ import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
 import { ApiError } from '@/api/client';
 import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
 import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { getQuizSessions, type QuizSession } from '@/api/quiz';
+import { getQuizPhases, type QuizPhase } from '@/api/quiz';
 import { OrganicButton } from './button';
 import { OrganicProgressBar } from './progress-bar';
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
 import { MANEUVER_DONE_THRESHOLD, SKILLS, type Skill, type SkillKey } from '@/constants/skills';
 import { Spacing } from '@/constants/theme';
-import { computeSkillProgress, getBestQuizRatio, QUIZ_PASS_RATIO } from '@/lib/gamification';
+import { computeSkillProgress, getQuizPhaseRatio, QUIZ_PASS_RATIO } from '@/lib/gamification';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -27,30 +27,48 @@ function practiceAction(skill: Skill): { label: string; route: string } {
   return { label: '📝 Registrar prática manual', route: '/nova-pratica' };
 }
 
-export function SkillDetailContent({ skillKey }: { skillKey: SkillKey }) {
+export function SkillDetailContent({
+  skillKey,
+  onBeforeNavigate,
+}: {
+  skillKey: SkillKey;
+  /** Chamado antes de navegar pra outra rota (Modo Copiloto, quiz, prática,
+   * checklist, monitor) — quando esse conteúdo está dentro do SkillDetailSheet,
+   * precisa fechar o overlay primeiro, senão ele fica por cima da tela nova
+   * e parece que "não abriu nada". */
+  onBeforeNavigate?: () => void;
+}) {
   const router = useRouter();
   const skill = SKILLS.find((candidate) => candidate.key === skillKey);
+
+  const navigate = useCallback(
+    (route: string) => {
+      onBeforeNavigate?.();
+      router.push(route as never);
+    },
+    [onBeforeNavigate, router],
+  );
 
   const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>([]);
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
-  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
+  const [quizPhases, setQuizPhases] = useState<QuizPhase[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadAll = useCallback(async () => {
     setLoadState('loading');
     try {
-      const [practice, checklist, monitor, quiz] = await Promise.all([
+      const [practice, checklist, monitor, phases] = await Promise.all([
         getPracticeSessions(),
         getChecklistSessions(),
         getMonitorSessions(),
-        getQuizSessions(),
+        getQuizPhases(),
       ]);
       setPracticeSessions(practice);
       setChecklistSessions(checklist);
       setMonitorSessions(monitor);
-      setQuizSessions(quiz);
+      setQuizPhases(phases);
       setLoadState('ready');
     } catch (error) {
       setErrorMessage(
@@ -76,11 +94,11 @@ export function SkillDetailContent({ skillKey }: { skillKey: SkillKey }) {
     practiceSessions,
     checklistSessions,
     monitorSessions,
-    quizSessions,
+    quizPhases,
   ).find((item) => item.skill.key === skill.key);
   const count = progress?.count ?? 0;
   const phase = progress?.phase ?? 'quiz';
-  const bestQuizRatio = getBestQuizRatio(quizSessions, skill.key);
+  const bestQuizRatio = getQuizPhaseRatio(quizPhases, skill.key);
   const quizLabel =
     bestQuizRatio !== null && bestQuizRatio >= QUIZ_PASS_RATIO ? '✅ Quiz aprovado — refazer' : '❓ Fazer o quiz';
   const practice = practiceAction(skill);
@@ -135,7 +153,7 @@ export function SkillDetailContent({ skillKey }: { skillKey: SkillKey }) {
 
           {phase === 'quiz' ? (
             <>
-              <OrganicButton label={quizLabel} onPress={() => router.push(`/quiz/${skill.key}`)} />
+              <OrganicButton label={quizLabel} onPress={() => navigate(`/quiz/${skill.key}`)} />
               {skill.maneuver && (
                 <OrganicButton label="🎙️ Modo Copiloto" variant="neutral" disabled onPress={() => {}} />
               )}
@@ -149,15 +167,15 @@ export function SkillDetailContent({ skillKey }: { skillKey: SkillKey }) {
               {skill.maneuver && (
                 <OrganicButton
                   label="🎙️ Modo Copiloto"
-                  onPress={() => router.push(`/copiloto/${skill.key}`)}
+                  onPress={() => navigate(`/copiloto/${skill.key}`)}
                 />
               )}
               <OrganicButton
                 label={practice.label}
                 variant={skill.maneuver ? 'neutral' : 'accent'}
-                onPress={() => router.push(practice.route as never)}
+                onPress={() => navigate(practice.route)}
               />
-              <OrganicButton label={quizLabel} variant="neutral" onPress={() => router.push(`/quiz/${skill.key}`)} />
+              <OrganicButton label={quizLabel} variant="neutral" onPress={() => navigate(`/quiz/${skill.key}`)} />
             </>
           )}
 

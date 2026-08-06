@@ -12,17 +12,20 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 MAX_LISTED_SESSIONS = 50
 QUIZ_PASS_THRESHOLD = 0.7
 
-# Ordem oficial das fases do quiz — as chaves batem com SKILLS (src/constants/skills.ts),
-# exceto "geral" (perguntas sem categoria no banco), que é sempre a primeira fase.
+# Ordem oficial das fases do quiz — precisa bater exatamente com a ordem de
+# SKILLS (src/constants/skills.ts), já que a trilha trata "passar no quiz"
+# como o que libera a prática de cada habilidade, nessa mesma ordem. "geral"
+# (perguntas sem categoria no banco) sempre vem primeiro, antes de qualquer
+# habilidade específica.
 QUIZ_PHASE_ORDER: list[tuple[str, str]] = [
     ("geral", "Legislação geral"),
-    ("checklist", "Checklist"),
     ("baliza", "Baliza"),
     ("rotatoria", "Rotatória"),
     ("estacionamento", "Estacionamento"),
+    ("rodovia", "Rodovia"),
     ("curva", "Curva"),
     ("marcha-re", "Marcha à ré"),
-    ("rodovia", "Rodovia"),
+    ("checklist", "Checklist"),
     ("direcao-suave", "Direção suave"),
 ]
 

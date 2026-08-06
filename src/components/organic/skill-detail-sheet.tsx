@@ -68,7 +68,7 @@ export function SkillDetailSheet({
             </Pressable>
           </View>
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            <SkillDetailContent skillKey={skillKey} />
+            <SkillDetailContent skillKey={skillKey} onBeforeNavigate={onClose} />
           </ScrollView>
         </OrganicSurface>
       </Animated.View>

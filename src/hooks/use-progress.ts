@@ -10,7 +10,7 @@ import {
   type PracticeSession,
   type PracticeSessionStats,
 } from '@/api/practice-sessions';
-import { getQuizSessions, type QuizSession } from '@/api/quiz';
+import { getQuizPhases, getQuizSessions, type QuizPhase, type QuizSession } from '@/api/quiz';
 import {
   computeAchievements,
   computeLastSevenDays,
@@ -31,6 +31,7 @@ export function useProgress() {
   const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
   const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
   const [quizSessions, setQuizSessions] = useState<QuizSession[]>([]);
+  const [quizPhases, setQuizPhases] = useState<QuizPhase[]>([]);
   const [stats, setStats] = useState<PracticeSessionStats | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -38,17 +39,19 @@ export function useProgress() {
   const reload = useCallback(async () => {
     setLoadState('loading');
     try {
-      const [practice, checklist, monitor, quiz, practiceStats] = await Promise.all([
+      const [practice, checklist, monitor, quiz, phases, practiceStats] = await Promise.all([
         getPracticeSessions(),
         getChecklistSessions(),
         getMonitorSessions(),
         getQuizSessions(),
+        getQuizPhases(),
         getPracticeSessionStats(),
       ]);
       setSessions(practice);
       setChecklistSessions(checklist);
       setMonitorSessions(monitor);
       setQuizSessions(quiz);
+      setQuizPhases(phases);
       setStats(practiceStats);
       setLoadState('ready');
     } catch (error) {
@@ -70,7 +73,7 @@ export function useProgress() {
   const xp = computeXp(sessions.length, checklistSessions.length, quizSessions.length, monitorSessions);
   const level = computeLevel(xp);
   const eventTrend = computeMonitorEventTrend(monitorSessions);
-  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions, quizSessions);
+  const skillProgress = computeSkillProgress(sessions, checklistSessions, monitorSessions, quizPhases);
   const achievements = computeAchievements(
     sessions,
     streak,
@@ -87,6 +90,7 @@ export function useProgress() {
     checklistSessions,
     monitorSessions,
     quizSessions,
+    quizPhases,
     stats,
     streak,
     weekDays,
