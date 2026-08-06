@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.cars import router as cars_router
 from app.api.checklist import router as checklist_router
@@ -9,8 +10,12 @@ from app.api.learners import router as learners_router
 from app.api.monitor_sessions import router as monitor_sessions_router
 from app.api.practice_sessions import router as practice_sessions_router
 from app.api.quiz import router as quiz_router
+from app.core.config import MEDIA_DIR
 
 app = FastAPI(title="Motorista Copiloto API")
+
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 
 # v1 roda só localmente para um único usuário (sem cookies/credenciais),
 # então liberar qualquer origem é seguro e evita reconfigurar a cada porta

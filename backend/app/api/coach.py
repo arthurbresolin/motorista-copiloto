@@ -1,4 +1,5 @@
 import base64
+from uuid import uuid4
 
 import anthropic
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,10 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.learners import get_current_learner
-from app.core.config import settings
+from app.core.config import MEDIA_DIR, settings
 from app.db.session import get_db
-from app.models import Learner, MonitorSession, PracticeSession
-from app.schemas.coach import CoachFeedback, PhotoFeedbackRequest
+from app.models import Learner, MonitorSession, PracticeSession, PracticeSessionFeedback
+from app.schemas.coach import CoachFeedback, PhotoFeedbackRequest, PracticeSessionFeedbackRead
 
 router = APIRouter(prefix="/coach", tags=["coach"])
 
@@ -25,6 +26,12 @@ MODEL = "claude-opus-4-8"
 # ("no longer available") depois de um tempo, como aconteceu com
 # "gemini-2.5-flash" ao testar.
 PHOTO_MODEL = "gemini-flash-latest"
+
+PHOTO_EXTENSIONS = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 
 SYSTEM_PROMPT = (
     "Você é um instrutor de direção experiente e encorajador, dando feedback rápido "
@@ -134,7 +141,15 @@ async def get_practice_session_feedback(
     if not text:
         return CoachFeedback(available=False)
 
-    return CoachFeedback(available=True, message=text.strip())
+    message = text.strip()
+    db.add(
+        PracticeSessionFeedback(
+            learner_id=learner.id, practice_session_id=session_id, kind="text", message=message
+        )
+    )
+    await db.commit()
+
+    return CoachFeedback(available=True, message=message)
 
 
 @router.post("/practice-sessions/{session_id}/photo-feedback", response_model=CoachFeedback)
@@ -195,4 +210,75 @@ async def get_practice_session_photo_feedback(
     if not text:
         return CoachFeedback(available=False)
 
-    return CoachFeedback(available=True, message=text.strip())
+    message = text.strip()
+
+    extension = PHOTO_EXTENSIONS.get(payload.media_type, ".jpg")
+    session_dir = MEDIA_DIR / "practice-sessions" / str(session_id)
+    session_dir.mkdir(parents=True, exist_ok=True)
+    photo_filename = f"{uuid4().hex}{extension}"
+    (session_dir / photo_filename).write_bytes(image_bytes)
+    photo_path = f"practice-sessions/{session_id}/{photo_filename}"
+
+    db.add(
+        PracticeSessionFeedback(
+            learner_id=learner.id,
+            practice_session_id=session_id,
+            kind="photo",
+            message=message,
+            photo_path=photo_path,
+        )
+    )
+    await db.commit()
+
+    return CoachFeedback(available=True, message=message)
+
+
+def _to_feedback_read(feedback: PracticeSessionFeedback) -> PracticeSessionFeedbackRead:
+    return PracticeSessionFeedbackRead(
+        id=feedback.id,
+        practice_session_id=feedback.practice_session_id,
+        kind=feedback.kind,
+        message=feedback.message,
+        photo_url=f"/media/{feedback.photo_path}" if feedback.photo_path else None,
+        created_at=feedback.created_at,
+    )
+
+
+@router.get(
+    "/practice-sessions/{session_id}/history", response_model=list[PracticeSessionFeedbackRead]
+)
+async def get_practice_session_feedback_history(
+    session_id: int,
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
+):
+    session_result = await db.execute(
+        select(PracticeSession.id).where(
+            PracticeSession.id == session_id, PracticeSession.learner_id == learner.id
+        )
+    )
+    if session_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="sessão de prática não encontrada")
+
+    result = await db.execute(
+        select(PracticeSessionFeedback)
+        .where(
+            PracticeSessionFeedback.practice_session_id == session_id,
+            PracticeSessionFeedback.learner_id == learner.id,
+        )
+        .order_by(PracticeSessionFeedback.created_at.asc())
+    )
+    return [_to_feedback_read(feedback) for feedback in result.scalars().all()]
+
+
+@router.get("/history", response_model=list[PracticeSessionFeedbackRead])
+async def get_feedback_history(
+    db: AsyncSession = Depends(get_db),
+    learner: Learner = Depends(get_current_learner),
+):
+    result = await db.execute(
+        select(PracticeSessionFeedback)
+        .where(PracticeSessionFeedback.learner_id == learner.id)
+        .order_by(PracticeSessionFeedback.created_at.desc())
+    )
+    return [_to_feedback_read(feedback) for feedback in result.scalars().all()]

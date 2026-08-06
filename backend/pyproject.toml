@@ -13,6 +13,7 @@ dependencies = [
     "google-genai>=2.16.0",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.9",
+    "resend>=2.35.0",
     "sqlalchemy[asyncio]>=2.0.51",
 ]
 

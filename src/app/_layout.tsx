@@ -60,6 +60,14 @@ function RootNavigator() {
             name="checklist"
             options={{ presentation: 'modal', title: 'Checklist pré-direção' }}
           />
+          <Stack.Screen
+            name="configuracoes"
+            options={{ presentation: 'modal', title: 'Configurações' }}
+          />
+          <Stack.Screen
+            name="feedback-historico"
+            options={{ presentation: 'modal', title: 'Feedback da IA' }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!isLoggedIn}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

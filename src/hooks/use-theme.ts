@@ -5,17 +5,22 @@
 
 import { Colors, Gradients } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useLearnerSession } from '@/hooks/use-learner-session';
+
+function useResolvedScheme() {
+  const deviceScheme = useColorScheme();
+  const { themePreference } = useLearnerSession();
+
+  if (themePreference === 'light' || themePreference === 'dark') {
+    return themePreference;
+  }
+  return deviceScheme === 'dark' ? 'dark' : 'light';
+}
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? 'dark' : 'light';
-
-  return Colors[theme];
+  return Colors[useResolvedScheme()];
 }
 
 export function useGradients() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'dark' ? 'dark' : 'light';
-
-  return Gradients[theme];
+  return Gradients[useResolvedScheme()];
 }

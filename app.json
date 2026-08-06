@@ -45,6 +45,12 @@
           "cameraPermission": "Usado pra tirar uma foto do resultado da manobra e a IA avaliar."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Usado pra escolher uma foto de perfil da sua galeria."
+        }
+      ],
       "expo-secure-store"
     ],
     "experiments": {

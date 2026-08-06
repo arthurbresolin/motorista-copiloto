@@ -1,6 +1,6 @@
 import { getLearnerToken } from '@/lib/learner-auth-storage';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export class ApiError extends Error {
   status?: number;
@@ -20,10 +20,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     // header explícito em `options` (ex: o token do instrutor) continua
     // sobrescrevendo, já que é espalhado por último.
     const learnerToken = await getLearnerToken();
+    // Upload multipart (FormData) precisa que o runtime defina o Content-Type
+    // sozinho (com o boundary certo) — forçar "application/json" quebraria isso.
+    const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData;
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(learnerToken ? { Authorization: `Bearer ${learnerToken}` } : {}),
         ...options?.headers,
       },
@@ -47,4 +50,9 @@ export const api = {
   get: <T>(path: string, options?: RequestInit) => request<T>(path, options),
   post: <T>(path: string, body: unknown, options?: RequestInit) =>
     request<T>(path, { ...options, method: 'POST', body: JSON.stringify(body) }),
+  patch: <T>(path: string, body: unknown, options?: RequestInit) =>
+    request<T>(path, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
+  delete: <T>(path: string, options?: RequestInit) => request<T>(path, { ...options, method: 'DELETE' }),
+  postForm: <T>(path: string, formData: FormData, options?: RequestInit) =>
+    request<T>(path, { ...options, method: 'POST', body: formData }),
 };

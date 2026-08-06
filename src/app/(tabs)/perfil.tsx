@@ -285,6 +285,16 @@ export default function PerfilScreen() {
               variant="neutral"
               onPress={() => router.push('/instrutor')}
             />
+            <OrganicButton
+              label="📸 Feedback da IA"
+              variant="neutral"
+              onPress={() => router.push('/feedback-historico')}
+            />
+            <OrganicButton
+              label="⚙️ Configurações"
+              variant="neutral"
+              onPress={() => router.push('/configuracoes')}
+            />
             <OrganicButton label="Sair" variant="neutral" onPress={handleLogout} />
           </View>
         )}

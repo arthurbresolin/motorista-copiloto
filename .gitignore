@@ -49,3 +49,4 @@ backend/**/__pycache__/
 backend/*.db
 backend/.pytest_cache/
 backend/.env
+backend/media/
