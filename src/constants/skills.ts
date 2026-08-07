@@ -147,8 +147,8 @@ export const SKILLS: Skill[] = [
     description: 'Reconhecer e respeitar as placas de sinalização e marcações da via durante a condução.',
     tips: [
       'Observe as placas de velocidade máxima em cada trecho da via.',
-      'Placas triangulares com borda vermelha são de advertência — redobre a atenção ao redor.',
-      'Placas circulares com borda vermelha indicam proibição — nunca ignore.',
+      'Placas amarelas em formato de losango, com borda preta, são de advertência — indicam perigo à frente.',
+      'Placas brancas circulares com borda vermelha são de regulamentação — proibição ou obrigação, nunca ignore.',
       'Preste atenção nas faixas pintadas no chão, elas também são sinalização.',
       'Se não tiver certeza do significado de uma placa, reduza a velocidade.',
     ],

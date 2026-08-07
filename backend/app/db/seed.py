@@ -1031,7 +1031,7 @@ DEFAULT_QUIZ_QUESTIONS = [
         "category": "placas-e-sinalizacao",
     },
     {
-        "prompt": "Placas triangulares com borda vermelha são do tipo...",
+        "prompt": "Placas amarelas em formato de losango, com símbolos e borda pretos, são do tipo...",
         "options": ["Regulamentação", "Advertência", "Indicação", "Serviços auxiliares"],
         "correct_index": 1,
         "category": "placas-e-sinalizacao",
@@ -1132,12 +1132,12 @@ DEFAULT_QUIZ_QUESTIONS = [
         "category": "semaforos-e-prioridade",
     },
     {
-        "prompt": "O sinal vermelho piscante em um semáforo geralmente equivale a...",
+        "prompt": "O sinal amarelo intermitente (piscando) em um semáforo indica que o motorista deve...",
         "options": [
-            "Sinal verde",
-            "Uma placa de PARE",
-            "Sinalização apagada, sem significado",
-            "Permissão para acelerar",
+            "Parar totalmente, como em um sinal vermelho",
+            "Redobrar a atenção e seguir com cautela",
+            "Acelerar para passar rápido",
+            "Ignorar, pois o semáforo está com defeito",
         ],
         "correct_index": 1,
         "category": "semaforos-e-prioridade",
