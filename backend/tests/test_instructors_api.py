@@ -208,3 +208,67 @@ async def test_overview_does_not_show_other_learners_data(client, session_factor
 
     assert response.status_code == 200
     assert response.json()["practice_sessions"] == []
+
+
+async def test_quiz_phases_requires_auth(client, session_factory):
+    response = await client.get("/instructors/quiz-phases")
+
+    assert response.status_code == 401
+
+
+async def test_quiz_phases_returns_student_progress(client, session_factory, auth_headers):
+    from app.models import QuizQuestion
+
+    token = await _create_invite(client, auth_headers)
+    accept_response = await _accept_invite(client, token)
+    access_token = accept_response.json()["access_token"]
+
+    async with session_factory() as session:
+        session.add(
+            QuizQuestion(prompt="P?", options=["A", "B"], correct_index=0, category=None)
+        )
+        await session.commit()
+
+    response = await client.get(
+        "/instructors/quiz-phases", headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["category"] is None
+    assert body[0]["unlocked"] is True
+
+
+async def test_quiz_phases_does_not_show_other_learners_data(client, session_factory, auth_headers):
+    from app.models import QuizQuestion
+
+    token = await _create_invite(client, auth_headers)
+    accept_response = await _accept_invite(client, token)
+    access_token = accept_response.json()["access_token"]
+
+    async with session_factory() as session:
+        session.add(
+            QuizQuestion(prompt="P?", options=["A", "B"], correct_index=0, category=None)
+        )
+        await session.commit()
+
+    await client.post(
+        "/learners/register", json={"email": "outro-aluno-quiz@example.com", "password": "senha1234"}
+    )
+    other_login = await client.post(
+        "/learners/login", json={"email": "outro-aluno-quiz@example.com", "password": "senha1234"}
+    )
+    other_headers = {"Authorization": f"Bearer {other_login.json()['access_token']}"}
+    await client.post(
+        "/quiz/sessions",
+        json={"answers": [{"question_id": 1, "selected_index": 0}]},
+        headers=other_headers,
+    )
+
+    response = await client.get(
+        "/instructors/quiz-phases", headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["best_score"] is None

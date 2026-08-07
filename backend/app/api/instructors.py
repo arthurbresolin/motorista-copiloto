@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 
 from app.api.learners import get_current_learner
+from app.api.quiz import _build_phases
 from app.core.security import create_access_token, decode_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models import (
@@ -28,6 +29,7 @@ from app.schemas.instructor import (
     InstructorRegister,
 )
 from app.schemas.practice_session import PracticeSessionStats
+from app.schemas.quiz import QuizPhaseRead
 
 router = APIRouter(prefix="/instructors", tags=["instructors"])
 
@@ -148,3 +150,13 @@ async def get_instructor_overview(
             total_sessions=total_sessions, total_minutes=total_minutes, total_km=total_km
         ),
     )
+
+
+@router.get("/quiz-phases", response_model=list[QuizPhaseRead])
+async def get_instructor_quiz_phases(
+    instructor: Instructor = Depends(get_current_instructor), db: AsyncSession = Depends(get_db)
+):
+    # Mesma leitura só-de-leitura do /quiz/phases do aluno, escopada pro
+    # aprendiz vinculado — reaproveita _build_phases (já recebe learner_id
+    # como parâmetro simples, não depende do Depends() de aluno logado).
+    return await _build_phases(db, instructor.learner_id)

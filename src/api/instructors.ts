@@ -2,7 +2,7 @@ import { api } from '@/api/client';
 import type { ChecklistSession } from '@/api/checklist';
 import type { MonitorSession } from '@/api/monitor-sessions';
 import type { PracticeSession, PracticeSessionStats } from '@/api/practice-sessions';
-import type { QuizSession } from '@/api/quiz';
+import type { QuizPhase, QuizSession } from '@/api/quiz';
 
 export type InstructorInvite = {
   token: string;
@@ -62,3 +62,6 @@ export const getInstructorProfile = (accessToken: string) =>
 
 export const getInstructorOverview = (accessToken: string) =>
   api.get<InstructorOverview>('/instructors/overview', authHeaders(accessToken));
+
+export const getInstructorQuizPhases = (accessToken: string) =>
+  api.get<QuizPhase[]>('/instructors/quiz-phases', authHeaders(accessToken));

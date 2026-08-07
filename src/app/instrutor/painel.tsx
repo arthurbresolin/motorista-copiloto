@@ -250,6 +250,8 @@ export default function InstructorDashboardScreen() {
                 </View>
               </OrganicSurface>
 
+              <OrganicButton label="🛣️ Ver trilha" variant="neutral" onPress={() => router.push('/instrutor/trilha')} />
+              <OrganicButton label="🚗 Ver práticas" variant="neutral" onPress={() => router.push('/instrutor/praticas')} />
               <OrganicButton label="Sair" variant="neutral" onPress={handleLogout} />
             </View>
           )}
