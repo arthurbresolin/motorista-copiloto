@@ -9,6 +9,11 @@ levas de trabalho.
 
 Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqueado (infra)
 
+**Atualizado em 2026-08-07** — depois de Bloco A (contas/configurações),
+Reskin 2 (visual + reestruturação quiz→prática da trilha) e a navegação
+do instrutor. Ver `[[project_motorista-copiloto]]` (memória) pro
+histórico detalhado de cada leva.
+
 ---
 
 ## 1. Autenticação e workspace pessoal
@@ -17,19 +22,19 @@ Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqu
 |---|---|
 | Tela de login | ✅ `src/app/(auth)/entrar.tsx` |
 | Tela de cadastro | ✅ `src/app/(auth)/cadastro.tsx` |
-| Esqueci minha senha (fluxo por e-mail) | ❌ não iniciado — precisa de infra de envio de e-mail (SMTP ou API tipo Resend/SendGrid), que o app não tem hoje. Decisão pendente: vale a pena configurar isso pra um app pessoal, ou um reset mais simples (ex: eu troco a senha direto no banco se precisar) resolve por enquanto? |
-| Redefinição de senha | ❌ mesma dependência acima |
+| Esqueci minha senha (fluxo por e-mail) | ✅ `POST /learners/password-reset/request` + telas `esqueci-senha.tsx`/`redefinir-senha.tsx`, via Resend (free tier) — **precisa de `APP_RESEND_API_KEY` + `APP_WEB_URL` no `backend/.env` pra enviar de verdade; sem isso o endpoint responde normal mas não manda e-mail** |
+| Redefinição de senha | ✅ mesma leva acima |
 | Logout | ✅ botão "Sair" no Perfil |
-| "Lembrar de mim" | 🚧 hoje o login já fica válido por 365 dias sempre (sem opção de escolher) — não existe um checkbox "lembrar de mim" que ligue/desligue isso |
-| Sessão seguro | ✅ JWT com claim de role + bcrypt |
-| Design moderno/premium consistente com o resto do app | ✅ telas reusam os componentes Clay já existentes |
+| "Lembrar de mim" | 🚧 login já fica válido por 365 dias sempre (sem opção de escolher) — não existe checkbox pra ligar/desligar isso |
+| Sessão segura | ✅ JWT com claim de role + bcrypt |
+| Design moderno/premium consistente com o resto do app | ✅ |
 | Isolamento de dados por conta: progresso, trilha, XP, nível, conquistas, streak, quiz, sessões guiadas/manuais, estatísticas | ✅ tudo isolado por `learner_id` |
-| Isolamento de "AI feedback" | ❌ **feedback da IA não é salvo em lugar nenhum hoje** — é gerado na hora e mostrado, não fica em histórico. Não tem o que isolar porque não existe persistência ainda. |
-| Isolamento de "fotos tiradas durante exercícios" | ❌ **fotos não são salvas hoje** — vão direto pro Gemini analisar e são descartadas depois da resposta |
-| "Challenges" | ❌ não existe como conceito separado (temos só Conquistas/achievements) |
-| Configurações pessoais | ❌ tela de Configurações inteira não existe |
-| Editar informações pessoais / trocar foto de perfil / trocar senha (autenticado) | ❌ não existe (isso é diferente do "esqueci senha" — aqui é trocar já logado) |
-| Notificações / preferências do app | ❌ não existe sistema de notificação nenhum ainda |
+| Isolamento de "AI feedback" | ✅ persiste em `session_feedback`, histórico em `src/app/feedback-historico.tsx` |
+| Isolamento de "fotos tiradas durante exercícios" | ✅ salvas em `backend/media/practice-sessions/{id}/`, servidas via `/media/...` |
+| "Challenges" | ❌ ainda não existe como conceito separado das Conquistas/achievements |
+| Configurações pessoais | ✅ `src/app/configuracoes.tsx` |
+| Editar informações pessoais / trocar foto de perfil / trocar senha (autenticado) | ✅ tudo em Configurações |
+| Notificações / preferências do app | 🚧 toggle salvo no perfil, mas nenhuma feature ainda lê esse valor pra notificar de verdade |
 | Sincronização entre aparelhos | ✅ automático, já que tudo vem do servidor |
 
 ---
@@ -38,12 +43,12 @@ Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqu
 
 | Item pedido | Status |
 |---|---|
-| Aulas ilustradas (setas, animação de volante, diagramas de posição, referências de estacionamento, áreas de perigo, exemplos animados) | ❌ hoje o Modo Copiloto é só texto falado (voz), sem nenhuma ilustração/animação |
-| Modo guiado "mais inteligente" com instruções curtas e contínuas (tipo "agora pise na embreagem", "engate a primeira", "solte devagar", "boa", "olhe os espelhos"...) | ❌ hoje fala só 2-3 dicas fixas por habilidade (`skill.tips`), sem granularidade de passo-a-passo real de condução |
-| Câmera assistindo em tempo real durante a aula guiada (centralização na faixa, referências de estacionamento, cones, semáforo, placa de pare, posição do carro, confirmar conclusão do passo) | 🔒 bloqueado — precisa de vídeo contínuo processado (`react-native-vision-camera` + frame processors ou similar), que exige build nativo custom. Sem Mac isso não roda (já documentado em `docs/roadmap-visao-computacional.md`, Fase B). |
-| Foto do resultado integrada ao modo guiado (não só na prática manual) | ✅ já existe — botão "📷 Foto do resultado" no fim do Modo Copiloto pra baliza/estacionamento |
-| Guardar as fotos pra rever depois / comparar progresso / histórico visual | ❌ a captura existe, mas a foto não fica salva (mesmo gap do item de "fotos" da seção 1) |
-| Redesenho da tela de Prática Manual (cards maiores, descrição rica, duração estimada, dificuldade, habilidades necessárias, preview visual, objetivos de aprendizado, indicador de progresso, próxima aula recomendada, atalho pro modo guiado, foto antes/depois, feedback de IA) | ❌ hoje é um formulário simples (`nova-pratica.tsx`) |
+| Aulas ilustradas (setas, animação de volante, diagramas de posição, referências de estacionamento, áreas de perigo, exemplos animados) | ❌ Modo Copiloto continua só texto falado (voz), sem ilustração/animação |
+| Modo guiado "mais inteligente" com instruções curtas e contínuas (tipo "agora pise na embreagem", "engate a primeira", "solte devagar"...) | ❌ ainda fala só 2-3 dicas fixas por habilidade (`skill.tips`), sem passo-a-passo granular |
+| Câmera assistindo em tempo real durante a aula guiada | 🔒 bloqueado — precisa de vídeo contínuo processado (`react-native-vision-camera` + frame processors), exige build nativo custom. Sem Mac isso não roda (`docs/roadmap-visao-computacional.md`, Fase B) |
+| Foto do resultado integrada ao modo guiado | ✅ botão "📷 Foto do resultado" no fim do Modo Copiloto pra baliza/estacionamento |
+| Guardar as fotos pra rever depois / comparar progresso / histórico visual | ✅ salvas + histórico em `feedback-historico.tsx` (Bloco A) |
+| Redesenho da tela de Prática Manual (cards maiores, dificuldade, preview, objetivos, foto antes/depois, feedback de IA) | ❌ ainda é o formulário simples `nova-pratica.tsx` |
 
 ---
 
@@ -51,9 +56,9 @@ Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqu
 
 | Item pedido | Status |
 |---|---|
-| Reordenar trilhas: 1) Fundamentos do veículo (pedais, embreagem, câmbio, ponto de embreagem, ligar/desligar, arrancar, trocar marcha, não morrer o carro, postura, ajuste de banco/espelho) → 2) Direção no trânsito (placas, sinalização, semáforo, distância segura, faixas, cruzamentos, rotatórias, direção defensiva) → 3) Manobras (baliza, estacionamento, retorno, conversões) | ❌ hoje `SKILLS` é uma lista única (`src/constants/skills.ts`) já começando por manobras (baliza é a primeira). Não existe conteúdo nenhum de "fundamentos do veículo" (embreagem, pedais, câmbio) — é uma trilha nova do zero. |
-| Reformular quizzes: tirar pergunta de trânsito/manobra da primeira fase, cada quiz só cobre o que já foi ensinado, quizzes menores e mais raros | ❌ hoje `QUIZ_PHASE_ORDER` no backend já bate exatamente com o problema descrito: baliza/rotatória/estacionamento aparecem como fase de quiz logo no início |
-| Espaço liberado usado pra aprofundar aulas práticas/animações/exemplos | depende dos itens acima serem feitos primeiro |
+| Reordenar trilhas: 1) Fundamentos do veículo (pedais, embreagem, câmbio, ponto de embreagem, ligar/desligar, arrancar, trocar marcha, não morrer o carro, postura, ajuste de banco/espelho) → 2) Direção no trânsito (placas, sinalização, semáforo, distância segura, faixas, cruzamentos, rotatórias, direção defensiva) → 3) Manobras (baliza, estacionamento, retorno, conversões) | ❌ **ainda bloqueado em conteúdo, não em reordenação** — `SKILLS` (`src/constants/skills.ts`) só tem manobras + checklist + direção suave hoje; não existe nenhum conteúdo de "fundamentos" ou "trânsito" pra colocar nas posições 1 e 2. Reordenar a lista atual não muda nada de verdade — precisa da leva C (conteúdo novo) primeiro. |
+| Reformular quizzes: tirar pergunta de trânsito/manobra da primeira fase, cada quiz só cobre o que já foi ensinado, quizzes menores e mais raros | ✅ **feito em 2026-08-07** — `QUIZ_PHASE_ORDER` (backend/app/api/quiz.py) agora bate exatamente com a ordem de `SKILLS`, e passar no quiz de uma habilidade só libera o quiz da próxima depois que a prática dessa habilidade também foi concluída (`_is_practice_done`, mesma regra de `gamification.ts`) — antes o quiz sozinho já liberava a fase seguinte, pulando a prática. A fase "geral" (9 perguntas de legislação — placas, prioridade, cinto, velocidade, álcool, cadeirinha) não tem pergunta de manobra específica, só legislação genérica; conferido nesta leva. |
+| Espaço liberado usado pra aprofundar aulas práticas/animações/exemplos | ainda depende do conteúdo novo (leva C/D) existir |
 
 ---
 
@@ -64,8 +69,9 @@ Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqu
 | Câmera em tempo real (faixas, semáforos, placas, pedestres, veículos próximos, vagas, cones, curvas, cruzamentos, posição na faixa, erros comuns) | 🔒 mesmo bloqueio da seção 2 — precisa de build nativo / Mac |
 | Aulas guiadas interativas com ilustrações/setas/animações | ❌ mesmo item da seção 2 |
 | Trilhas completas novas: Fundamentos do Câmbio Manual, Controle Básico do Veículo, Consciência no Trânsito, Direção Urbana, Direção em Rodovias, Condições Adversas, Conhecimento do Veículo | ❌ nenhuma dessas existe — é a expansão de conteúdo mais ambiciosa do pedido inteiro. Hoje só existem as 6 manobras + checklist + direção suave. |
-| IA explicando o porquê de cada acerto/erro e o que praticar na próxima sessão | 🚧 o feedback de IA já existe (`backend/app/api/coach.py`) mas é 1-2 frases curtas — não tem essa profundidade de "por que certo/errado + o que praticar depois" ainda; é mais ajuste de prompt do que feature nova |
-| Progressão de aulas com níveis dentro de cada trilha (ex: Câmbio Manual Nível 1 → 2 → ... → 6) | ❌ o modelo de dados atual não tem esse conceito — hoje é "habilidade feita/atual/travada" baseado em contagem de sessões, não "nível dentro de uma trilha com várias aulas" |
+| IA explicando o porquê de cada acerto/erro e o que praticar na próxima sessão | 🚧 o feedback de IA já existe e agora fica salvo (`backend/app/api/coach.py` + `session_feedback`), mas ainda é 1-2 frases curtas — não tem essa profundidade de "por que certo/errado + o que praticar depois"; é mais ajuste de prompt do que feature nova |
+| Progressão de aulas com níveis dentro de cada trilha (ex: Câmbio Manual Nível 1 → 2 → ... → 6) | ❌ o modelo de dados continua "habilidade feita/atual/travada" baseado em quiz+prática — não tem conceito de "nível dentro de uma trilha com várias aulas" |
+| Instrutor conseguir navegar pelo app, não só o painel | ✅ **feito em 2026-08-07** — `src/app/instrutor/trilha.tsx` e `praticas.tsx`, mesmos componentes visuais do aluno em modo só-leitura, alimentados por `GET /instructors/overview` + novo `GET /instructors/quiz-phases` |
 
 ---
 
@@ -75,11 +81,12 @@ O pedido inteiro, junto, é essencialmente: **transformar o app de "treinador de
 
 Pra fatiar isso de forma realista, dá pra pensar em blocos mais ou menos independentes:
 
-- **A. Contas/Configurações** — o que já estava no plano (Fase 2): tela de Configurações, editar perfil, trocar senha logado, + agora também: persistir fotos e feedback de IA (pra isolamento de conta fazer sentido nesses itens), decidir o que fazer com "esqueci senha".
-- **B. Reorganizar trilha + quiz existentes** — reordenar o que já existe (Fundamentos → Trânsito → Manobras) e ajustar as fases de quiz pra bater com a nova ordem. É sobretudo reestruturação de conteúdo/dados, não tecnologia nova — o bloco mais rápido de atacar.
-- **C. Conteúdo de Fundamentos do Veículo do zero** — escrever as aulas de embreagem/câmbio/pedais/postura que hoje não existem nada. Trabalho de conteúdo pesado.
-- **D. Aulas guiadas mais visuais** — ilustrações, animações, guiagem por voz mais granular (passo a passo tipo "pise na embreagem... solte devagar..."). Trabalho de design/animação.
-- **E. Redesenho da tela de Prática Manual** — cards mais ricos, preview, dificuldade, etc.
+- **A. Contas/Configurações** — ✅ feito (2026-08-06): tela de Configurações, editar perfil, trocar senha logado, persistência de fotos e feedback de IA, esqueci senha via Resend (falta só a chave de API pra ativar o envio de verdade).
+- **B. Reorganizar trilha + quiz existentes** — ✅ a parte de dados/sequenciamento do quiz está feita (2026-08-07: ordem `QUIZ_PHASE_ORDER` alinhada com `SKILLS`, quiz exige prática antes de liberar a próxima fase). A parte de "reordenar em 3 seções" continua bloqueada em conteúdo — não tem o que reordenar até a leva C existir.
+- **C. Conteúdo de Fundamentos do Veículo do zero** — ❌ ainda não iniciado. Escrever as aulas de embreagem/câmbio/pedais/postura que hoje não existem nada. Trabalho de conteúdo pesado e subjetivo (tom, profundidade, exemplos) — melhor decidido junto, não de forma autônoma, dado o quanto o usuário se importa com fidelidade exata em outras levas (design, cópia do quiz).
+- **D. Aulas guiadas mais visuais** — ❌ ilustrações, animações, guiagem por voz mais granular. Trabalho de design/animação, mesma ressalva de C.
+- **E. Redesenho da tela de Prática Manual** — ❌ cards mais ricos, preview, dificuldade, etc.
 - **F. Câmera em tempo real** — 🔒 continua bloqueado até resolver Mac/build nativo, independente de tudo o resto.
+- **Extra. Instrutor navegar pelo app** — ✅ feito (2026-08-07), item da seção 4 que não tinha bloco próprio.
 
-Nada disso foi implementado ainda — este documento é só o inventário organizado, pra decidir juntos por onde começar.
+Blocos C, D e E são os que sobraram — todos genuinamente grandes e de conteúdo/design subjetivo, por isso não foram atacados de forma autônoma nesta leva. Ficam prontos pra decidir juntos a próxima vez.
