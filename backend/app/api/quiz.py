@@ -19,13 +19,24 @@ QUIZ_PASS_THRESHOLD = 0.7
 # habilidade específica.
 QUIZ_PHASE_ORDER: list[tuple[str, str]] = [
     ("geral", "Legislação geral"),
+    ("checklist", "Checklist"),
+    ("postura-ao-dirigir", "Postura ao Dirigir"),
+    ("pedais-e-embreagem", "Pedais e Embreagem"),
+    ("ponto-de-embreagem", "Ponto de Embreagem"),
+    ("ligar-e-desligar", "Ligar e Desligar"),
+    ("trocar-marchas", "Trocar Marchas"),
+    ("controle-baixa-velocidade", "Controle em Baixa Velocidade"),
+    ("placas-e-sinalizacao", "Placas e Sinalização"),
+    ("semaforos-e-prioridade", "Semáforos e Prioridade"),
+    ("distancia-e-espelhos", "Distância e Espelhos"),
+    ("mudanca-de-faixa", "Mudança de Faixa"),
+    ("direcao-defensiva", "Direção Defensiva"),
     ("baliza", "Baliza"),
     ("rotatoria", "Rotatória"),
     ("estacionamento", "Estacionamento"),
     ("rodovia", "Rodovia"),
     ("curva", "Curva"),
     ("marcha-re", "Marcha à ré"),
-    ("checklist", "Checklist"),
     ("direcao-suave", "Direção suave"),
 ]
 
@@ -36,6 +47,17 @@ QUIZ_PHASE_ORDER: list[tuple[str, str]] = [
 MANEUVER_DONE_THRESHOLD = 2
 SMOOTH_DRIVING_MIN_DURATION_SECONDS = 120
 PHASE_MANEUVER_LABEL: dict[str, str] = {
+    "postura-ao-dirigir": "Postura ao Dirigir",
+    "pedais-e-embreagem": "Pedais e Embreagem",
+    "ponto-de-embreagem": "Ponto de Embreagem",
+    "ligar-e-desligar": "Ligar e Desligar",
+    "trocar-marchas": "Trocar Marchas",
+    "controle-baixa-velocidade": "Controle em Baixa Velocidade",
+    "placas-e-sinalizacao": "Placas e Sinalização",
+    "semaforos-e-prioridade": "Semáforos e Prioridade",
+    "distancia-e-espelhos": "Distância e Espelhos",
+    "mudanca-de-faixa": "Mudança de Faixa",
+    "direcao-defensiva": "Direção Defensiva",
     "baliza": "Baliza",
     "rotatoria": "Rotatória",
     "estacionamento": "Estacionamento",

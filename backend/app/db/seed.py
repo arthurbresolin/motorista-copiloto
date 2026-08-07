@@ -646,6 +646,693 @@ DEFAULT_QUIZ_QUESTIONS = [
         "correct_index": 1,
         "category": "direcao-suave",
     },
+    # --- postura-ao-dirigir ---
+    {
+        "prompt": "Qual é a posição recomendada das mãos no volante para a maioria dos veículos modernos?",
+        "options": ["9 horas e 3 horas", "12 horas apenas", "6 horas", "Uma mão embaixo do queixo"],
+        "correct_index": 0,
+        "category": "postura-ao-dirigir",
+    },
+    {
+        "prompt": "Qual é a postura correta do motorista ao dirigir?",
+        "options": [
+            "Reclinado bem para trás, relaxado",
+            "Encostado no banco, com as costas retas",
+            "Inclinado bem para frente, perto do volante",
+            "Não existe postura ideal",
+        ],
+        "correct_index": 1,
+        "category": "postura-ao-dirigir",
+    },
+    {
+        "prompt": "Depois de fazer uma curva, o que o motorista deve fazer com o volante?",
+        "options": [
+            "Tirar as mãos e deixar ele voltar sozinho",
+            "Soltar suavemente sem tirar as mãos",
+            "Segurar travado até parar",
+            "Girar rapidamente para o lado oposto",
+        ],
+        "correct_index": 1,
+        "category": "postura-ao-dirigir",
+    },
+    {
+        "prompt": "Por que dirigir com os braços totalmente esticados não é recomendado?",
+        "options": [
+            "Porque cansa mais e reduz o controle em manobras rápidas",
+            "Porque é proibido por lei",
+            "Porque desliga o airbag",
+            "Não há problema nenhum",
+        ],
+        "correct_index": 0,
+        "category": "postura-ao-dirigir",
+    },
+    {
+        "prompt": "Com que frequência é recomendado observar os espelhos enquanto dirige?",
+        "options": [
+            "Só antes de manobras",
+            "Continuamente, a cada poucos segundos",
+            "Apenas no início do trajeto",
+            "Nunca, atrapalha a atenção na via",
+        ],
+        "correct_index": 1,
+        "category": "postura-ao-dirigir",
+    },
+    {
+        "prompt": "Qual a principal vantagem de manter a postura correta ao dirigir?",
+        "options": [
+            "Só estética",
+            "Melhor controle do carro e menos cansaço e lesões",
+            "Não tem vantagem real",
+            "Só importa em viagens muito longas",
+        ],
+        "correct_index": 1,
+        "category": "postura-ao-dirigir",
+    },
+    # --- pedais-e-embreagem ---
+    {
+        "prompt": "Em um carro com câmbio manual, quantos pedais existem e qual a ordem da esquerda para a direita?",
+        "options": [
+            "Dois: freio e acelerador",
+            "Três: embreagem, freio e acelerador",
+            "Três: acelerador, freio e embreagem",
+            "Quatro: embreagem, freio, acelerador e marcha",
+        ],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    {
+        "prompt": "Qual pé deve ser usado para pisar na embreagem?",
+        "options": ["O direito", "O esquerdo", "Qualquer um dos dois", "Os dois ao mesmo tempo"],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    {
+        "prompt": "Qual pé deve ser usado para o acelerador e o freio?",
+        "options": [
+            "O esquerdo para os dois",
+            "O direito para os dois, nunca ao mesmo tempo",
+            "O direito no acelerador e o esquerdo no freio",
+            "Não importa",
+        ],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    {
+        "prompt": "O que pode acontecer se o motorista pisar no freio e no acelerador ao mesmo tempo?",
+        "options": [
+            "Nada, é uma prática recomendada",
+            "Perda de controle e desgaste desnecessário do veículo",
+            "O carro anda mais rápido com segurança",
+            "É a forma correta de frear em emergência",
+        ],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    {
+        "prompt": "Pisar fundo no acelerador de forma brusca costuma causar...",
+        "options": [
+            "Economia de combustível",
+            "Aceleração descontrolada e desconforto aos passageiros",
+            "Redução do consumo de combustível",
+            "Maior durabilidade do motor",
+        ],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    {
+        "prompt": "Antes de aprender a dirigir em movimento, é importante...",
+        "options": [
+            "Pular direto para a estrada",
+            "Reconhecer bem a posição e o funcionamento de cada pedal com o carro parado",
+            "Aprender só com o carro desligado, sem nunca ligá-lo",
+            "Ignorar os pedais e focar só no volante",
+        ],
+        "correct_index": 1,
+        "category": "pedais-e-embreagem",
+    },
+    # --- ponto-de-embreagem ---
+    {
+        "prompt": "O que é o 'ponto de embreagem'?",
+        "options": [
+            "O momento em que o motor desliga",
+            "O ponto em que o carro começa a se mover ao soltar a embreagem",
+            "A posição da embreagem totalmente pisada",
+            "Um ajuste do banco do motorista",
+        ],
+        "correct_index": 1,
+        "category": "ponto-de-embreagem",
+    },
+    {
+        "prompt": "Como encontrar o ponto de embreagem?",
+        "options": [
+            "Soltando a embreagem de uma vez, rapidamente",
+            "Soltando a embreagem devagar até sentir o carro puxar para frente",
+            "Pisando fundo no acelerador antes de soltar a embreagem",
+            "Sem soltar a embreagem em nenhum momento",
+        ],
+        "correct_index": 1,
+        "category": "ponto-de-embreagem",
+    },
+    {
+        "prompt": "O que costuma acontecer se o motorista soltar a embreagem rápido demais sem acelerar?",
+        "options": ["O carro acelera suavemente", "O motor morre (cala)", "O carro anda de ré", "Nada acontece"],
+        "correct_index": 1,
+        "category": "ponto-de-embreagem",
+    },
+    {
+        "prompt": "Praticar o ponto de embreagem parado, sem acelerar, serve para...",
+        "options": [
+            "Ganhar velocidade rapidamente",
+            "Sentir com precisão o momento exato em que o carro reage",
+            "Economizar combustível",
+            "Não tem nenhuma utilidade",
+        ],
+        "correct_index": 1,
+        "category": "ponto-de-embreagem",
+    },
+    {
+        "prompt": "Depois de dominar o ponto de embreagem parado, o próximo passo é...",
+        "options": [
+            "Tentar arrancar com uma leve aceleração junto",
+            "Arrancar em segunda marcha direto",
+            "Nunca mais usar a embreagem",
+            "Soltar a embreagem de uma vez em alta velocidade",
+        ],
+        "correct_index": 0,
+        "category": "ponto-de-embreagem",
+    },
+    {
+        "prompt": "Dominar bem o ponto de embreagem ajuda especialmente em...",
+        "options": [
+            "Ultrapassagens em rodovia",
+            "Arrancadas suaves e manobras em baixa velocidade",
+            "Uso do farol alto",
+            "Estacionamento em local plano com o carro desligado",
+        ],
+        "correct_index": 1,
+        "category": "ponto-de-embreagem",
+    },
+    # --- ligar-e-desligar ---
+    {
+        "prompt": "Antes de dar a partida no carro com câmbio manual, o motorista deve...",
+        "options": [
+            "Deixar o carro engatado em uma marcha",
+            "Confirmar que o câmbio está em ponto morto e pisar na embreagem",
+            "Acelerar fundo",
+            "Soltar o freio de mão antes de ligar",
+        ],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    {
+        "prompt": "Ao dar a partida, o que se deve fazer assim que o motor pega?",
+        "options": [
+            "Segurar a chave na posição de partida por mais alguns segundos",
+            "Soltar a chave imediatamente",
+            "Acelerar fundo",
+            "Pisar no freio com força",
+        ],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    {
+        "prompt": "Antes de desligar o carro, o que é recomendado fazer primeiro?",
+        "options": ["Tirar o pé da embreagem", "Engatar o freio de mão", "Acelerar uma última vez", "Abrir a porta"],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    {
+        "prompt": "Em qual marcha o carro deve estar antes de desligar o motor?",
+        "options": ["Em qualquer marcha engatada", "Em ponto morto", "Na marcha à ré", "Na marcha mais alta"],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    {
+        "prompt": "O que pode acontecer se o motorista tentar dar partida com o carro engatado e sem pisar na embreagem?",
+        "options": [
+            "Nada, é seguro",
+            "O carro pode dar um solavanco e se mover de forma inesperada",
+            "O motor liga mais rápido",
+            "A bateria dura mais",
+        ],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    {
+        "prompt": "Repetir a sequência correta de ligar e desligar o carro ajuda a evitar...",
+        "options": [
+            "Furos no pneu",
+            "Calar o motor sem querer e desgaste desnecessário",
+            "Multas de trânsito",
+            "Consumo de combustível",
+        ],
+        "correct_index": 1,
+        "category": "ligar-e-desligar",
+    },
+    # --- trocar-marchas ---
+    {
+        "prompt": "Antes de trocar de marcha em movimento, o motorista deve...",
+        "options": [
+            "Acelerar fundo e depois pisar na embreagem",
+            "Tirar o pé do acelerador e pisar na embreagem até o fim",
+            "Soltar o volante",
+            "Frear bruscamente",
+        ],
+        "correct_index": 1,
+        "category": "trocar-marchas",
+    },
+    {
+        "prompt": "Quando é indicado subir de marcha?",
+        "options": [
+            "Quando o motor está com rotação baixa demais",
+            "Quando o motor está acelerando demais para a velocidade atual",
+            "Nunca, deve-se ficar sempre na mesma marcha",
+            "Só em descidas",
+        ],
+        "correct_index": 1,
+        "category": "trocar-marchas",
+    },
+    {
+        "prompt": "Quando é indicado descer de marcha?",
+        "options": [
+            "Antes de perder força, como em subidas",
+            "Ao entrar em uma rodovia reta e plana",
+            "Assim que o carro liga",
+            "Nunca é necessário descer de marcha",
+        ],
+        "correct_index": 0,
+        "category": "trocar-marchas",
+    },
+    {
+        "prompt": "Trocar de marcha sem pisar totalmente na embreagem costuma causar...",
+        "options": [
+            "Troca mais suave",
+            "Ruído e desgaste na caixa de câmbio",
+            "Economia de combustível",
+            "Nenhum efeito perceptível",
+        ],
+        "correct_index": 1,
+        "category": "trocar-marchas",
+    },
+    {
+        "prompt": "Durante a troca de marchas, o que o motorista NÃO deve fazer?",
+        "options": [
+            "Manter a atenção na via",
+            "Tirar os olhos da via para olhar a alavanca de câmbio",
+            "Pisar na embreagem até o fim",
+            "Soltar a embreagem aos poucos",
+        ],
+        "correct_index": 1,
+        "category": "trocar-marchas",
+    },
+    {
+        "prompt": "Andar em uma marcha muito alta para a velocidade do carro pode causar...",
+        "options": [
+            "Aceleração descontrolada",
+            "Perda de força e o carro 'engasgar'",
+            "Economia extra de combustível sem nenhuma desvantagem",
+            "Maior velocidade máxima",
+        ],
+        "correct_index": 1,
+        "category": "trocar-marchas",
+    },
+    # --- controle-baixa-velocidade ---
+    {
+        "prompt": "Para manter o carro em velocidade bem baixa e controlada, o motorista deve usar principalmente...",
+        "options": [
+            "O freio de mão",
+            "O ponto de embreagem, sem acelerar",
+            "O acelerador no máximo",
+            "A marcha à ré mesmo indo para frente",
+        ],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    {
+        "prompt": "Ao praticar controle em baixa velocidade, os dois pés do motorista devem ficar...",
+        "options": [
+            "Ambos no acelerador",
+            "Um na embreagem e outro perto do freio, prontos para agir",
+            "Ambos fora dos pedais",
+            "Um no freio de mão e outro no acelerador",
+        ],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    {
+        "prompt": "Se o carro acelerar mais do que o desejado durante uma manobra lenta, o que fazer?",
+        "options": [
+            "Pisar fundo no acelerador para compensar",
+            "Pisar um pouco mais na embreagem em vez de frear bruscamente",
+            "Soltar o volante",
+            "Desligar o carro imediatamente",
+        ],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    {
+        "prompt": "Controle em baixa velocidade é uma habilidade especialmente importante para...",
+        "options": [
+            "Ultrapassagens em rodovia",
+            "Manobras em espaços apertados, como baliza e estacionamento",
+            "Dirigir em alta velocidade",
+            "Uso do farol de neblina",
+        ],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    {
+        "prompt": "Antes de praticar controle em baixa velocidade em curva, é recomendado praticar primeiro...",
+        "options": ["Em alta velocidade", "Em linha reta", "Somente de marcha à ré", "Com os olhos fechados"],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    {
+        "prompt": "Qual erro comum atrapalha o controle em baixa velocidade?",
+        "options": [
+            "Manter os pés prontos na embreagem e no freio",
+            "Acelerar em vez de usar o ponto de embreagem",
+            "Reduzir a velocidade gradualmente",
+            "Observar os retrovisores",
+        ],
+        "correct_index": 1,
+        "category": "controle-baixa-velocidade",
+    },
+    # --- placas-e-sinalizacao ---
+    {
+        "prompt": "Placas de sinalização com fundo branco e borda vermelha, formato circular, geralmente indicam...",
+        "options": [
+            "Uma advertência",
+            "Uma proibição",
+            "Uma informação de serviço",
+            "Uma indicação de destino",
+        ],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    {
+        "prompt": "Placas triangulares com borda vermelha são do tipo...",
+        "options": ["Regulamentação", "Advertência", "Indicação", "Serviços auxiliares"],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    {
+        "prompt": "Ao encontrar uma placa cujo significado o motorista não reconhece, o mais indicado é...",
+        "options": [
+            "Ignorar e manter a velocidade",
+            "Reduzir a velocidade e redobrar a atenção",
+            "Acelerar para passar rápido",
+            "Parar no meio da via",
+        ],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    {
+        "prompt": "As faixas pintadas no chão da via são consideradas...",
+        "options": [
+            "Decoração, sem valor legal",
+            "Sinalização, com o mesmo valor das placas",
+            "Apenas orientação para pedestres",
+            "Válidas somente à noite",
+        ],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    {
+        "prompt": "Uma placa de velocidade máxima indica...",
+        "options": [
+            "A velocidade mínima obrigatória",
+            "O limite de velocidade permitido naquele trecho",
+            "Uma sugestão que pode ser ignorada",
+            "A velocidade ideal para economizar combustível",
+        ],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    {
+        "prompt": "Placas azuis e retangulares costumam indicar...",
+        "options": [
+            "Proibições",
+            "Informações e serviços (ex: estacionamento, hospital)",
+            "Perigo iminente",
+            "Fim de pista",
+        ],
+        "correct_index": 1,
+        "category": "placas-e-sinalizacao",
+    },
+    # --- semaforos-e-prioridade ---
+    {
+        "prompt": "Ao ver o sinal amarelo, o motorista deve...",
+        "options": [
+            "Acelerar para passar antes do vermelho",
+            "Avaliar se dá tempo de parar com segurança e, se não, seguir com cautela",
+            "Ignorar, pois vale como verde",
+            "Parar bruscamente sempre",
+        ],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    {
+        "prompt": "Em um cruzamento sem sinalização, quem tem preferência?",
+        "options": ["Quem chegar primeiro", "Quem vem pela direita", "O veículo mais rápido", "O veículo mais largo"],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    {
+        "prompt": "Mesmo com o sinal verde, antes de avançar em um cruzamento o motorista deve...",
+        "options": [
+            "Acelerar sem olhar, já que tem prioridade",
+            "Observar os dois lados antes de seguir",
+            "Fechar os olhos e confiar no sinal",
+            "Buzinar continuamente",
+        ],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    {
+        "prompt": "É permitido parar sobre a faixa de pedestres esperando o sinal abrir?",
+        "options": [
+            "Sim, sempre que houver fila",
+            "Não, deve-se parar antes da faixa",
+            "Sim, apenas à noite",
+            "Sim, se não houver pedestres por perto",
+        ],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    {
+        "prompt": "Em uma rotatória, quem tem preferência de passagem?",
+        "options": [
+            "Quem está entrando na rotatória",
+            "Quem já está circulando dentro dela",
+            "O veículo mais próximo à saída",
+            "Não existe prioridade definida",
+        ],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    {
+        "prompt": "O sinal vermelho piscante em um semáforo geralmente equivale a...",
+        "options": [
+            "Sinal verde",
+            "Uma placa de PARE",
+            "Sinalização apagada, sem significado",
+            "Permissão para acelerar",
+        ],
+        "correct_index": 1,
+        "category": "semaforos-e-prioridade",
+    },
+    # --- distancia-e-espelhos ---
+    {
+        "prompt": "A 'regra dos 2 segundos' serve para...",
+        "options": [
+            "Calcular o tempo de uma ultrapassagem",
+            "Manter uma distância segura do carro da frente",
+            "Definir o tempo de sinal verde",
+            "Medir a velocidade do vento",
+        ],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    {
+        "prompt": "Em dias de chuva, a distância de segurança em relação ao carro da frente deve ser...",
+        "options": ["Reduzida", "Aumentada", "Igual, não muda nada", "Zero, para não perder o carro de vista"],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    {
+        "prompt": "Com que frequência é recomendado checar o retrovisor interno durante a condução?",
+        "options": [
+            "Nunca, é perigoso desviar o olhar",
+            "A cada 5 a 8 segundos",
+            "Apenas uma vez por viagem",
+            "Só antes de estacionar",
+        ],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    {
+        "prompt": "Antes de uma freada mais forte, o motorista deve, se possível...",
+        "options": [
+            "Ignorar os espelhos e focar só no freio",
+            "Checar os retrovisores para saber quem vem atrás",
+            "Acelerar antes de frear",
+            "Buzinar continuamente",
+        ],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    {
+        "prompt": "Seguir muito próximo do carro da frente porque ele está andando devagar é...",
+        "options": [
+            "Uma prática segura",
+            "Perigoso, pois reduz o tempo de reação em caso de frenagem",
+            "Recomendado em vias urbanas",
+            "Obrigatório em rodovias",
+        ],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    {
+        "prompt": "Manter distância segura do carro da frente ajuda principalmente a...",
+        "options": [
+            "Economizar combustível",
+            "Ter tempo de reação suficiente em caso de frenagem brusca",
+            "Chegar mais rápido ao destino",
+            "Evitar multas de excesso de velocidade",
+        ],
+        "correct_index": 1,
+        "category": "distancia-e-espelhos",
+    },
+    # --- mudanca-de-faixa ---
+    {
+        "prompt": "Antes de mudar de faixa, a seta deve ser ligada...",
+        "options": [
+            "Durante a manobra",
+            "Antes de começar a se mexer",
+            "Depois de já estar na outra faixa",
+            "Não é necessário usar a seta",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    {
+        "prompt": "O 'ponto cego' é...",
+        "options": [
+            "A área bem à frente do carro",
+            "A área ao lado ou atrás do carro que não aparece nos espelhos",
+            "O painel do carro",
+            "A luz de freio traseira",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    {
+        "prompt": "Antes de mudar de faixa, além dos espelhos, o motorista deve...",
+        "options": [
+            "Fechar os olhos por um instante",
+            "Virar rapidamente a cabeça para checar o ponto cego",
+            "Acelerar ao máximo",
+            "Buzinar para avisar",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    {
+        "prompt": "Como deve ser o movimento do volante ao mudar de faixa?",
+        "options": [
+            "Brusco e rápido",
+            "Suave e gradual",
+            "Não importa, desde que seja rápido",
+            "Deve-se soltar o volante",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    {
+        "prompt": "Depois de completar a mudança de faixa, o motorista deve...",
+        "options": [
+            "Manter a seta ligada por mais alguns minutos",
+            "Desligar a seta assim que terminar a manobra",
+            "Acelerar fortemente",
+            "Voltar imediatamente para a faixa anterior",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    {
+        "prompt": "Mudar de faixa sem sinalizar e sem checar o ponto cego aumenta o risco de...",
+        "options": [
+            "Economizar combustível",
+            "Colisão com um veículo que estava fora do campo de visão dos espelhos",
+            "Chegar mais rápido ao destino",
+            "Nenhum risco adicional",
+        ],
+        "correct_index": 1,
+        "category": "mudanca-de-faixa",
+    },
+    # --- direcao-defensiva ---
+    {
+        "prompt": "Direção defensiva significa principalmente...",
+        "options": [
+            "Dirigir o mais rápido possível para sair logo do perigo",
+            "Antecipar riscos e agir para evitar acidentes, mesmo que o erro seja de outro",
+            "Nunca usar os freios",
+            "Ignorar os outros veículos",
+        ],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
+    {
+        "prompt": "Ao passar perto de escolas ou pontos de ônibus, o motorista deve...",
+        "options": [
+            "Manter a velocidade normal",
+            "Reduzir a velocidade e redobrar a atenção",
+            "Acelerar para passar rápido",
+            "Buzinar continuamente",
+        ],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
+    {
+        "prompt": "Antes de passar perto de um pedestre na calçada, o motorista deve...",
+        "options": [
+            "Presumir que o pedestre já viu o carro",
+            "Reduzir a velocidade, mesmo que o pedestre pareça ter visto o carro",
+            "Acelerar para passar antes dele se mexer",
+            "Buzinar sem necessidade",
+        ],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
+    {
+        "prompt": "Ao ultrapassar um ciclista, a distância lateral mínima recomendada é de aproximadamente...",
+        "options": ["30 centímetros", "1,5 metro", "10 centímetros", "Não há necessidade de distância extra"],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
+    {
+        "prompt": "Motociclistas e ciclistas, em relação aos pontos cegos, geralmente...",
+        "options": [
+            "Não têm pontos cegos",
+            "Também têm pontos cegos e podem não ver o carro",
+            "São sempre visíveis em qualquer espelho",
+            "Só têm ponto cego à noite",
+        ],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
+    {
+        "prompt": "Ao perceber um comportamento imprevisível de outro condutor, o mais indicado é...",
+        "options": [
+            "Acelerar para se afastar rapidamente",
+            "Manter distância e reduzir a velocidade",
+            "Buzinar e seguir sem alterar nada",
+            "Fechar o carro do outro condutor",
+        ],
+        "correct_index": 1,
+        "category": "direcao-defensiva",
+    },
 ]
 
 
@@ -670,14 +1357,23 @@ async def seed_quiz_questions(
     session_factory: async_sessionmaker = async_session,
 ) -> None:
     async with session_factory() as session:
-        existing = await session.scalar(select(QuizQuestion.id).limit(1))
-        if existing is not None:
+        # Idempotente por categoria (não pela tabela inteira) — assim, quando
+        # novas categorias são adicionadas a DEFAULT_QUIZ_QUESTIONS depois que
+        # o banco já foi semeado uma vez, rodar o seed de novo insere só as
+        # categorias que ainda não existem, sem duplicar as que já existem.
+        existing_result = await session.execute(select(QuizQuestion.category).distinct())
+        existing_categories = {category for (category,) in existing_result.all()}
+
+        new_questions = [
+            question for question in DEFAULT_QUIZ_QUESTIONS if question["category"] not in existing_categories
+        ]
+        if not new_questions:
             print("quiz_questions já populada, pulando seed.")
             return
 
-        session.add_all(QuizQuestion(**question) for question in DEFAULT_QUIZ_QUESTIONS)
+        session.add_all(QuizQuestion(**question) for question in new_questions)
         await session.commit()
-        print(f"{len(DEFAULT_QUIZ_QUESTIONS)} perguntas de quiz inseridas.")
+        print(f"{len(new_questions)} perguntas de quiz inseridas.")
 
 
 async def seed_all(session_factory: async_sessionmaker = async_session) -> None:
