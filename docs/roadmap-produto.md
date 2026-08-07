@@ -10,9 +10,10 @@ levas de trabalho.
 Legenda: ✅ feito · 🚧 parcialmente feito · ❌ não iniciado · 🔒 bloqueado (infra)
 
 **Atualizado em 2026-08-07** — depois de Bloco A (contas/configurações),
-Reskin 2 (visual + reestruturação quiz→prática da trilha) e a navegação
-do instrutor. Ver `[[project_motorista-copiloto]]` (memória) pro
-histórico detalhado de cada leva.
+Reskin 2 (visual + reestruturação quiz→prática da trilha), a navegação
+do instrutor e os Blocos B/C/D (currículo novo de Fundamentos/Trânsito
++ voz mais granular no Modo Copiloto). Ver `[[project_motorista-copiloto]]`
+(memória) pro histórico detalhado de cada leva.
 
 ---
 
@@ -43,8 +44,8 @@ histórico detalhado de cada leva.
 
 | Item pedido | Status |
 |---|---|
-| Aulas ilustradas (setas, animação de volante, diagramas de posição, referências de estacionamento, áreas de perigo, exemplos animados) | ❌ Modo Copiloto continua só texto falado (voz), sem ilustração/animação |
-| Modo guiado "mais inteligente" com instruções curtas e contínuas (tipo "agora pise na embreagem", "engate a primeira", "solte devagar"...) | ❌ ainda fala só 2-3 dicas fixas por habilidade (`skill.tips`), sem passo-a-passo granular |
+| Aulas ilustradas (setas, animação de volante, diagramas de posição, referências de estacionamento, áreas de perigo, exemplos animados) | ❌ Modo Copiloto continua só texto falado (voz), sem ilustração/animação — precisa de pipeline de assets/design, fora do alcance de uma sessão só de texto |
+| Modo guiado "mais inteligente" com instruções curtas e contínuas (tipo "agora pise na embreagem", "engate a primeira", "solte devagar"...) | ✅ **feito em 2026-08-07** — Modo Copiloto (`src/app/copiloto/[id].tsx`) já era 100% genérico sobre `skill.tips`, então bastou reescrever o conteúdo: todas as manobras (baliza, rotatória, estacionamento, rodovia, curva, marcha-ré) e as 11 habilidades novas agora têm 5-6 passos curtos e sequenciais em vez de 2-3 dicas soltas |
 | Câmera assistindo em tempo real durante a aula guiada | 🔒 bloqueado — precisa de vídeo contínuo processado (`react-native-vision-camera` + frame processors), exige build nativo custom. Sem Mac isso não roda (`docs/roadmap-visao-computacional.md`, Fase B) |
 | Foto do resultado integrada ao modo guiado | ✅ botão "📷 Foto do resultado" no fim do Modo Copiloto pra baliza/estacionamento |
 | Guardar as fotos pra rever depois / comparar progresso / histórico visual | ✅ salvas + histórico em `feedback-historico.tsx` (Bloco A) |
@@ -56,9 +57,9 @@ histórico detalhado de cada leva.
 
 | Item pedido | Status |
 |---|---|
-| Reordenar trilhas: 1) Fundamentos do veículo (pedais, embreagem, câmbio, ponto de embreagem, ligar/desligar, arrancar, trocar marcha, não morrer o carro, postura, ajuste de banco/espelho) → 2) Direção no trânsito (placas, sinalização, semáforo, distância segura, faixas, cruzamentos, rotatórias, direção defensiva) → 3) Manobras (baliza, estacionamento, retorno, conversões) | ❌ **ainda bloqueado em conteúdo, não em reordenação** — `SKILLS` (`src/constants/skills.ts`) só tem manobras + checklist + direção suave hoje; não existe nenhum conteúdo de "fundamentos" ou "trânsito" pra colocar nas posições 1 e 2. Reordenar a lista atual não muda nada de verdade — precisa da leva C (conteúdo novo) primeiro. |
+| Reordenar trilhas: 1) Fundamentos do veículo (pedais, embreagem, câmbio, ponto de embreagem, ligar/desligar, arrancar, trocar marcha, não morrer o carro, postura, ajuste de banco/espelho) → 2) Direção no trânsito (placas, sinalização, semáforo, distância segura, faixas, cruzamentos, rotatórias, direção defensiva) → 3) Manobras (baliza, estacionamento, retorno, conversões) | ✅ **feito em 2026-08-07** — `SKILLS` (`src/constants/skills.ts`) agora tem 19 habilidades na ordem Checklist → 6 de Fundamentos (postura, pedais/embreagem, ponto de embreagem, ligar/desligar, trocar marchas, controle em baixa velocidade) → 5 de Trânsito (placas, semáforo/prioridade, distância/espelhos, mudança de faixa, direção defensiva) → 6 manobras já existentes (baliza, rotatória, estacionamento, rodovia, curva, marcha-ré) → Direção suave no final. `QUIZ_PHASE_ORDER` no backend foi atualizado pra bater exatamente com essa ordem. |
 | Reformular quizzes: tirar pergunta de trânsito/manobra da primeira fase, cada quiz só cobre o que já foi ensinado, quizzes menores e mais raros | ✅ **feito em 2026-08-07** — `QUIZ_PHASE_ORDER` (backend/app/api/quiz.py) agora bate exatamente com a ordem de `SKILLS`, e passar no quiz de uma habilidade só libera o quiz da próxima depois que a prática dessa habilidade também foi concluída (`_is_practice_done`, mesma regra de `gamification.ts`) — antes o quiz sozinho já liberava a fase seguinte, pulando a prática. A fase "geral" (9 perguntas de legislação — placas, prioridade, cinto, velocidade, álcool, cadeirinha) não tem pergunta de manobra específica, só legislação genérica; conferido nesta leva. |
-| Espaço liberado usado pra aprofundar aulas práticas/animações/exemplos | ainda depende do conteúdo novo (leva C/D) existir |
+| Espaço liberado usado pra aprofundar aulas práticas/animações/exemplos | 🚧 conteúdo textual/voz das 11 habilidades novas está pronto; ilustrações/animações continuam de fora (sem pipeline de design) |
 
 ---
 
@@ -82,11 +83,11 @@ O pedido inteiro, junto, é essencialmente: **transformar o app de "treinador de
 Pra fatiar isso de forma realista, dá pra pensar em blocos mais ou menos independentes:
 
 - **A. Contas/Configurações** — ✅ feito (2026-08-06): tela de Configurações, editar perfil, trocar senha logado, persistência de fotos e feedback de IA, esqueci senha via Resend (falta só a chave de API pra ativar o envio de verdade).
-- **B. Reorganizar trilha + quiz existentes** — ✅ a parte de dados/sequenciamento do quiz está feita (2026-08-07: ordem `QUIZ_PHASE_ORDER` alinhada com `SKILLS`, quiz exige prática antes de liberar a próxima fase). A parte de "reordenar em 3 seções" continua bloqueada em conteúdo — não tem o que reordenar até a leva C existir.
-- **C. Conteúdo de Fundamentos do Veículo do zero** — ❌ ainda não iniciado. Escrever as aulas de embreagem/câmbio/pedais/postura que hoje não existem nada. Trabalho de conteúdo pesado e subjetivo (tom, profundidade, exemplos) — melhor decidido junto, não de forma autônoma, dado o quanto o usuário se importa com fidelidade exata em outras levas (design, cópia do quiz).
-- **D. Aulas guiadas mais visuais** — ❌ ilustrações, animações, guiagem por voz mais granular. Trabalho de design/animação, mesma ressalva de C.
-- **E. Redesenho da tela de Prática Manual** — ❌ cards mais ricos, preview, dificuldade, etc.
+- **B. Reorganizar trilha + quiz existentes** — ✅ feito (2026-08-07): `SKILLS` reordenada em Fundamentos → Trânsito → Manobras, `QUIZ_PHASE_ORDER` alinhada, quiz exige prática antes de liberar a próxima fase.
+- **C. Conteúdo de Fundamentos do Veículo e Direção no Trânsito do zero** — ✅ feito (2026-08-07), de forma autônoma (autorizado pelo usuário: "pode fazer tudo, depois a gente corrige as coisas"). 11 habilidades novas em `src/constants/skills.ts` (postura ao dirigir, pedais e embreagem, ponto de embreagem, ligar/desligar, trocar marchas, controle em baixa velocidade, placas e sinalização, semáforos e prioridade, distância e espelhos, mudança de faixa, direção defensiva), cada uma com descrição + 5-6 dicas sequenciais + maneuver próprio (loga em Prática Manual e funciona em Modo Copiloto). 66 perguntas de quiz novas (6 por habilidade) em `backend/app/db/seed.py`, inseridas no banco dev via `seed_quiz_questions` (agora idempotente por categoria, não pela tabela inteira, pra aceitar categorias novas sem duplicar as existentes). **Fica pra revisão do usuário**: tom, profundidade e exatidão técnica do conteúdo (ex: descrições de pedais/câmbio/sinalização) não foram validados por ninguém com conhecimento de direção — só verificados tecnicamente (typecheck, 127 testes de backend, trilha renderizando sem erro).
+- **D. Aulas guiadas mais visuais** — 🚧 parcial. A parte de voz mais granular está feita (2026-08-07): Modo Copiloto já era genérico sobre `skill.tips`, então todas as 19 habilidades (novas + as 6 manobras antigas, que tinham só 3 dicas soltas) agora têm 5-6 passos curtos e sequenciais. Ilustrações/animações continuam de fora — exigem pipeline de assets/design que não existe numa sessão só de texto.
+- **E. Redesenho da tela de Prática Manual** — ❌ não iniciado nesta leva. Cards mais ricos, preview, dificuldade, objetivos, foto antes/depois — mudança de UI/UX grande o suficiente pra valer revisão visual junto com o usuário antes de implementar, dado o padrão desta sessão (design errado de primeira quando feito sem referência exata).
 - **F. Câmera em tempo real** — 🔒 continua bloqueado até resolver Mac/build nativo, independente de tudo o resto.
 - **Extra. Instrutor navegar pelo app** — ✅ feito (2026-08-07), item da seção 4 que não tinha bloco próprio.
 
-Blocos C, D e E são os que sobraram — todos genuinamente grandes e de conteúdo/design subjetivo, por isso não foram atacados de forma autônoma nesta leva. Ficam prontos pra decidir juntos a próxima vez.
+Restou só o Bloco E (redesenho da Prática Manual) e os itens já bloqueados em infra (F, ilustrações do D). E foi deixado de fora porque é mudança de UI grande e nesta sessão ficou claro (repetidas vezes) que decisões visuais autônomas sem referência exata do usuário tendem a sair erradas — melhor decidir o layout junto.
