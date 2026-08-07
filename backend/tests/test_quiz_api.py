@@ -173,3 +173,73 @@ async def test_create_session_for_locked_category_is_rejected(client, session_fa
     )
 
     assert response.status_code == 403
+
+
+async def _pass_quiz(client, headers, question, category):
+    return await client.post(
+        "/quiz/sessions",
+        json={
+            "answers": [{"question_id": question.id, "selected_index": question.correct_index}],
+            "category": category,
+        },
+        headers=headers,
+    )
+
+
+async def test_passing_quiz_without_practice_keeps_next_phase_locked(
+    client, session_factory, auth_headers
+):
+    q_geral = await _seed_question(session_factory, category=None, correct_index=0)
+    q_baliza = await _seed_question(session_factory, category="baliza", correct_index=0)
+    await _seed_question(session_factory, category="rotatoria")
+
+    await _pass_quiz(client, auth_headers, q_geral, "geral")
+    await _pass_quiz(client, auth_headers, q_baliza, "baliza")
+
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
+    rotatoria_phase = next(phase for phase in phases if phase["category"] == "rotatoria")
+    assert rotatoria_phase["unlocked"] is False
+
+
+async def test_passing_quiz_with_practice_unlocks_next_phase(client, session_factory, auth_headers):
+    q_geral = await _seed_question(session_factory, category=None, correct_index=0)
+    q_baliza = await _seed_question(session_factory, category="baliza", correct_index=0)
+    await _seed_question(session_factory, category="rotatoria")
+
+    await _pass_quiz(client, auth_headers, q_geral, "geral")
+    await _pass_quiz(client, auth_headers, q_baliza, "baliza")
+
+    practice_payload = {
+        "practiced_at": "2026-08-06",
+        "duration_minutes": 20,
+        "distance_km": 5.0,
+        "maneuvers": ["Baliza"],
+    }
+    await client.post("/practice-sessions", json=practice_payload, headers=auth_headers)
+    await client.post("/practice-sessions", json=practice_payload, headers=auth_headers)
+
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
+    rotatoria_phase = next(phase for phase in phases if phase["category"] == "rotatoria")
+    assert rotatoria_phase["unlocked"] is True
+
+
+async def test_checklist_phase_requires_checklist_sessions_to_unlock_next(
+    client, session_factory, auth_headers
+):
+    q_geral = await _seed_question(session_factory, category=None, correct_index=0)
+    q_checklist = await _seed_question(session_factory, category="checklist", correct_index=0)
+    await _seed_question(session_factory, category="direcao-suave")
+
+    await _pass_quiz(client, auth_headers, q_geral, "geral")
+    await _pass_quiz(client, auth_headers, q_checklist, "checklist")
+
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
+    direcao_suave_phase = next(phase for phase in phases if phase["category"] == "direcao-suave")
+    assert direcao_suave_phase["unlocked"] is False
+
+    await client.post("/checklist/sessions", json={}, headers=auth_headers)
+    await client.post("/checklist/sessions", json={}, headers=auth_headers)
+
+    phases = (await client.get("/quiz/phases", headers=auth_headers)).json()
+    direcao_suave_phase = next(phase for phase in phases if phase["category"] == "direcao-suave")
+    assert direcao_suave_phase["unlocked"] is True

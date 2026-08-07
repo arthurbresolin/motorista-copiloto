@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.learners import get_current_learner
 from app.db.session import get_db
-from app.models import Learner, QuizQuestion, QuizSession
+from app.models import ChecklistSession, Learner, MonitorSession, PracticeSession, QuizQuestion, QuizSession
 from app.schemas.quiz import QuizPhaseRead, QuizQuestionRead, QuizSessionCreate, QuizSessionRead
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -28,6 +28,59 @@ QUIZ_PHASE_ORDER: list[tuple[str, str]] = [
     ("checklist", "Checklist"),
     ("direcao-suave", "Direção suave"),
 ]
+
+# Mesma regra de "prática concluída" da trilha (src/lib/gamification.ts,
+# MANEUVER_DONE_THRESHOLD/SMOOTH_DRIVING_MIN_DURATION_SECONDS em
+# src/constants/skills.ts) — precisa bater exatamente, senão o quiz libera a
+# próxima fase antes da prática da fase atual estar de fato concluída.
+MANEUVER_DONE_THRESHOLD = 2
+SMOOTH_DRIVING_MIN_DURATION_SECONDS = 120
+PHASE_MANEUVER_LABEL: dict[str, str] = {
+    "baliza": "Baliza",
+    "rotatoria": "Rotatória",
+    "estacionamento": "Estacionamento",
+    "rodovia": "Rodovia",
+    "curva": "Curva",
+    "marcha-re": "Marcha à ré",
+}
+
+
+async def _is_practice_done(db: AsyncSession, learner_id: int, phase_key: str) -> bool:
+    if phase_key == "geral":
+        # "geral" é só legislação, sem componente prático — não bloqueia nada.
+        return True
+
+    if phase_key == "checklist":
+        count_result = await db.execute(
+            select(func.count(ChecklistSession.id)).where(ChecklistSession.learner_id == learner_id)
+        )
+        return (count_result.scalar_one() or 0) >= MANEUVER_DONE_THRESHOLD
+
+    if phase_key == "direcao-suave":
+        sessions_result = await db.execute(
+            select(MonitorSession).where(MonitorSession.learner_id == learner_id)
+        )
+        smooth_count = sum(
+            1
+            for session in sessions_result.scalars().all()
+            if session.event_count == 0 and session.duration_seconds >= SMOOTH_DRIVING_MIN_DURATION_SECONDS
+        )
+        return smooth_count >= MANEUVER_DONE_THRESHOLD
+
+    maneuver_label = PHASE_MANEUVER_LABEL.get(phase_key)
+    if maneuver_label is None:
+        return True
+
+    maneuvers_result = await db.execute(
+        select(PracticeSession.maneuvers).where(PracticeSession.learner_id == learner_id)
+    )
+    count = sum(
+        1
+        for maneuvers in maneuvers_result.scalars().all()
+        for maneuver in maneuvers
+        if maneuver == maneuver_label
+    )
+    return count >= MANEUVER_DONE_THRESHOLD
 
 
 def _db_category(phase_key: str) -> str | None:
@@ -83,7 +136,11 @@ async def _build_phases(db: AsyncSession, learner_id: int) -> list[QuizPhaseRead
                 best_total=best_total,
             )
         )
-        previous_passed = unlocked and best is not None and best_score / best_total >= QUIZ_PASS_THRESHOLD
+        quiz_passed = unlocked and best is not None and best_score / best_total >= QUIZ_PASS_THRESHOLD
+        # Passar no quiz sozinho não libera a próxima fase — a prática da
+        # fase atual também precisa estar concluída, senão o quiz "pula" a
+        # etapa de prática que a trilha exige antes de avançar.
+        previous_passed = quiz_passed and await _is_practice_done(db, learner_id, phase_key)
 
     return phases
 
