@@ -20,7 +20,7 @@ import {
   OrganicText,
   ScreenBackground,
 } from '@/components/organic';
-import { SKILLS } from '@/constants/skills';
+import { SKILLS, type Skill } from '@/constants/skills';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSkillDetailSheet } from '@/hooks/use-skill-detail-sheet';
 
@@ -36,13 +36,29 @@ const ENCOURAGEMENT_THRESHOLD = 2;
 // posição fixa razoável (perto do topo da área de conteúdo).
 const DEFAULT_SHEET_ANCHOR_Y = 200;
 
+// Passar no quiz nunca libera a próxima fase direto — libera a prática
+// dessa habilidade (backend exige as duas coisas, ver quiz.py
+// _is_practice_done). "geral" é a exceção: não tem prática própria, então
+// passar nela já libera a próxima fase de verdade.
+function passedMessage(skill: Skill | undefined): string {
+  if (!skill) {
+    return 'Passou! A próxima fase foi liberada.';
+  }
+  if (skill.maneuver) {
+    return 'Passou! Agora pratique no Modo Copiloto pra destravar a próxima habilidade.';
+  }
+  if (skill.key === 'checklist') {
+    return 'Passou! Agora conclua o checklist pra destravar a próxima habilidade.';
+  }
+  return 'Passou! Agora monitore uma sessão de direção suave pra destravar a próxima habilidade.';
+}
+
 export default function QuizPhaseScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const [phase, setPhase] = useState<QuizPhase | null>(null);
-  const [nextPhase, setNextPhase] = useState<QuizPhase | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -64,7 +80,6 @@ export default function QuizPhaseScreen() {
       const [data, phases] = await Promise.all([getQuizQuestions(category), getQuizPhases()]);
       const index = phases.findIndex((candidate) => (candidate.category ?? 'geral') === category);
       setPhase(index >= 0 ? phases[index] : null);
-      setNextPhase(index >= 0 ? (phases[index + 1] ?? null) : null);
       setQuestions(data);
       setStage('playing');
       setCurrentIndex(0);
@@ -238,9 +253,7 @@ export default function QuizPhaseScreen() {
               </OrganicText>
               <OrganicText size="small" color="onAccent" style={styles.centerText}>
                 {passed
-                  ? nextPhase
-                    ? `Passou! "${nextPhase.label}" foi liberada.`
-                    : 'Passou! Essa era a última fase.'
+                  ? passedMessage(skillForCategory)
                   : showEncouragement
                     ? 'Essa tá osso, hein? 😅 Bora dar uma revisada antes de tentar de novo?'
                     : 'Não chegou a 70% — tente de novo pra liberar a próxima fase.'}
