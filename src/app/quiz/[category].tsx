@@ -31,6 +31,10 @@ const QUIZ_PASS_RATIO = 0.7;
 // A partir da 2ª falha seguida na mesma fase, o card de resultado troca o
 // tom sério por um mais leve e sugere revisar em vez de só "tente de novo".
 const ENCOURAGEMENT_THRESHOLD = 2;
+// SkillDetailSheet normalmente ancora perto do toque (nó da trilha) — aqui
+// não tem um nó pra ancorar perto, só um botão de texto, então usa uma
+// posição fixa razoável (perto do topo da área de conteúdo).
+const DEFAULT_SHEET_ANCHOR_Y = 200;
 
 export default function QuizPhaseScreen() {
   const { category } = useLocalSearchParams<{ category: string }>();
@@ -247,7 +251,7 @@ export default function QuizPhaseScreen() {
               <OrganicButton
                 label="📖 Rever dicas"
                 variant="neutral"
-                onPress={() => openSkillDetail(skillForCategory.key)}
+                onPress={() => openSkillDetail(skillForCategory.key, DEFAULT_SHEET_ANCHOR_Y)}
               />
             )}
             <OrganicButton label="Voltar pras fases" variant="neutral" onPress={() => router.back()} />

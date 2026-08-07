@@ -4,7 +4,7 @@ import { SkillDetailSheet } from '@/components/organic';
 import type { SkillKey } from '@/constants/skills';
 
 type SkillDetailSheetContextValue = {
-  open: (key: SkillKey) => void;
+  open: (key: SkillKey, anchorY: number) => void;
 };
 
 const SkillDetailSheetContext = createContext<SkillDetailSheetContextValue | null>(null);
@@ -17,8 +17,12 @@ const SkillDetailSheetContext = createContext<SkillDetailSheetContextValue | nul
 // irmão de todo o <Stack>, ele sempre pinta por cima de tudo.
 export function SkillDetailSheetProvider({ children }: { children: ReactNode }) {
   const [skillKey, setSkillKey] = useState<SkillKey | null>(null);
+  const [anchorY, setAnchorY] = useState(0);
 
-  const open = useCallback((key: SkillKey) => setSkillKey(key), []);
+  const open = useCallback((key: SkillKey, y: number) => {
+    setAnchorY(y);
+    setSkillKey(key);
+  }, []);
   const close = useCallback(() => setSkillKey(null), []);
 
   const value = useMemo(() => ({ open }), [open]);
@@ -26,7 +30,7 @@ export function SkillDetailSheetProvider({ children }: { children: ReactNode }) 
   return (
     <SkillDetailSheetContext.Provider value={value}>
       {children}
-      <SkillDetailSheet skillKey={skillKey} onClose={close} />
+      <SkillDetailSheet skillKey={skillKey} anchorY={anchorY} onClose={close} />
     </SkillDetailSheetContext.Provider>
   );
 }

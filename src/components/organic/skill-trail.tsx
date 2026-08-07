@@ -1,19 +1,18 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Line, Svg } from 'react-native-svg';
 
 import { FadeSlideIn } from './fade-slide-in';
 import { OrganicPill } from './pill';
-import { SkillNode, type SkillNodeState } from './skill-node';
+import { SkillNode } from './skill-node';
 import { OrganicText } from './text';
-import { PRACTICE_ICON_BY_SKILL, QUIZ_ICON } from '@/constants/skill-icons';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { SkillProgress } from '@/lib/gamification';
-import type { Skill, SkillKey } from '@/constants/skills';
+import type { SkillKey } from '@/constants/skills';
 
-const NODE_SIZE = 44;
-const CURRENT_NODE_SIZE = 64;
+const NODE_SIZE = 52;
+const CURRENT_NODE_SIZE = 76;
 const OFFSET_STEP = 56;
 const PRESS_SCALE = 0.94;
 const PRESS_DURATION = 100;
@@ -23,20 +22,17 @@ const ENTRANCE_STAGGER_MS = 50;
 const TRAIL_OFFSETS = [0, 1, 1, 0, -1, -1, 0, 1];
 
 function TrailNode({
-  skill,
-  state,
-  phase,
+  progress,
   index,
   offset,
   onPress,
 }: {
-  skill: Skill;
-  state: SkillNodeState;
-  phase: 'quiz' | 'practice';
+  progress: SkillProgress;
   index: number;
   offset: number;
-  onPress: () => void;
+  onPress: (event: GestureResponderEvent) => void;
 }) {
+  const { skill, state, phase, quizPassed, practiceDone } = progress;
   const isCurrent = state === 'current';
   const size = isCurrent ? CURRENT_NODE_SIZE : NODE_SIZE;
   const scale = useSharedValue(1);
@@ -44,11 +40,6 @@ function TrailNode({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
-  // Selo só faz sentido pra sub-fase de uma habilidade "atual" (quiz
-  // pendente) — feita/travada já ficam claras só pelo ícone principal
-  // (✓/🔒), duplicar o selo ali só teria poluído visualmente.
-  const badge = state === 'current' && phase === 'quiz' ? QUIZ_ICON : undefined;
 
   return (
     <FadeSlideIn delay={index * ENTRANCE_STAGGER_MS} style={[styles.row, { marginLeft: offset }]}>
@@ -66,8 +57,9 @@ function TrailNode({
             state={state}
             label={skill.label}
             size={size}
-            icon={PRACTICE_ICON_BY_SKILL[skill.key]}
-            badge={badge}
+            phase={phase}
+            quizPassed={quizPassed}
+            practiceDone={practiceDone}
           />
           <OrganicText size="small" color="textSecondary" style={styles.nodeLabel}>
             {skill.label}
@@ -90,7 +82,7 @@ export function SkillTrail({
   onPressSkill,
 }: {
   items: SkillProgress[];
-  onPressSkill: (key: SkillKey) => void;
+  onPressSkill: (key: SkillKey, anchorY: number) => void;
 }) {
   const theme = useTheme();
 
@@ -116,15 +108,13 @@ export function SkillTrail({
           </Svg>
         )}
 
-        {items.map(({ skill, state, phase }, index) => (
+        {items.map((progress, index) => (
           <TrailNode
-            key={skill.key}
-            skill={skill}
-            state={state}
-            phase={phase}
+            key={progress.skill.key}
+            progress={progress}
             index={index}
             offset={TRAIL_OFFSETS[index % TRAIL_OFFSETS.length] * OFFSET_STEP}
-            onPress={() => onPressSkill(skill.key)}
+            onPress={(event) => onPressSkill(progress.skill.key, event.nativeEvent.pageY)}
           />
         ))}
       </View>

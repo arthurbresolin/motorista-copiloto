@@ -1,6 +1,6 @@
+import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,45 +8,57 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { OrganicButton } from './button';
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
-import { SkillDetailContent } from './skill-detail-content';
 import type { SkillKey } from '@/constants/skills';
 import { RadiusLg, Spacing } from '@/constants/theme';
+import { practiceAction, useSkillDetail } from '@/hooks/use-skill-detail';
 
-const DURATION = 220;
+const DURATION = 180;
+const CARD_WIDTH = 280;
+const TOP_MARGIN = 90;
+const BOTTOM_MARGIN = 220;
 
-// Overlay compacto ao tocar num nó da trilha — substitui a navegação pra
-// tela cheia skill/[id] (mantida só como wrapper de deep link, ver esse
-// arquivo). Animação manual (não `entering`/Keyframe) pelo mesmo motivo do
-// FadeSlideIn: aqui não tem risco de flex/gap quebrado (é overlay absoluto,
-// sozinho), mas mantém o mesmo padrão testado em vez de outra API.
+// Callout compacto ancorado perto do nó tocado — não é uma tela cheia nem
+// um bottom-sheet: só o essencial (título + a ação da fase atual) mais um
+// link "Ver mais" pra tela cheia (skill/[id]) com descrição/dicas.
 export function SkillDetailSheet({
   skillKey,
+  anchorY,
   onClose,
 }: {
   skillKey: SkillKey | null;
+  anchorY: number;
   onClose: () => void;
 }) {
-  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { skill, loadState, phase, quizLabel } = useSkillDetail(skillKey);
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = skillKey
-      ? withTiming(1, { duration: DURATION, easing: Easing.out(Easing.quad) })
-      : withTiming(0, { duration: DURATION, easing: Easing.in(Easing.quad) });
+    progress.value = withTiming(skillKey ? 1 : 0, {
+      duration: DURATION,
+      easing: skillKey ? Easing.out(Easing.quad) : Easing.in(Easing.quad),
+    });
   }, [skillKey, progress]);
 
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: progress.value * 0.5,
-  }));
-  const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - progress.value) * 40 }],
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value * 0.35 }));
+  const cardStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
+    transform: [{ scale: 0.9 + progress.value * 0.1 }],
   }));
 
   if (!skillKey) {
     return null;
+  }
+
+  const screenHeight = Dimensions.get('window').height;
+  const top = Math.min(Math.max(anchorY - 40, TOP_MARGIN), screenHeight - BOTTOM_MARGIN);
+
+  function handleNavigate(route: string) {
+    onClose();
+    router.push(route as never);
   }
 
   return (
@@ -54,22 +66,29 @@ export function SkillDetailSheet({
       <Animated.View style={[styles.backdrop, backdropStyle]}>
         <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} accessibilityLabel="Fechar" />
       </Animated.View>
-      <Animated.View style={[styles.sheetWrapper, sheetStyle]} pointerEvents="box-none">
-        <OrganicSurface
-          backgroundColor="background"
-          borderRadius={RadiusLg}
-          style={[styles.sheet, { paddingBottom: insets.bottom + Spacing.four }]}>
-          <View style={styles.header}>
-            <View style={styles.headerHandle} />
-            <Pressable onPress={onClose} style={styles.closeButton} accessibilityLabel="Fechar">
-              <OrganicText size="small" color="textSecondary">
-                ✕ Fechar
-              </OrganicText>
-            </Pressable>
-          </View>
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            <SkillDetailContent skillKey={skillKey} onBeforeNavigate={onClose} />
-          </ScrollView>
+
+      <Animated.View style={[styles.cardWrapper, { top }, cardStyle]} pointerEvents="box-none">
+        <OrganicSurface backgroundColor="background" borderRadius={RadiusLg} style={styles.card}>
+          {loadState === 'loading' || !skill ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              <OrganicText size="subtitle">{skill.label}</OrganicText>
+              {phase === 'quiz' ? (
+                <OrganicButton label={quizLabel} onPress={() => handleNavigate(`/quiz/${skill.key}`)} />
+              ) : (
+                <OrganicButton
+                  label={practiceAction(skill).label}
+                  onPress={() => handleNavigate(practiceAction(skill).route)}
+                />
+              )}
+              <Pressable onPress={() => handleNavigate(`/skill/${skill.key}`)}>
+                <OrganicText size="small" color="textSecondary" style={styles.moreLink}>
+                  Ver mais →
+                </OrganicText>
+              </Pressable>
+            </>
+          )}
         </OrganicSurface>
       </Animated.View>
     </View>
@@ -79,8 +98,7 @@ export function SkillDetailSheet({
 const styles = StyleSheet.create({
   // zIndex alto de propósito: a barra de abas (CustomTabList em app-tabs.tsx)
   // é irmã do conteúdo da tela dentro do TabSlot e pinta por cima por ordem
-  // de DOM (nenhum dos dois tinha zIndex antes) — sem isso o rodapé do sheet
-  // fica escondido atrás da barra de abas.
+  // de DOM — sem isso o popup ficaria escondido atrás da barra de abas.
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
@@ -90,42 +108,19 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
   },
-  sheetWrapper: {
+  cardWrapper: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
-    maxHeight: '85%',
-  },
-  sheet: {
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    paddingTop: Spacing.two,
-    paddingHorizontal: Spacing.four,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: Spacing.two,
   },
-  headerHandle: {
-    position: 'absolute',
-    left: '50%',
-    top: 0,
-    marginLeft: -18,
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+  card: {
+    width: CARD_WIDTH,
+    gap: Spacing.three,
+    padding: Spacing.four,
+    alignItems: 'stretch',
   },
-  closeButton: {
-    padding: Spacing.one,
-  },
-  scrollView: {
-    flexGrow: 0,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.four,
+  moreLink: {
+    textAlign: 'center',
   },
 });

@@ -1,31 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { getChecklistSessions, type ChecklistSession } from '@/api/checklist';
-import { ApiError } from '@/api/client';
-import { getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
-import { getPracticeSessions, type PracticeSession } from '@/api/practice-sessions';
-import { getQuizPhases, type QuizPhase } from '@/api/quiz';
 import { OrganicButton } from './button';
 import { OrganicProgressBar } from './progress-bar';
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
-import { MANEUVER_DONE_THRESHOLD, SKILLS, type Skill, type SkillKey } from '@/constants/skills';
+import type { SkillKey } from '@/constants/skills';
 import { Spacing } from '@/constants/theme';
-import { computeSkillProgress, getQuizPhaseRatio, QUIZ_PASS_RATIO } from '@/lib/gamification';
-
-type LoadState = 'loading' | 'error' | 'ready';
-
-function practiceAction(skill: Skill): { label: string; route: string } {
-  if (skill.key === 'checklist') {
-    return { label: '✅ Fazer checklist', route: '/checklist' };
-  }
-  if (skill.key === 'direcao-suave') {
-    return { label: '🚦 Monitorar sessão', route: '/monitor' };
-  }
-  return { label: '📝 Registrar prática manual', route: '/nova-pratica' };
-}
+import { practiceAction, useSkillDetail } from '@/hooks/use-skill-detail';
 
 export function SkillDetailContent({
   skillKey,
@@ -39,7 +22,8 @@ export function SkillDetailContent({
   onBeforeNavigate?: () => void;
 }) {
   const router = useRouter();
-  const skill = SKILLS.find((candidate) => candidate.key === skillKey);
+  const { skill, loadState, errorMessage, reload, count, phase, bestQuizRatio, quizLabel, practiceThreshold } =
+    useSkillDetail(skillKey);
 
   const navigate = useCallback(
     (route: string) => {
@@ -49,39 +33,6 @@ export function SkillDetailContent({
     [onBeforeNavigate, router],
   );
 
-  const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>([]);
-  const [checklistSessions, setChecklistSessions] = useState<ChecklistSession[]>([]);
-  const [monitorSessions, setMonitorSessions] = useState<MonitorSession[]>([]);
-  const [quizPhases, setQuizPhases] = useState<QuizPhase[]>([]);
-  const [loadState, setLoadState] = useState<LoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const loadAll = useCallback(async () => {
-    setLoadState('loading');
-    try {
-      const [practice, checklist, monitor, phases] = await Promise.all([
-        getPracticeSessions(),
-        getChecklistSessions(),
-        getMonitorSessions(),
-        getQuizPhases(),
-      ]);
-      setPracticeSessions(practice);
-      setChecklistSessions(checklist);
-      setMonitorSessions(monitor);
-      setQuizPhases(phases);
-      setLoadState('ready');
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError ? error.message : 'Não foi possível carregar seu progresso.',
-      );
-      setLoadState('error');
-    }
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-  }, [loadAll]);
-
   if (!skill) {
     return (
       <View style={styles.centerContent}>
@@ -90,17 +41,6 @@ export function SkillDetailContent({
     );
   }
 
-  const progress = computeSkillProgress(
-    practiceSessions,
-    checklistSessions,
-    monitorSessions,
-    quizPhases,
-  ).find((item) => item.skill.key === skill.key);
-  const count = progress?.count ?? 0;
-  const phase = progress?.phase ?? 'quiz';
-  const bestQuizRatio = getQuizPhaseRatio(quizPhases, skill.key);
-  const quizLabel =
-    bestQuizRatio !== null && bestQuizRatio >= QUIZ_PASS_RATIO ? '✅ Quiz aprovado — refazer' : '❓ Fazer o quiz';
   const practice = practiceAction(skill);
 
   return (
@@ -109,9 +49,9 @@ export function SkillDetailContent({
         <OrganicText size="subtitle">{skill.label}</OrganicText>
         {loadState === 'ready' && (
           <>
-            <OrganicProgressBar progress={count / MANEUVER_DONE_THRESHOLD} />
+            <OrganicProgressBar progress={count / practiceThreshold} />
             <OrganicText size="small" color="textSecondary">
-              {Math.min(count, MANEUVER_DONE_THRESHOLD)} de {MANEUVER_DONE_THRESHOLD} pra destravar
+              {Math.min(count, practiceThreshold)} de {practiceThreshold} pra destravar
             </OrganicText>
           </>
         )}
@@ -128,7 +68,7 @@ export function SkillDetailContent({
           <OrganicText color="textSecondary" style={styles.centerText}>
             {errorMessage}
           </OrganicText>
-          <OrganicButton label="Tentar novamente" variant="neutral" onPress={loadAll} />
+          <OrganicButton label="Tentar novamente" variant="neutral" onPress={reload} />
         </View>
       )}
 
