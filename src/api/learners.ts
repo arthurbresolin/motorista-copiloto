@@ -11,6 +11,7 @@ export type LearnerRegisterInput = {
 export type LearnerLoginInput = {
   email: string;
   password: string;
+  remember_me?: boolean;
 };
 
 export type LearnerAuth = {

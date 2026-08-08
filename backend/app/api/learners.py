@@ -10,7 +10,14 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import MEDIA_DIR, settings
-from app.core.security import create_access_token, decode_access_token, hash_password, verify_password
+from app.core.security import (
+    ACCESS_TOKEN_EXPIRE_DAYS,
+    SHORT_SESSION_EXPIRE_DAYS,
+    create_access_token,
+    decode_access_token,
+    hash_password,
+    verify_password,
+)
 from app.db.session import get_db
 from app.models import (
     Car,
@@ -91,7 +98,10 @@ async def login_learner(payload: LearnerLogin, db: AsyncSession = Depends(get_db
     learner = result.scalar_one_or_none()
     if learner is None or not verify_password(payload.password, learner.password_hash):
         raise HTTPException(status_code=401, detail="e-mail ou senha inválidos")
-    return LearnerAuthResponse(access_token=create_access_token(learner.id, role="learner"))
+    expire_days = ACCESS_TOKEN_EXPIRE_DAYS if payload.remember_me else SHORT_SESSION_EXPIRE_DAYS
+    return LearnerAuthResponse(
+        access_token=create_access_token(learner.id, role="learner", expire_days=expire_days)
+    )
 
 
 @router.get("/me", response_model=LearnerRead)

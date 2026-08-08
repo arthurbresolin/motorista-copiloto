@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { loginLearner } from '@/api/learners';
-import { OrganicButton, OrganicText, ScreenBackground } from '@/components/organic';
+import { OrganicButton, OrganicCheckbox, OrganicText, ScreenBackground } from '@/components/organic';
 import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, Spacing } from '@/constants/theme';
 import { useLearnerSession } from '@/hooks/use-learner-session';
 import { useTheme } from '@/hooks/use-theme';
@@ -19,6 +19,7 @@ export default function LearnerLoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,7 +32,7 @@ export default function LearnerLoginScreen() {
     setIsSubmitting(true);
     setSubmitError('');
     try {
-      const auth = await loginLearner({ email: email.trim(), password });
+      const auth = await loginLearner({ email: email.trim(), password, remember_me: rememberMe });
       await setLearnerToken(auth.access_token);
       await refresh();
       router.replace('/');
@@ -100,6 +101,12 @@ export default function LearnerLoginScreen() {
               placeholderTextColor={theme.textSecondary}
               secureTextEntry
               style={inputStyle}
+            />
+
+            <OrganicCheckbox
+              label="Lembrar de mim"
+              value={rememberMe}
+              onValueChange={() => setRememberMe((current) => !current)}
             />
 
             {submitError !== '' && (

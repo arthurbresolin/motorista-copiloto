@@ -10,6 +10,10 @@ JWT_ALGORITHM = "HS256"
 # resolvido com um token de validade bem longa guardado com segurança no
 # aparelho (expo-secure-store / localStorage), em vez de infra de refresh.
 ACCESS_TOKEN_EXPIRE_DAYS = 365
+# Sessão curta usada quando o aluno desmarca "lembrar de mim" no login —
+# ainda funciona por um bom tempo de uso (não desloga no meio da aula),
+# mas não fica valendo por um ano num aparelho compartilhado/público.
+SHORT_SESSION_EXPIRE_DAYS = 1
 
 
 def hash_password(password: str) -> str:
@@ -20,8 +24,8 @@ def verify_password(password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
-def create_access_token(subject_id: int, role: str) -> str:
-    expires_at = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+def create_access_token(subject_id: int, role: str, expire_days: int = ACCESS_TOKEN_EXPIRE_DAYS) -> str:
+    expires_at = datetime.now(timezone.utc) + timedelta(days=expire_days)
     payload = {"sub": str(subject_id), "role": role, "exp": expires_at}
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=JWT_ALGORITHM)
 

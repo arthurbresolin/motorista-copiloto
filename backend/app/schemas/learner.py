@@ -12,6 +12,7 @@ class LearnerRegister(BaseModel):
 class LearnerLogin(BaseModel):
     email: str
     password: str
+    remember_me: bool = True
 
 
 class LearnerAuthResponse(BaseModel):
