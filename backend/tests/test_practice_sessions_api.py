@@ -127,6 +127,63 @@ async def test_practice_session_stats_aggregates(client, session_factory, auth_h
     assert body["total_km"] == 20.5
 
 
+async def test_upload_before_photo_accepts_jpeg(client, session_factory, auth_headers):
+    created = await client.post("/practice-sessions", json=VALID_PAYLOAD, headers=auth_headers)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/practice-sessions/{session_id}/before-photo",
+        files={"file": ("antes.jpg", b"fake-jpeg-bytes", "image/jpeg")},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["before_photo_url"] is not None
+    assert body["before_photo_url"].startswith(f"/media/practice-sessions/{session_id}/before-")
+
+
+async def test_upload_before_photo_rejects_unsupported_type(client, session_factory, auth_headers):
+    created = await client.post("/practice-sessions", json=VALID_PAYLOAD, headers=auth_headers)
+    session_id = created.json()["id"]
+
+    response = await client.post(
+        f"/practice-sessions/{session_id}/before-photo",
+        files={"file": ("arquivo.txt", b"nao e imagem", "text/plain")},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 422
+
+
+async def test_upload_before_photo_not_found(client, session_factory, auth_headers):
+    response = await client.post(
+        "/practice-sessions/999/before-photo",
+        files={"file": ("antes.jpg", b"fake-jpeg-bytes", "image/jpeg")},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
+
+
+async def test_upload_before_photo_requires_auth(client, session_factory):
+    response = await client.post(
+        "/practice-sessions/1/before-photo",
+        files={"file": ("antes.jpg", b"fake-jpeg-bytes", "image/jpeg")},
+    )
+
+    assert response.status_code == 401
+
+
+async def test_practice_session_without_before_photo_has_null_url(
+    client, session_factory, auth_headers
+):
+    response = await client.post("/practice-sessions", json=VALID_PAYLOAD, headers=auth_headers)
+
+    assert response.status_code == 201
+    assert response.json()["before_photo_url"] is None
+
+
 async def test_practice_sessions_are_isolated_per_learner(client, session_factory, auth_headers):
     await client.post("/practice-sessions", json=VALID_PAYLOAD, headers=auth_headers)
 

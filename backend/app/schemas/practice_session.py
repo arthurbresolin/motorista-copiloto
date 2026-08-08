@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class PracticeSessionCreate(BaseModel):
@@ -22,6 +22,12 @@ class PracticeSessionRead(BaseModel):
     maneuvers: list[str]
     notes: str | None
     car_id: int | None
+    before_photo_path: str | None = Field(exclude=True, default=None)
+
+    @computed_field
+    @property
+    def before_photo_url(self) -> str | None:
+        return f"/media/{self.before_photo_path}" if self.before_photo_path else None
 
 
 class PracticeSessionStats(BaseModel):

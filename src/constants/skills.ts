@@ -19,10 +19,13 @@ export type SkillKey =
   | 'marcha-re'
   | 'direcao-suave';
 
+export type SkillDifficulty = 'iniciante' | 'intermediario' | 'avancado';
+
 export type Skill = {
   key: SkillKey;
   label: string;
   maneuver?: string;
+  difficulty: SkillDifficulty;
   description: string;
   tips: string[];
   // Manobras cujo resultado é uma posição final (estacionar) se beneficiam
@@ -31,30 +34,11 @@ export type Skill = {
   supportsPhotoFeedback?: boolean;
 };
 
-export const MANEUVER_OPTIONS = [
-  'Postura ao Dirigir',
-  'Pedais e Embreagem',
-  'Ponto de Embreagem',
-  'Ligar e Desligar',
-  'Trocar Marchas',
-  'Controle em Baixa Velocidade',
-  'Placas e Sinalização',
-  'Semáforos e Prioridade',
-  'Distância e Espelhos',
-  'Mudança de Faixa',
-  'Direção Defensiva',
-  'Baliza',
-  'Rotatória',
-  'Estacionamento',
-  'Rodovia',
-  'Curva',
-  'Marcha à ré',
-];
-
 export const SKILLS: Skill[] = [
   {
     key: 'checklist',
     label: 'Checklist',
+    difficulty: 'iniciante',
     description: 'Conferir o carro antes de sair — espelhos, cinto, banco, combustível.',
     tips: [
       'Ajuste os espelhos antes de ligar o carro.',
@@ -66,6 +50,7 @@ export const SKILLS: Skill[] = [
     key: 'postura-ao-dirigir',
     label: 'Postura ao Dirigir',
     maneuver: 'Postura ao Dirigir',
+    difficulty: 'iniciante',
     description: 'Manter a postura do corpo e a posição das mãos corretas no volante durante toda a condução.',
     tips: [
       'Sente-se com as costas retas, encostado no banco, sem se inclinar pra frente.',
@@ -79,6 +64,7 @@ export const SKILLS: Skill[] = [
     key: 'pedais-e-embreagem',
     label: 'Pedais e Embreagem',
     maneuver: 'Pedais e Embreagem',
+    difficulty: 'iniciante',
     description: 'Reconhecer os três pedais e praticar o uso coordenado da embreagem, acelerador e freio.',
     tips: [
       'Identifique os pedais com o carro desligado: embreagem à esquerda, freio no meio, acelerador à direita.',
@@ -92,6 +78,7 @@ export const SKILLS: Skill[] = [
     key: 'ponto-de-embreagem',
     label: 'Ponto de Embreagem',
     maneuver: 'Ponto de Embreagem',
+    difficulty: 'iniciante',
     description: 'Encontrar e sentir o ponto de embreagem — o momento exato em que o carro começa a se mover.',
     tips: [
       'Com o carro ligado e em primeira marcha, solte a embreagem bem devagar.',
@@ -105,6 +92,7 @@ export const SKILLS: Skill[] = [
     key: 'ligar-e-desligar',
     label: 'Ligar e Desligar o Carro',
     maneuver: 'Ligar e Desligar',
+    difficulty: 'iniciante',
     description: 'Praticar a sequência de ligar e desligar o carro sem calar o motor.',
     tips: [
       'Confira se o câmbio está em ponto morto antes de ligar.',
@@ -118,6 +106,7 @@ export const SKILLS: Skill[] = [
     key: 'trocar-marchas',
     label: 'Trocar Marchas',
     maneuver: 'Trocar Marchas',
+    difficulty: 'intermediario',
     description: 'Praticar a troca de marchas em movimento, sem trancos e sem calar o motor.',
     tips: [
       'Tire o pé do acelerador antes de pisar na embreagem pra trocar de marcha.',
@@ -131,6 +120,7 @@ export const SKILLS: Skill[] = [
     key: 'controle-baixa-velocidade',
     label: 'Controle em Baixa Velocidade',
     maneuver: 'Controle em Baixa Velocidade',
+    difficulty: 'intermediario',
     description: 'Manter o carro em movimento controlado e constante em velocidade bem baixa, essencial pra manobras.',
     tips: [
       'Use só a embreagem, no ponto de embreagem, sem acelerar, pra manter velocidade baixa.',
@@ -144,6 +134,7 @@ export const SKILLS: Skill[] = [
     key: 'placas-e-sinalizacao',
     label: 'Placas e Sinalização',
     maneuver: 'Placas e Sinalização',
+    difficulty: 'iniciante',
     description: 'Reconhecer e respeitar as placas de sinalização e marcações da via durante a condução.',
     tips: [
       'Observe as placas de velocidade máxima em cada trecho da via.',
@@ -157,6 +148,7 @@ export const SKILLS: Skill[] = [
     key: 'semaforos-e-prioridade',
     label: 'Semáforos e Prioridade',
     maneuver: 'Semáforos e Prioridade',
+    difficulty: 'intermediario',
     description: 'Praticar a leitura de semáforos e as regras de prioridade em cruzamentos.',
     tips: [
       'No amarelo, avalie se dá tempo de parar com segurança antes de decidir passar.',
@@ -170,6 +162,7 @@ export const SKILLS: Skill[] = [
     key: 'distancia-e-espelhos',
     label: 'Distância e Espelhos',
     maneuver: 'Distância e Espelhos',
+    difficulty: 'intermediario',
     description: 'Manter distância segura do carro da frente e criar o hábito de checar os espelhos com frequência.',
     tips: [
       'Use a regra dos 2 segundos: conte 2 segundos entre o carro da frente passar por um ponto e você passar pelo mesmo ponto.',
@@ -183,6 +176,7 @@ export const SKILLS: Skill[] = [
     key: 'mudanca-de-faixa',
     label: 'Mudança de Faixa',
     maneuver: 'Mudança de Faixa',
+    difficulty: 'avancado',
     description: 'Praticar a troca de faixa com segurança: sinalização, checagem de espelhos e ponto cego.',
     tips: [
       'Ligue a seta antes de começar a se mexer, não durante.',
@@ -196,6 +190,7 @@ export const SKILLS: Skill[] = [
     key: 'direcao-defensiva',
     label: 'Direção Defensiva',
     maneuver: 'Direção Defensiva',
+    difficulty: 'avancado',
     description: 'Antecipar riscos no trânsito e manter atenção redobrada com pedestres e ciclistas.',
     tips: [
       'Reduza a velocidade ao passar perto de escolas, pontos de ônibus e faixas de pedestre.',
@@ -209,6 +204,7 @@ export const SKILLS: Skill[] = [
     key: 'baliza',
     label: 'Baliza',
     maneuver: 'Baliza',
+    difficulty: 'avancado',
     description: 'Estacionar em vaga entre dois carros, com controle e poucas manobras.',
     tips: [
       'Alinhe seu carro paralelo ao carro da frente, mantendo cerca de 1 metro de distância.',
@@ -224,6 +220,7 @@ export const SKILLS: Skill[] = [
     key: 'rotatoria',
     label: 'Rotatória',
     maneuver: 'Rotatória',
+    difficulty: 'intermediario',
     description: 'Entrar e sair de rotatórias respeitando quem já está circulando.',
     tips: [
       'Reduza a velocidade antes de entrar na rotatória.',
@@ -238,6 +235,7 @@ export const SKILLS: Skill[] = [
     key: 'estacionamento',
     label: 'Estacionamento',
     maneuver: 'Estacionamento',
+    difficulty: 'intermediario',
     description: 'Estacionar em vaga livre, alinhado e sem sustos.',
     tips: [
       'Escolha uma vaga compatível com o tamanho do seu carro.',
@@ -253,6 +251,7 @@ export const SKILLS: Skill[] = [
     key: 'rodovia',
     label: 'Rodovia',
     maneuver: 'Rodovia',
+    difficulty: 'avancado',
     description: 'Dirigir em vias rápidas, com conversões e ultrapassagens seguras.',
     tips: [
       'Mantenha distância segura do carro da frente (regra dos 2 segundos).',
@@ -267,6 +266,7 @@ export const SKILLS: Skill[] = [
     key: 'curva',
     label: 'Curva',
     maneuver: 'Curva',
+    difficulty: 'intermediario',
     description: 'Fazer curvas fechadas mantendo a velocidade sob controle.',
     tips: [
       'Reduza a velocidade antes de entrar na curva, não durante.',
@@ -281,6 +281,7 @@ export const SKILLS: Skill[] = [
     key: 'marcha-re',
     label: 'Marcha à ré',
     maneuver: 'Marcha à ré',
+    difficulty: 'avancado',
     description: 'Manobrar de ré olhando pelos espelhos e pela janela traseira.',
     tips: [
       'Olhe por cima do ombro, não só pelos espelhos.',
@@ -294,6 +295,7 @@ export const SKILLS: Skill[] = [
   {
     key: 'direcao-suave',
     label: 'Direção suave',
+    difficulty: 'avancado',
     description: 'Uma sessão do Monitor sem nenhuma freada ou aceleração brusca.',
     tips: [
       'Acelere e freie de forma gradual, sem solavancos.',

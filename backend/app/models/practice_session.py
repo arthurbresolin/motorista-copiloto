@@ -17,3 +17,7 @@ class PracticeSession(Base):
     maneuvers: Mapped[list[str]] = mapped_column(JSON, default=list)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     car_id: Mapped[int | None] = mapped_column(ForeignKey("cars.id"), nullable=True)
+    # Foto "antes" opcional, só pra referência visual do aluno (comparar com o
+    # resultado depois) — sem análise de IA, ao contrário da foto de resultado
+    # em PracticeSessionFeedback, que já tem esse fluxo pronto.
+    before_photo_path: Mapped[str | None] = mapped_column(Text, nullable=True)
