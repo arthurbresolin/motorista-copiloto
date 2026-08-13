@@ -48,19 +48,31 @@ SYSTEM_PROMPT = (
     "assim feche com uma sugestão concreta pra próxima vez."
 )
 
-PHOTO_SYSTEM_PROMPT = (
-    "Você é um instrutor de direção experiente e encorajador, olhando uma foto do "
-    "resultado de uma manobra de estacionamento que um aluno acabou de praticar. "
-    "Responda em português do Brasil, em no máximo 3 frases curtas, sem saudação "
-    "nem se apresentar. Estruture a resposta em três partes bem enxutas: (1) o que "
-    "está bom ou ruim no alinhamento do carro e na distância dos veículos/meio-fio "
-    "vizinhos, sendo específico sobre o que você vê na foto; (2) por que esse "
-    "detalhe importa na prática (ex: risco de bater o retrovisor, dificuldade pra "
-    "sair da vaga depois); (3) uma sugestão concreta do que ajustar na próxima "
-    "tentativa. Se não der pra avaliar direito pela foto (ângulo ruim, muito "
-    "longe, não dá pra ver um carro estacionado), diga isso em vez de inventar uma "
-    "avaliação, e peça uma foto melhor."
-)
+def _photo_system_prompt(maneuver: str) -> str:
+    """
+    Instrução da avaliação de foto, montada em torno da habilidade praticada.
+
+    Isso era um texto fixo falando de "manobra de estacionamento". Como a
+    instrução de sistema pesa mais que o prompt do usuário, o modelo avaliava
+    tudo como se fosse baliza — numa prática de "Pedais e Embreagem" ele
+    respondeu pedindo uma foto do carro estacionado na vaga. Agora a habilidade
+    entra na própria instrução.
+    """
+    return (
+        "Você é um instrutor de direção experiente e encorajador, olhando uma foto "
+        f"que um aluno tirou depois de praticar: {maneuver}. "
+        "Responda em português do Brasil, em no máximo 3 frases curtas, sem saudação "
+        "nem se apresentar. Estruture a resposta em três partes bem enxutas: (1) o que "
+        "a foto mostra de bom ou de ruim em relação a essa habilidade específica, "
+        "sendo concreto sobre o que você vê; (2) por que esse detalhe importa na "
+        "prática; (3) uma sugestão do que ajustar na próxima tentativa. "
+        "Nem toda habilidade deixa um resultado visível numa foto (controle de "
+        "embreagem, troca de marchas, postura): nesses casos comente o que dá pra "
+        "ver do contexto — posição do carro, do banco, das mãos, do ambiente — em vez "
+        "de cobrar uma foto de manobra que não é o caso. "
+        "Se a foto não tiver nada a ver com dirigir, diga isso em vez de inventar uma "
+        "avaliação, e peça uma foto da prática."
+    )
 
 
 def _build_prompt(
@@ -181,8 +193,8 @@ async def get_practice_session_photo_feedback(
     if not settings.google_api_key:
         return CoachFeedback(available=False)
 
-    maneuver = ", ".join(session.maneuvers) if session.maneuvers else "estacionamento"
-    prompt_text = f"Manobra praticada: {maneuver}. Avalie o resultado nesta foto."
+    maneuver = ", ".join(session.maneuvers) if session.maneuvers else "prática de direção"
+    prompt_text = f"Habilidade praticada: {maneuver}. Avalie o resultado nesta foto."
 
     try:
         image_bytes = base64.b64decode(payload.image_base64)
@@ -198,7 +210,7 @@ async def get_practice_session_photo_feedback(
                 prompt_text,
             ],
             config=genai_types.GenerateContentConfig(
-                system_instruction=PHOTO_SYSTEM_PROMPT,
+                system_instruction=_photo_system_prompt(maneuver),
                 # gemini-flash-latest gasta uma parte do orçamento de tokens
                 # "pensando" antes de responder (visto na prática: ~500 tokens
                 # de thinking para uma resposta de ~35 tokens) — um limite
