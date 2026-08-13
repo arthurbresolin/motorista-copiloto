@@ -20,8 +20,9 @@ import {
   OrganicSurface,
   OrganicText,
   ScreenBackground,
+  SkillPicker,
 } from '@/components/organic';
-import { SKILLS, type SkillDifficulty } from '@/constants/skills';
+import { SKILLS } from '@/constants/skills';
 import {
   BodyFontFamily,
   BorderWidth,
@@ -30,7 +31,6 @@ import {
   RadiusPill,
   RadiusSm,
   Spacing,
-  type ThemeColor,
 } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { todayIsoDate } from '@/lib/format';
@@ -39,24 +39,6 @@ type CarsLoadState = 'loading' | 'error' | 'ready';
 type Phase = 'form' | 'result';
 
 const MANEUVER_SKILLS = SKILLS.filter((skill) => skill.maneuver);
-
-const DIFFICULTY_LABEL: Record<SkillDifficulty, string> = {
-  iniciante: 'Iniciante',
-  intermediario: 'Intermediário',
-  avancado: 'Avançado',
-};
-
-const DIFFICULTY_COLOR: Record<SkillDifficulty, ThemeColor> = {
-  iniciante: 'accent2',
-  intermediario: 'warning',
-  avancado: 'danger',
-};
-
-const DIFFICULTY_TEXT_COLOR: Record<SkillDifficulty, ThemeColor> = {
-  iniciante: 'onAccent2',
-  intermediario: 'onWarning',
-  avancado: 'background',
-};
 
 function parseDecimal(value: string) {
   return Number(value.trim().replace(',', '.'));
@@ -81,6 +63,7 @@ export default function NovaPraticaScreen() {
   const [durationMinutes, setDurationMinutes] = useState('');
   const [distanceKm, setDistanceKm] = useState('');
   const [selectedManeuvers, setSelectedManeuvers] = useState<Set<string>>(new Set());
+  const [pickerVisible, setPickerVisible] = useState(false);
   const [notes, setNotes] = useState('');
 
   const [cars, setCars] = useState<Car[]>([]);
@@ -434,43 +417,50 @@ export default function NovaPraticaScreen() {
             )}
           </View>
 
+          {/* O formulário mostra só a escolha feita; a lista inteira mora no
+              seletor flutuante, pra não empurrar duração/km/fotos pra três
+              telas de rolagem abaixo. */}
           <View style={styles.field}>
             <OrganicText size="small">O que você praticou?</OrganicText>
-            <View style={styles.skillCardsWrapper}>
-              {MANEUVER_SKILLS.map((skill, index) => {
-                const selected = selectedManeuvers.has(skill.maneuver as string);
-                return (
-                  <FadeSlideIn key={skill.key} delay={index * 30}>
-                    <Pressable
-                      onPress={() => toggleManeuver(skill.maneuver as string)}
-                      style={({ pressed }) => pressed && styles.pressed}>
-                      <OrganicSurface
-                        backgroundColor={selected ? 'accent' : 'backgroundElement'}
-                        style={styles.skillCard}>
-                        <View style={styles.skillCardHeader}>
-                          <OrganicText size="small" color={selected ? 'onAccent' : 'text'}>
-                            {skill.label}
-                          </OrganicText>
-                          <View
-                            style={[
-                              styles.difficultyBadge,
-                              { backgroundColor: theme[DIFFICULTY_COLOR[skill.difficulty]] },
-                            ]}>
-                            <OrganicText size="small" color={DIFFICULTY_TEXT_COLOR[skill.difficulty]}>
-                              {DIFFICULTY_LABEL[skill.difficulty]}
-                            </OrganicText>
-                          </View>
-                        </View>
-                        <OrganicText size="small" color={selected ? 'onAccent' : 'textSecondary'}>
-                          {skill.description}
-                        </OrganicText>
-                      </OrganicSurface>
-                    </Pressable>
-                  </FadeSlideIn>
-                );
-              })}
-            </View>
+            {selectedManeuvers.size > 0 && (
+              <View style={styles.selectedChips}>
+                {MANEUVER_SKILLS.filter((skill) =>
+                  selectedManeuvers.has(skill.maneuver as string),
+                ).map((skill) => (
+                  <Pressable
+                    key={skill.key}
+                    onPress={() => toggleManeuver(skill.maneuver as string)}>
+                    <OrganicSurface
+                      backgroundColor="accent"
+                      shadow={false}
+                      borderRadius={RadiusPill}
+                      style={styles.chip}>
+                      <OrganicText size="small" color="onAccent">
+                        {skill.label} ✕
+                      </OrganicText>
+                    </OrganicSurface>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+            <OrganicButton
+              variant="neutral"
+              label={
+                selectedManeuvers.size === 0
+                  ? 'Escolher habilidades'
+                  : `Mudar escolha (${selectedManeuvers.size})`
+              }
+              onPress={() => setPickerVisible(true)}
+            />
           </View>
+
+          <SkillPicker
+            visible={pickerVisible}
+            skills={MANEUVER_SKILLS}
+            selected={selectedManeuvers}
+            onToggle={toggleManeuver}
+            onClose={() => setPickerVisible(false)}
+          />
 
           <View style={styles.field}>
             <OrganicText size="small">Duração (minutos)</OrganicText>
@@ -638,23 +628,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },
-  skillCardsWrapper: {
-    gap: Spacing.two,
-  },
-  skillCard: {
-    padding: Spacing.three,
-    gap: Spacing.one,
-  },
-  skillCardHeader: {
+  selectedChips: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Spacing.two,
   },
-  difficultyBadge: {
-    borderRadius: RadiusPill,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.half,
+  chip: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   photosRow: {
     flexDirection: 'row',
