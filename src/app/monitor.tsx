@@ -5,7 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
 import { createMonitorSession, getMonitorSessions, type MonitorSession } from '@/api/monitor-sessions';
-import { OrganicButton, OrganicSurface, OrganicText, ScreenBackground } from '@/components/organic';
+import {
+  LiveBadge,
+  OrganicButton,
+  OrganicSurface,
+  OrganicText,
+  ScreenBackground,
+} from '@/components/organic';
 import { RouteMap } from '@/components/route-map';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useDrivingMonitor } from '@/hooks/use-driving-monitor';
@@ -118,6 +124,7 @@ export default function MonitorScreen() {
           {(state === 'idle' || state === 'checking') && (
             <View style={styles.centerContent}>
               <OrganicButton
+                breathe
                 label={state === 'checking' ? 'Verificando sensor…' : 'Iniciar monitoramento'}
                 disabled={state === 'checking'}
                 onPress={start}
@@ -127,7 +134,7 @@ export default function MonitorScreen() {
 
           {state === 'monitoring' && (
             <View style={styles.centerContent}>
-              <OrganicText size="small">Monitorando…</OrganicText>
+              <LiveBadge label="MONITORANDO" />
               <OrganicText color="textSecondary">
                 {eventCount === 0
                   ? 'Nenhum movimento brusco até agora.'

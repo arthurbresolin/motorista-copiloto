@@ -3,18 +3,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   FadeSlideIn,
+  FlameFlicker,
+  FlipNumber,
   OrganicButton,
-  OrganicPill,
   OrganicSurface,
   OrganicText,
   ScreenBackground,
   SkillTrail,
 } from '@/components/organic';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, RadiusPill, Spacing } from '@/constants/theme';
 import { useProgress } from '@/hooks/use-progress';
 import { useSkillDetailSheet } from '@/hooks/use-skill-detail-sheet';
+import { useTheme } from '@/hooks/use-theme';
+import { useTrailCelebration } from '@/hooks/use-trail-celebration';
 
 export default function TrilhaScreen() {
+  const theme = useTheme();
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
     ...safeAreaInsets,
@@ -23,6 +27,7 @@ export default function TrilhaScreen() {
   const { loadState, errorMessage, reload, streak, xp, skillProgress } = useProgress();
   const doneCount = skillProgress.filter((item) => item.state === 'done').length;
   const { open: openSkillDetail } = useSkillDetailSheet();
+  const celebratingKey = useTrailCelebration(skillProgress, loadState === 'ready');
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -44,9 +49,19 @@ export default function TrilhaScreen() {
         contentInset={insets}
         contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
         <View style={styles.container}>
+        {/* Streak e XP viram números animados: quando a conclusão de uma
+            habilidade faz o valor mudar, ele gira em vez de trocar seco. */}
         <View style={styles.pillRow}>
-          <OrganicPill label={`🔥 ${streak}`} backgroundColor="backgroundElement" />
-          <OrganicPill label={`⭐ ${xp}`} backgroundColor="backgroundElement" />
+          <View style={[styles.statChip, { backgroundColor: theme.backgroundElement }]}>
+            <FlameFlicker>
+              <OrganicText size="small">🔥</OrganicText>
+            </FlameFlicker>
+            <FlipNumber value={streak} size="small" style={styles.statValue} />
+          </View>
+          <View style={[styles.statChip, { backgroundColor: theme.backgroundElement }]}>
+            <OrganicText size="small">⭐</OrganicText>
+            <FlipNumber value={xp} size="small" style={styles.statValue} />
+          </View>
         </View>
 
         {loadState === 'ready' && (
@@ -79,7 +94,11 @@ export default function TrilhaScreen() {
 
         {loadState === 'ready' && (
           <View style={styles.trailWrapper}>
-            <SkillTrail items={skillProgress} onPressSkill={openSkillDetail} />
+            <SkillTrail
+              items={skillProgress}
+              celebratingKey={celebratingKey}
+              onPressSkill={openSkillDetail}
+            />
           </View>
         )}
         </View>
@@ -107,6 +126,17 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.six,
+  },
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: RadiusPill,
+  },
+  statValue: {
+    minWidth: 18,
   },
   unitBanner: {
     marginHorizontal: Spacing.four,

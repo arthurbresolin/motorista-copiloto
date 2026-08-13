@@ -4,8 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_BASE_URL } from '@/api/client';
 import {
+  Breathe,
   FadeSlideIn,
   FlameFlicker,
+  GrowBar,
   MascPlaceholder,
   OrganicButton,
   OrganicSurface,
@@ -56,11 +58,16 @@ export default function HomeScreen() {
             <OrganicText size="title">Oi{firstName ? `, ${firstName}` : ''} 👋</OrganicText>
             <OrganicText color="textSecondary">pronto pra dirigir hoje?</OrganicText>
           </View>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
-          ) : (
-            <MascPlaceholder size={48} />
-          )}
+          <Pressable
+            onPress={() => router.push('/perfil')}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir meu perfil">
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} />
+            ) : (
+              <MascPlaceholder size={48} />
+            )}
+          </Pressable>
         </View>
 
         {loadState === 'loading' && (
@@ -139,15 +146,10 @@ export default function HomeScreen() {
                           styles.weekBarTrack,
                           { height: WEEK_CHART_HEIGHT },
                         ]}>
-                        <OrganicSurface
-                          backgroundColor={day.minutes > 0 ? 'accent' : 'backgroundSelected'}
-                          inset={day.minutes === 0}
-                          shadow={false}
-                          borderRadius={RadiusSm * 0.5}
-                          style={{
-                            width: '100%',
-                            height: Math.max(4, (day.minutes / maxWeekMinutes) * WEEK_CHART_HEIGHT),
-                          }}
+                        <GrowBar
+                          index={index}
+                          filled={day.minutes > 0}
+                          height={Math.max(4, (day.minutes / maxWeekMinutes) * WEEK_CHART_HEIGHT)}
                         />
                       </View>
                       <OrganicText size="small" color="textSecondary">
@@ -160,13 +162,16 @@ export default function HomeScreen() {
             </FadeSlideIn>
 
             <FadeSlideIn delay={240}>
-              <Pressable onPress={() => router.push('/monitor')}>
-                <OrganicSurface backgroundColor="accent" style={styles.ctaCard}>
-                  <OrganicText size="subtitle" color="onAccent" style={styles.ctaLabel}>
-                    🚗 Sair pra dirigir
-                  </OrganicText>
-                </OrganicSurface>
-              </Pressable>
+              {/* Ação principal da tela — a única que respira aqui. */}
+              <Breathe>
+                <Pressable onPress={() => router.push('/monitor')}>
+                  <OrganicSurface backgroundColor="accent" style={styles.ctaCard}>
+                    <OrganicText size="subtitle" color="onAccent" style={styles.ctaLabel}>
+                      🚗 Sair pra dirigir
+                    </OrganicText>
+                  </OrganicSurface>
+                </Pressable>
+              </Breathe>
             </FadeSlideIn>
           </View>
         )}
