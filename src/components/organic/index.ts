@@ -6,7 +6,6 @@ export { FlameFlicker } from './flame-flicker';
 export { FlipNumber } from './flip-number';
 export { GrowBar } from './grow-bar';
 export { LessonCelebration } from './lesson-celebration';
-export { LessonIllustration, type IllustrationId } from './lesson-illustration';
 export { LiveBadge } from './live-badge';
 export { LessonLock, LessonStar } from './lesson-star';
 export { ListRow } from './list-row';

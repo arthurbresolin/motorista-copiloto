@@ -1,5 +1,3 @@
-import type { IllustrationId } from '@/components/organic/lesson-illustration';
-
 export type SkillKey =
   | 'checklist'
   | 'postura-ao-dirigir'
@@ -34,10 +32,6 @@ export type Skill = {
   // de uma foto avaliada pela IA no fim do Modo Copiloto — não faz sentido
   // pra manobras de trajeto (curva, rotatória) sem posição final clara.
   supportsPhotoFeedback?: boolean;
-  // Diagrama mostrado durante o Modo Copiloto, junto da voz. Opcional: só
-  // habilidades cuja instrução é espacial (onde ficam as mãos, qual pedal)
-  // ganham desenho — pra o resto, imagem genérica seria enfeite.
-  illustration?: IllustrationId;
 };
 
 export const SKILLS: Skill[] = [
@@ -58,7 +52,6 @@ export const SKILLS: Skill[] = [
     maneuver: 'Postura ao Dirigir',
     difficulty: 'iniciante',
     description: 'Manter a postura do corpo e a posição das mãos corretas no volante durante toda a condução.',
-    illustration: 'volante-maos',
     tips: [
       'Sente-se com as costas retas, encostado no banco, sem se inclinar pra frente.',
       'Segure o volante nas posições 9 e 3 horas, como um relógio.',
@@ -73,7 +66,6 @@ export const SKILLS: Skill[] = [
     maneuver: 'Pedais e Embreagem',
     difficulty: 'iniciante',
     description: 'Reconhecer os três pedais e praticar o uso coordenado da embreagem, acelerador e freio.',
-    illustration: 'pedais',
     tips: [
       'Identifique os pedais com o carro desligado: embreagem à esquerda, freio no meio, acelerador à direita.',
       'Pise na embreagem sempre com o pé esquerdo, nunca com o direito.',

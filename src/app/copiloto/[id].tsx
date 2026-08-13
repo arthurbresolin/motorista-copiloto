@@ -8,13 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPracticeSessionFeedback, getPracticeSessionPhotoFeedback } from '@/api/coach';
 import { createMonitorSession } from '@/api/monitor-sessions';
 import { createPracticeSession } from '@/api/practice-sessions';
-import {
-  LessonIllustration,
-  OrganicButton,
-  OrganicProgressBar,
-  OrganicText,
-  ScreenBackground,
-} from '@/components/organic';
+import { OrganicButton, OrganicProgressBar, OrganicText, ScreenBackground } from '@/components/organic';
 import { SKILLS } from '@/constants/skills';
 import { MaxContentWidth, RadiusMd, Spacing } from '@/constants/theme';
 import { useDrivingMonitor } from '@/hooks/use-driving-monitor';
@@ -261,14 +255,6 @@ export default function CopilotoScreen() {
               </View>
 
               <View style={styles.stepWrapper}>
-                {/* Diagrama fica acima do passo, não no lugar dele: a voz e o
-                    texto continuam sendo a instrução, o desenho é referência
-                    de "onde", pra quem nunca viu um câmbio manual. */}
-                {skill.illustration && (
-                  <View style={styles.illustrationWrapper}>
-                    <LessonIllustration id={skill.illustration} />
-                  </View>
-                )}
                 <OrganicText size="title" style={styles.centerText}>
                   {steps[stepIndex]}
                 </OrganicText>
@@ -403,9 +389,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     gap: Spacing.three,
-  },
-  illustrationWrapper: {
-    alignItems: 'center',
   },
   actionsWrapper: {
     gap: Spacing.two,
