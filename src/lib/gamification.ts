@@ -142,8 +142,11 @@ export function computeSkillProgress(
   monitorSessions: MonitorSession[],
   quizPhases: QuizPhase[],
 ): SkillProgress[] {
+  // Só prática guiada (Modo Copiloto) conta pra trilha — o registro manual é
+  // diário de bordo e não conclui habilidade. Ver `guided` em PracticeSession.
   const maneuverCounts = new Map<string, number>();
   for (const session of practiceSessions) {
+    if (!session.guided) continue;
     for (const maneuver of session.maneuvers) {
       maneuverCounts.set(maneuver, (maneuverCounts.get(maneuver) ?? 0) + 1);
     }
@@ -166,19 +169,32 @@ export function computeSkillProgress(
     return { skill, count, quizPassed, practiceDone };
   });
 
-  let currentAssigned = false;
+  // A trilha é estritamente sequencial: só destrava a próxima habilidade quem
+  // terminou a anterior. Assim que aparece a primeira incompleta, ela vira a
+  // atual e TODO o resto fica travado — mesmo que já tenha quiz aprovado ou
+  // práticas registradas.
+  //
+  // Isso importa porque os dados podem estar fora de ordem: quem praticou
+  // baliza antes de existir a trilha atual tem sessões de uma habilidade lá do
+  // meio sem ter feito as de trás. A regra antiga marcava essa habilidade como
+  // concluída no meio de habilidades travadas, o que lia como trilha furada.
+  // Contas nessa situação vão ver habilidades "voltarem" de concluída pra
+  // travada — é o comportamento pedido, não um bug.
+  let blocked = false;
   return counted.map(({ skill, count, quizPassed, practiceDone }) => {
     // Quiz sempre antes da prática — a fase "atual" da habilidade é o quiz
     // até ele ser aprovado, só depois passa a ser a prática.
     const phase: SkillPhase = quizPassed ? 'practice' : 'quiz';
+    const base = { skill, count, quizPassed, practiceDone, phase };
+
+    if (blocked) {
+      return { ...base, state: 'locked' as SkillNodeState };
+    }
     if (quizPassed && practiceDone) {
-      return { skill, count, quizPassed, practiceDone, phase, state: 'done' as SkillNodeState };
+      return { ...base, state: 'done' as SkillNodeState };
     }
-    if (!currentAssigned) {
-      currentAssigned = true;
-      return { skill, count, quizPassed, practiceDone, phase, state: 'current' as SkillNodeState };
-    }
-    return { skill, count, quizPassed, practiceDone, phase, state: 'locked' as SkillNodeState };
+    blocked = true;
+    return { ...base, state: 'current' as SkillNodeState };
   });
 }
 

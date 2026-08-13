@@ -10,6 +10,8 @@ class PracticeSessionCreate(BaseModel):
     maneuvers: list[str] = []
     notes: str | None = None
     car_id: int | None = None
+    # Só o Modo Copiloto manda True — ver o comentário no modelo.
+    guided: bool = False
 
 
 class PracticeSessionRead(BaseModel):
@@ -22,6 +24,7 @@ class PracticeSessionRead(BaseModel):
     maneuvers: list[str]
     notes: str | None
     car_id: int | None
+    guided: bool = False
     before_photo_path: str | None = Field(exclude=True, default=None)
 
     @computed_field

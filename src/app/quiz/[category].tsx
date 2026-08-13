@@ -22,6 +22,7 @@ import {
 } from '@/components/organic';
 import { SKILLS, type Skill } from '@/constants/skills';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { practiceAction } from '@/hooks/use-skill-detail';
 import { useSkillDetailSheet } from '@/hooks/use-skill-detail-sheet';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -259,13 +260,27 @@ export default function QuizPhaseScreen() {
                     : 'Não chegou a 70% — tente de novo pra liberar a próxima fase.'}
               </OrganicText>
             </OrganicSurface>
-            <OrganicButton label="Tentar de novo" onPress={handleRestart} />
+            {/* Passou = a fase seguinte da aula é a prática, então é ela que
+                vira o botão principal — mandar de volta pro quiz que o aluno
+                acabou de passar era o caminho errado em destaque. */}
+            {passed && skillForCategory ? (
+              <OrganicButton
+                breathe
+                label={practiceAction(skillForCategory).label}
+                onPress={() => router.replace(practiceAction(skillForCategory).route as never)}
+              />
+            ) : (
+              <OrganicButton label="Tentar de novo" onPress={handleRestart} />
+            )}
             {showEncouragement && skillForCategory && (
               <OrganicButton
                 label="📖 Rever dicas"
                 variant="neutral"
                 onPress={() => openSkillDetail(skillForCategory.key, DEFAULT_SHEET_ANCHOR_Y)}
               />
+            )}
+            {passed && (
+              <OrganicButton label="Refazer o quiz" variant="neutral" onPress={handleRestart} />
             )}
             <OrganicButton label="Voltar pras fases" variant="neutral" onPress={() => router.back()} />
           </View>

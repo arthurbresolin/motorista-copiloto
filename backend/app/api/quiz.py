@@ -44,7 +44,11 @@ QUIZ_PHASE_ORDER: list[tuple[str, str]] = [
 # MANEUVER_DONE_THRESHOLD/SMOOTH_DRIVING_MIN_DURATION_SECONDS em
 # src/constants/skills.ts) — precisa bater exatamente, senão o quiz libera a
 # próxima fase antes da prática da fase atual estar de fato concluída.
-MANEUVER_DONE_THRESHOLD = 2
+#
+# Uma aula é quiz + Modo Copiloto, então basta UMA prática guiada. Era 2, sem
+# nada na tela dizendo isso, o que fazia a habilidade parecer travada de graça
+# depois da primeira prática.
+MANEUVER_DONE_THRESHOLD = 1
 SMOOTH_DRIVING_MIN_DURATION_SECONDS = 120
 PHASE_MANEUVER_LABEL: dict[str, str] = {
     "postura-ao-dirigir": "Postura ao Dirigir",
@@ -93,8 +97,14 @@ async def _is_practice_done(db: AsyncSession, learner_id: int, phase_key: str) -
     if maneuver_label is None:
         return True
 
+    # `guided` filtra fora o registro manual: só a aula guiada (Modo Copiloto)
+    # conclui a habilidade. Prática manual é diário de bordo — ver o comentário
+    # em PracticeSession.guided.
     maneuvers_result = await db.execute(
-        select(PracticeSession.maneuvers).where(PracticeSession.learner_id == learner_id)
+        select(PracticeSession.maneuvers).where(
+            PracticeSession.learner_id == learner_id,
+            PracticeSession.guided.is_(True),
+        )
     )
     count = sum(
         1

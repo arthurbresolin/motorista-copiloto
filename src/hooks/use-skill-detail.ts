@@ -17,7 +17,10 @@ export function practiceAction(skill: Skill): { label: string; route: string } {
   if (skill.key === 'direcao-suave') {
     return { label: '🚦 Monitorar sessão', route: '/monitor' };
   }
-  return { label: '📝 Registrar prática manual', route: '/nova-pratica' };
+  // Modo Copiloto é a segunda fase da aula (quiz → copiloto), então é ele que
+  // aparece como a ação da fase de prática. Registrar prática manual continua
+  // existindo, mas como diário de bordo — na aba Práticas, fora da trilha.
+  return { label: '🎙️ Modo Copiloto', route: `/copiloto/${skill.key}` };
 }
 
 // Fetch + derivação compartilhados entre o popup compacto (SkillDetailSheet)

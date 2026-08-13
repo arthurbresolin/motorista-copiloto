@@ -119,6 +119,8 @@ export default function CopilotoScreen() {
         maneuvers: skill?.maneuver ? [skill.maneuver] : [],
         notes: 'Registrado via Modo Copiloto',
         car_id: null,
+        // É a aula guiada — esta é a sessão que conclui a habilidade na trilha.
+        guided: true,
       });
       setPracticeSessionId(practiceSession.id);
 

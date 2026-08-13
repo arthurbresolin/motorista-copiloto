@@ -11,6 +11,8 @@ export type PracticeSession = {
   maneuvers: string[];
   notes: string | null;
   car_id: number | null;
+  /** True quando veio do Modo Copiloto; só essas contam pra trilha. */
+  guided: boolean;
   before_photo_url: string | null;
 };
 
@@ -21,6 +23,8 @@ export type PracticeSessionInput = {
   maneuvers: string[];
   notes: string | null;
   car_id: number | null;
+  /** Omitido = registro manual (diário de bordo), não conclui habilidade. */
+  guided?: boolean;
 };
 
 export type PracticeSessionStats = {

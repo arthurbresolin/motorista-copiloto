@@ -305,8 +305,13 @@ export const SKILLS: Skill[] = [
   },
 ];
 
-// Quantas vezes uma habilidade precisa ser registrada pra virar "feita" na trilha.
-export const MANEUVER_DONE_THRESHOLD = 2;
+// Quantas vezes uma habilidade precisa ser praticada pra virar "feita" na trilha.
+//
+// Uma aula é quiz + Modo Copiloto, então uma prática guiada basta. Era 2, sem
+// nada na tela dizendo isso — depois da primeira prática a habilidade continuava
+// travada e parecia bug. Só prática guiada conta; registro manual é diário de
+// bordo (ver `guided` em PracticeSession, no backend).
+export const MANEUVER_DONE_THRESHOLD = 1;
 
 // Duração mínima (segundos) pra uma sessão do Monitor contar como "direção suave" —
 // evita que uma sessão de poucos segundos destrave o nó sem prática de verdade.
