@@ -28,6 +28,14 @@ export const Colors = {
     danger: '#CC0000',
     warning: '#E0B400',
     onWarning: '#000000',
+    // Faixa escura sob os nós da trilha — é ela que dá a leitura de botão 3D
+    // (o handoff pede `0 8px 0`, que no RN vira uma View deslocada, não sombra).
+    accentShadow: '#C76400',
+    doneShadow: '#241D14',
+    lockedShadow: '#C8AE92',
+    // Dourado das estrelas de recompensa e do "+XP" — não é cor de UI, só de
+    // celebração, por isso não reaproveita accent nem warning.
+    gold: '#FFCF3F',
   },
   dark: {
     text: '#F4F3F0',
@@ -47,6 +55,10 @@ export const Colors = {
     danger: '#CC0000',
     warning: '#E0B400',
     onWarning: '#000000',
+    accentShadow: '#4E7A50',
+    doneShadow: '#14261A',
+    lockedShadow: '#191B20',
+    gold: '#FFCF3F',
   },
 } as const;
 

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { Breathe } from './breathe';
 import { OrganicSurface } from './surface';
 import { OrganicText } from './text';
 import { RadiusPill, Spacing, type ThemeColor } from '@/constants/theme';
@@ -10,12 +11,20 @@ export type OrganicButtonProps = {
   onPress?: () => void;
   disabled?: boolean;
   variant?: 'accent' | 'neutral';
+  /** Marca este botão como a ação principal da tela — ver `Breathe`. */
+  breathe?: boolean;
 };
 
 const PRESS_SCALE = 0.96;
 const PRESS_DURATION = 100;
 
-export function OrganicButton({ label, onPress, disabled, variant = 'accent' }: OrganicButtonProps) {
+export function OrganicButton({
+  label,
+  onPress,
+  disabled,
+  variant = 'accent',
+  breathe = false,
+}: OrganicButtonProps) {
   const backgroundColor: ThemeColor = variant === 'accent' ? 'accent' : 'backgroundElement';
   const textColor: ThemeColor = variant === 'accent' ? 'onAccent' : 'text';
   const scale = useSharedValue(1);
@@ -35,13 +44,18 @@ export function OrganicButton({ label, onPress, disabled, variant = 'accent' }: 
         scale.value = withTiming(1, { duration: PRESS_DURATION });
       }}
       style={[styles.wrapper, disabled && styles.disabled]}>
-      <Animated.View style={animatedStyle}>
-        <OrganicSurface backgroundColor={backgroundColor} borderRadius={RadiusPill} style={styles.button}>
-          <OrganicText size="body" color={textColor} style={styles.label}>
-            {label}
-          </OrganicText>
-        </OrganicSurface>
-      </Animated.View>
+      <Breathe active={breathe && !disabled}>
+        <Animated.View style={animatedStyle}>
+          <OrganicSurface
+            backgroundColor={backgroundColor}
+            borderRadius={RadiusPill}
+            style={styles.button}>
+            <OrganicText size="body" color={textColor} style={styles.label}>
+              {label}
+            </OrganicText>
+          </OrganicSurface>
+        </Animated.View>
+      </Breathe>
     </Pressable>
   );
 }
