@@ -289,7 +289,9 @@ async def test_feedback_unavailable_does_not_persist(client, session_factory, mo
     assert rows == []
 
 
-async def test_photo_feedback_persists_to_history(client, session_factory, monkeypatch, auth_headers):
+async def test_photo_feedback_persists_to_history(
+    client, session_factory, monkeypatch, auth_headers, isolated_media_dir
+):
     monkeypatch.setattr(settings, "google_api_key", "fake-key")
     patch_genai_client(
         monkeypatch,
@@ -306,7 +308,6 @@ async def test_photo_feedback_persists_to_history(client, session_factory, monke
 
     from sqlalchemy import select as sa_select
 
-    from app.core.config import MEDIA_DIR
     from app.models import PracticeSessionFeedback
 
     async with session_factory() as session:
@@ -315,9 +316,9 @@ async def test_photo_feedback_persists_to_history(client, session_factory, monke
     assert len(rows) == 1
     assert rows[0].kind == "photo"
     assert rows[0].photo_path is not None
-    saved_file = MEDIA_DIR / rows[0].photo_path
-    assert saved_file.is_file()
-    saved_file.unlink()
+    # Pasta temporária do teste, não o media/ do projeto — o arquivo some
+    # sozinho no fim, sem precisar apagar na mão.
+    assert (isolated_media_dir / rows[0].photo_path).is_file()
 
 
 async def test_practice_session_feedback_history_requires_auth(client, session_factory):
