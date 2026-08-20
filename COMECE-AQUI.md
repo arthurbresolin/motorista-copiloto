@@ -7,29 +7,26 @@ outra coisa. Ele é o briefing; os detalhes estão nos arquivos que ele aponta.
 
 ## Por que este projeto tem travas
 
-<Preencha com o diagnóstico REAL do seu projeto. Sem isto, o resto vira ritual e
-a primeira trava inconveniente é desligada. Rode os comandos abaixo e cole os
-números.>
+Diagnóstico real deste projeto (Expo/React Native + backend FastAPI para
+checklist do motorista), levantado em 20/08/2026:
 
 ```bash
-# proporção de commits que são correção
 git log --oneline | grep -ciE "^\w+ (fix|correc|corrig)" ; git rev-list --count HEAD
+# 0 correções em 8 commits — histórico recém-começado
 
-# arquivos que mais mudam (onde a dor mora)
-git log --format= --name-only | grep -v '^$' | sort | uniq -c | sort -rn | head -10
-
-# quantidade de mock na suíte
-grep -rhoE "patch\(|MagicMock|jest\.mock|vi\.mock|Mockito" <dir de testes> | sort | uniq -c
+grep -rhoE "patch\(|MagicMock" backend/tests | sort | uniq -c
+# nenhum resultado — 0 mocks em 5 arquivos de teste
 ```
 
-<Exemplo de como fica preenchido, tirado de um projeto real:>
-
-> 82 dos 171 commits eram correção — 48%. Quase uma correção por funcionalidade.
-> A suíte tinha 748 mocks, que verificam que o código chamou o mock e não que o
-> resultado está certo: passava verde enquanto o comportamento regredia. Não
-> havia CI. O frontend não tinha teste nem verificação de tipos. E nada obrigava
-> a verificar — tudo dependia de alguém lembrar, às duas da manhã, na décima
-> tentativa.
+> Projeto muito novo (8 commits, 0 de correção) — não há padrão de dor
+> estabelecido ainda. Os arquivos que mais mudam são os modelos e o `main.py`
+> do backend (`backend/app/models/__init__.py`, `backend/app/main.py`,
+> `backend/app/models/checklist.py`) — é onde o domínio de checklist está
+> sendo desenhado agora. O sinal bom: a suíte do backend não usa mock nenhum
+> (0 ocorrências de `patch`/`MagicMock` em 5 arquivos) — os testes rodam
+> contra SQLite real via `aiosqlite`, não contra dublês. Mantenha esse padrão
+> conforme o projeto cresce. O app Expo (frontend) ainda não tem teste
+> nenhum — só o backend tem suíte hoje.
 
 O ponto que importa para você: **isso foi resolvido com infraestrutura, não com
 boa vontade.** Existem hooks que rodam tenha ou não alguém prestando atenção.
