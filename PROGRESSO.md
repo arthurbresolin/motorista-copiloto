@@ -34,10 +34,35 @@ caso falha ao reverter o commit" é.
 - **133 → 142** testes (9 novos em `test_subscriptions_api.py`)
 - `uv run pytest -q` → 142 passed ✓
 
+### Status da assinatura em Configurações (commit `d5a8796`)
+
+- `npm install` (package.json do Arthur tinha dependências novas —
+  `expo-camera`, `expo-speech`, `expo-haptics`, `react-native-svg` etc. —
+  ainda não instaladas nesta máquina)
+- `src/api/subscription.ts` + `src/hooks/use-subscription.ts` consumindo
+  `GET /learners/me/subscription`
+- Card "Plano" em Configurações: "Premium ativo" + data de renovação, ou
+  "Plano gratuito" — sem botão de assinar ainda (propositalmente: um botão
+  que não compra nada seria uma tela quebrada, não um MVP)
+- `.expo/types/router.d.ts` estava desatualizado desde 14/07 (só tinha as
+  rotas do template original) — rodei `npx expo start --offline` 25s em
+  background só pra regenerar, depois matei o processo
+- `npx tsc --noEmit` → limpo (exit 0), incluindo todos os erros de rota que
+  apareciam antes por causa do arquivo de tipos desatualizado
+
 **Estado final da sessão**
 
-- 142 testes de backend passando
-- Frontend (SDK RevenueCat, paywall) ainda não iniciado
+- 142 testes de backend passando, typecheck do mobile limpo
+- Frontend: só leitura de status implementada. SDK `react-native-purchases`
+  (compra de verdade) e paywall ainda não iniciados — dependem de build
+  nativo (Xcode) e conta RevenueCat, ambos em andamento pelo usuário em
+  paralelo
+- **Achado que trava o próximo passo real de assinatura, mesmo sem
+  Xcode/RevenueCat**: o webhook `POST /subscriptions/revenuecat/webhook`
+  só funciona com o backend acessível publicamente — hoje roda só em
+  `localhost`. Deploy em nuvem (Módulo 7 do plano) é o próximo item
+  genuinamente desbloqueado e necessário pra assinatura funcionar de
+  verdade, não só decoração.
 
 **Precisa do usuário**
 
@@ -48,12 +73,14 @@ caso falha ao reverter o commit" é.
   Console quando chegar a hora de testar de verdade
 - Decidir sobre Apple Developer Program (US$99/ano) quando for além do
   Simulador iOS
+- Decidir se seguimos com deploy do backend em nuvem agora (envolve criar
+  conta/provisionar serviço pago — não avanço sozinho nisso)
 
 **Próxima tarefa**
 
-Integrar o SDK `react-native-purchases` no mobile (exige sair do Expo Go —
-dev client custom) e construir a tela de paywall, assim que Xcode e conta
-RevenueCat estiverem prontos.
+Deploy do backend em nuvem (desbloqueia o webhook de verdade). Depois,
+assim que Xcode e conta RevenueCat estiverem prontos: SDK
+`react-native-purchases` no mobile e tela de paywall.
 
 ---
 
