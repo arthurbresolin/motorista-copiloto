@@ -76,11 +76,83 @@ caso falha ao reverter o commit" é.
 - Decidir se seguimos com deploy do backend em nuvem agora (envolve criar
   conta/provisionar serviço pago — não avanço sozinho nisso)
 
+---
+
+## 2026-08-22 — deploy do backend no Vercel
+
+**Branch:** `deploy-backend-vercel` — push feito, 2 commits
+
+**Baseline confirmado antes de iniciar**
+
+- `uv run pytest -q`: 142 passed (herdado da sessão anterior)
+
+---
+
+### Provisionamento e deploy (commits `1274d12`, `44cd1e1`)
+
+- Projeto Vercel `motorista-copiloto-backend` criado a partir de `backend/`
+  (detecção automática de FastAPI via `pyproject.toml`)
+- Postgres provisionado via Marketplace (Neon) — `vercel integration add
+  neon`, conectado ao projeto, env vars baixadas automaticamente
+- `asyncpg` adicionado como dependência; `[tool.vercel] entrypoint =
+  "app.main:app"` no `pyproject.toml`
+- `APP_DATABASE_URL` configurada (produção/preview/dev) — connection string
+  pooled do Neon, convertida pra `postgresql+asyncpg://`, sem `sslmode`
+  nem `channel_binding` (SQLAlchemy 2.x + asyncpg não reconhecem esses
+  parâmetros — dá `TypeError`/`unexpected keyword argument`)
+- `APP_JWT_SECRET_KEY` gerada (32 bytes aleatórios) e configurada só em
+  produção/preview — o valor hardcoded de dev nunca teria que vazar pra
+  produção
+- Proteção SSO do Vercel desativada pro projeto (`vercel project protection
+  disable --sso`) — sem isso, toda chamada de fora (app mobile, webhook do
+  RevenueCat) batia num redirect de login em vez da API
+
+**Dois bugs achados rodando pela primeira vez contra Postgres de verdade**
+(SQLite mascarava os dois — nenhum é meu, são do Arthur, mas travavam o
+deploy):
+
+1. `server_default='1'`/`'0'` em coluna Boolean — SQLite aceita, Postgres
+   dá `DatatypeMismatchError`. Fix: `sa.true()`/`sa.false()` (traduz certo
+   por dialeto) nas migrações `2dfa38d266be` e `4a793432210d`.
+2. `INSERT INTO learners (id, ...) VALUES (1, ...)` não avança a sequence
+   do Postgres — primeiro `POST /learners/register` em produção colidia
+   com `UniqueViolationError`. Fix: `setval()` condicional a
+   `dialect=='postgresql'` na migração `7812fa33b880`.
+
+**Achado à parte, também travava tudo**: `MEDIA_DIR.mkdir()` no import de
+`main.py` derrubava o app inteiro em serverless (filesystem read-only fora
+de `/tmp`) — não era só upload de foto quebrado, era um 500 em **toda**
+rota. Fix: `MEDIA_DIR` configurável via `APP_MEDIA_DIR` (Vercel usa
+`/tmp/media`). **Isso é armazenamento efêmero — fotos não sobrevivem entre
+invocações/deploys em produção.** Solução definitiva pendente: migrar
+avatar/fotos de prática pra um storage de verdade (Vercel Blob).
+
+**Teste de fumaça em produção**: registro, login, perfil, status de
+assinatura, checklist — todos OK contra o Postgres real. Registros de
+teste removidos do banco depois.
+
+**Estado final da sessão**
+
+- Backend em produção: `https://motorista-copiloto-api.vercel.app`
+- 142 testes locais continuam passando (SQLite intacto)
+- Webhook do RevenueCat agora é alcançável de verdade — falta só a conta
+  RevenueCat apontar pra essa URL
+
+**Precisa do usuário**
+
+- Instalar Xcode completo (Command Line Tools não bastam pra build nativo)
+- Criar conta RevenueCat, configurar produtos, e apontar o webhook para
+  `https://motorista-copiloto-api.vercel.app/subscriptions/revenuecat/webhook`
+  com o `APP_REVENUECAT_WEBHOOK_SECRET` (ainda não configurado no Vercel —
+  falta o valor real vindo do painel do RevenueCat)
+- Decisão consciente pendente: fotos (avatar, prática) não persistem em
+  produção até migrarmos pra Vercel Blob — tudo o mais já funciona
+
 **Próxima tarefa**
 
-Deploy do backend em nuvem (desbloqueia o webhook de verdade). Depois,
-assim que Xcode e conta RevenueCat estiverem prontos: SDK
-`react-native-purchases` no mobile e tela de paywall.
+Assim que Xcode e conta RevenueCat estiverem prontos: SDK
+`react-native-purchases` no mobile e tela de paywall, apontando o app pra
+`https://motorista-copiloto-api.vercel.app` em vez de localhost.
 
 ---
 
