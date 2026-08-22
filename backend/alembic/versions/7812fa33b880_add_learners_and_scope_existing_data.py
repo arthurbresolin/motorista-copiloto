@@ -48,6 +48,12 @@ def upgrade() -> None:
         "INSERT INTO learners (id, email, password_hash, name, created_at) "
         f"VALUES (1, 'arthur@local', '{DEFAULT_LEARNER_PASSWORD_HASH}', 'Arthur', CURRENT_TIMESTAMP)"
     )
+    if op.get_bind().dialect.name == "postgresql":
+        # INSERT com id explícito não avança a sequence do Postgres (SQLite
+        # não tem esse problema — o próximo rowid é sempre MAX(id)+1). Sem
+        # isso, o primeiro POST /learners/register em produção colide com
+        # id=1 e derruba com UniqueViolationError.
+        op.execute("SELECT setval('learners_id_seq', (SELECT MAX(id) FROM learners))")
 
     # SQLite não suporta ALTER TABLE ADD CONSTRAINT — adicionar uma coluna com
     # FK exige modo batch (copiar-e-mover), mesmo padrão já usado em

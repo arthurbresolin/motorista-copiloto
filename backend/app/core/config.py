@@ -1,11 +1,15 @@
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# backend/media/ — arquivos enviados por usuário (avatar, fotos de exercício),
-# fora do controle de versão (ver .gitignore). Caminho fixo e não configurável
-# via env por enquanto, já que o backend roda sempre localmente.
-MEDIA_DIR = Path(__file__).resolve().parent.parent.parent / "media"
+# backend/media/ por padrão (dev local, fora do controle de versão — ver
+# .gitignore). Em serverless (Vercel) o filesystem do projeto é somente
+# leitura fora de /tmp, então o deploy define APP_MEDIA_DIR=/tmp/media —
+# nesse caso os arquivos não sobrevivem entre invocações/deploys (é
+# armazenamento efêmero, não uma solução definitiva; a solução real é migrar
+# upload de foto pra um storage de verdade, tipo Vercel Blob).
+MEDIA_DIR = Path(os.environ.get("APP_MEDIA_DIR") or Path(__file__).resolve().parent.parent.parent / "media")
 
 
 class Settings(BaseSettings):
