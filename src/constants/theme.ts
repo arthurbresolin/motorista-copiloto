@@ -9,22 +9,102 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#3D2A1C',
+    background: '#FDF1E6',
+    backgroundElement: '#F6ECE0',
+    backgroundSelected: '#F0E2D2',
+    textSecondary: '#A98A72',
+    accent: '#FF9351',
+    onAccent: '#5C2C0C',
+    accent2: '#93D68D',
+    onAccent2: '#2F6A35',
+    borderColor: '#F0E2D2',
+    barFill: '#FF9351',
+    mapPatternA: '#E9EFE6',
+    mapPatternB: '#E2E9DE',
+    // Pontinhos sutis sobre o fundo (ver TextureOverlay) — mesma família do
+    // texto secundário, opacidade baixa aplicada no componente, não aqui.
+    patternDot: '#A98A72',
+    danger: '#CC0000',
+    warning: '#E0B400',
+    onWarning: '#000000',
+    // Faixa escura sob os nós da trilha — é ela que dá a leitura de botão 3D
+    // (o handoff pede `0 8px 0`, que no RN vira uma View deslocada, não sombra).
+    accentShadow: '#C76400',
+    doneShadow: '#241D14',
+    lockedShadow: '#C8AE92',
+    // Dourado das estrelas de recompensa e do "+XP" — não é cor de UI, só de
+    // celebração, por isso não reaproveita accent nem warning.
+    gold: '#FFCF3F',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F4F3F0',
+    background: '#20232A',
+    backgroundElement: '#2F333B',
+    backgroundSelected: '#33383F',
+    textSecondary: '#8B929C',
+    accent: '#8ECB8F',
+    onAccent: '#123018',
+    accent2: '#FF9351',
+    onAccent2: '#5C2C0C',
+    borderColor: '#33383F',
+    barFill: '#8ECB8F',
+    mapPatternA: '#1B241E',
+    mapPatternB: '#18211B',
+    patternDot: '#8B929C',
+    danger: '#CC0000',
+    warning: '#E0B400',
+    onWarning: '#000000',
+    accentShadow: '#4E7A50',
+    doneShadow: '#14261A',
+    lockedShadow: '#191B20',
+    gold: '#FFCF3F',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+// Pares de gradiente (topo→baixo-esquerda a baixo→direita, 145deg) por papel de cor —
+// toda superfície "raised" do sistema Claymorphism usa um gradiente diagonal sutil.
+export const Gradients = {
+  light: {
+    surface: ['#FFFFFF', '#F6ECE0'] as const,
+    accent: ['#FFB27A', '#FF9351'] as const,
+    accent2: ['#B6E6B0', '#93D68D'] as const,
+    background: ['#FDF1E6', '#FBE6D3'] as const,
+  },
+  dark: {
+    surface: ['#2F333B', '#262A30'] as const,
+    accent: ['#A9DFAA', '#8ECB8F'] as const,
+    accent2: ['#FFB27A', '#FF9351'] as const,
+    background: ['#262A30', '#1F2329'] as const,
+  },
+} as const;
+
+export type GradientRole = keyof typeof Gradients.light & keyof typeof Gradients.dark;
+
+// Sistema de design "Claymorphism": tudo em Archivo, superfícies "infladas" com
+// gradiente diagonal + sombra suave (sem bordas duras), cantos bem arredondados.
+export const HeadingFontFamily = 'Archivo_800ExtraBold';
+export const BodyFontFamily = 'Archivo_700Bold';
+
+export const BorderWidth = 1.5;
+
+// Sombra "puffy" — mais espalhada e escura que a do sistema anterior, pra reforçar
+// a leitura de superfície inflada. Highlight superior não é viável nativamente no
+// RN (um só shadow por View); o gradiente diagonal já sugere a fonte de luz.
+export const SoftShadow = {
+  shadowColor: '#96795A',
+  shadowOffset: { width: 6, height: 8 },
+  shadowOpacity: 0.28,
+  shadowRadius: 16,
+  elevation: 8,
+} as const;
+
+export const RadiusSm = 16;
+export const RadiusMd = 22;
+export const RadiusLg = 26;
+export const RadiusPill = 999;
 
 export const Fonts = Platform.select({
   ios: {

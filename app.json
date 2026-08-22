@@ -32,7 +32,26 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usado pra registrar o trajeto da sua sessão de prática no Monitor de direção."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Usado pra tirar uma foto do resultado da manobra e a IA avaliar."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Usado pra escolher uma foto de perfil da sua galeria."
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
