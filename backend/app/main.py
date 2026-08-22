@@ -10,6 +10,7 @@ from app.api.learners import router as learners_router
 from app.api.monitor_sessions import router as monitor_sessions_router
 from app.api.practice_sessions import router as practice_sessions_router
 from app.api.quiz import router as quiz_router
+from app.api.subscriptions import router as subscriptions_router
 from app.core.config import MEDIA_DIR
 
 app = FastAPI(title="Motorista Copiloto API")
@@ -35,6 +36,7 @@ app.include_router(learners_router)
 app.include_router(monitor_sessions_router)
 app.include_router(practice_sessions_router)
 app.include_router(quiz_router)
+app.include_router(subscriptions_router)
 
 
 @app.get("/health")

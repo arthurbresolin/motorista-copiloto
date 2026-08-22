@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     # manualmente com a URL do túnel atual (mesma realidade operacional do
     # link de convite de instrutor).
     web_url: str | None = None
+    # Valor configurado manualmente no painel do RevenueCat (Authorization
+    # Header do webhook) — comparado byte a byte contra o header recebido.
+    # None enquanto a conta RevenueCat não existe: webhook fica bloqueado por
+    # padrão em vez de aceitar eventos não autenticados.
+    revenuecat_webhook_secret: str | None = None
 
 
 settings = Settings()

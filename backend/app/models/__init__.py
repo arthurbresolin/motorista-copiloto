@@ -6,6 +6,7 @@ from app.models.monitor_session import MonitorSession
 from app.models.practice_session import PracticeSession
 from app.models.quiz import QuizQuestion, QuizSession
 from app.models.session_feedback import PracticeSessionFeedback
+from app.models.subscription import Subscription
 
 __all__ = [
     "Car",
@@ -20,4 +21,5 @@ __all__ = [
     "PracticeSessionFeedback",
     "QuizQuestion",
     "QuizSession",
+    "Subscription",
 ]
