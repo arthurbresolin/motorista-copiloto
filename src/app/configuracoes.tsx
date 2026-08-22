@@ -14,11 +14,13 @@ import {
   type PickedImage,
   type ThemePreference,
 } from '@/api/learners';
-import { MascPlaceholder, OrganicButton, OrganicCheckbox, OrganicSurface, OrganicText, ScreenBackground } from '@/components/organic';
+import { MascPlaceholder, OrganicButton, OrganicCheckbox, OrganicPill, OrganicSurface, OrganicText, ScreenBackground } from '@/components/organic';
 import { BodyFontFamily, BorderWidth, MaxContentWidth, RadiusMd, RadiusPill, Spacing } from '@/constants/theme';
 import { useLearnerSession } from '@/hooks/use-learner-session';
+import { useSubscription } from '@/hooks/use-subscription';
 import { useTheme } from '@/hooks/use-theme';
 import { clearLearnerToken } from '@/lib/learner-auth-storage';
+import { formatDateBr } from '@/lib/format';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'light', label: 'Claro' },
@@ -33,6 +35,7 @@ export default function ConfiguracoesScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { learner, themePreference, refresh, updateThemePreference } = useLearnerSession();
+  const { subscription, loading: subscriptionLoading } = useSubscription();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const [name, setName] = useState(learner?.name ?? '');
@@ -344,6 +347,33 @@ export default function ConfiguracoesScreen() {
                 disabled={profileSaving}
                 onPress={handleSaveProfile}
               />
+            </OrganicSurface>
+
+            {/* Plano */}
+            <OrganicSurface backgroundColor="backgroundElement" style={styles.card}>
+              <OrganicText size="small">Plano</OrganicText>
+
+              {subscriptionLoading ? (
+                <OrganicText size="small" color="textSecondary">
+                  Carregando…
+                </OrganicText>
+              ) : subscription?.active ? (
+                <>
+                  <OrganicPill label="Premium ativo" backgroundColor="accent" textColor="onAccent" />
+                  {subscription.expires_at && (
+                    <OrganicText size="small" color="textSecondary">
+                      Renova em {formatDateBr(subscription.expires_at)}.
+                    </OrganicText>
+                  )}
+                </>
+              ) : (
+                <>
+                  <OrganicPill label="Plano gratuito" backgroundColor="backgroundSelected" />
+                  <OrganicText size="small" color="textSecondary">
+                    A assinatura mensal ainda não está disponível pra compra — em breve.
+                  </OrganicText>
+                </>
+              )}
             </OrganicSurface>
 
             {/* Segurança */}
