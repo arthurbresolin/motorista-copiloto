@@ -48,9 +48,12 @@ def upgrade() -> None:
     # server_default necessario: SQLite nao aceita ADD COLUMN NOT NULL sem
     # default numa tabela que ja tem linhas (mesmo problema resolvido antes
     # na migration de learner_id, aqui sem FK entao nao precisa de batch mode).
+    # sa.text('1') funciona por acidente no SQLite (tipagem solta) mas
+    # quebra no Postgres, que exige um boolean de verdade — sa.true() deixa
+    # o SQLAlchemy traduzir pro literal certo em cada dialeto.
     op.add_column(
         'learners',
-        sa.Column('notifications_enabled', sa.Boolean(), nullable=False, server_default=sa.text('1')),
+        sa.Column('notifications_enabled', sa.Boolean(), nullable=False, server_default=sa.true()),
     )
     # ### end Alembic commands ###
 
