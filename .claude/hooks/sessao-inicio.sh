@@ -33,17 +33,17 @@ while IFS='|' read -r dir tipo; do
   echo "  $dir ($tipo): ${CMD:-sem comando de teste detectado}"
 done < <(projetos_detectados)
 
-if [ -f "$RAIZ/PROGRESSO.md" ]; then
+PROGRESSO="$(doc_do_projeto PROGRESSO.md)" && {
   echo
   echo "## Onde o trabalho parou"
   echo
-  tail -25 "$RAIZ/PROGRESSO.md"
-fi
+  tail -25 "$RAIZ/$PROGRESSO"
+}
 
 echo
 echo "## Antes de qualquer código"
 echo
-[ -f "$RAIZ/COMECE-AQUI.md" ] && echo "1. Leia COMECE-AQUI.md — explica por que as travas deste projeto existem."
-[ -f "$RAIZ/PLANO.md" ] && echo "2. Leia PLANO.md e identifique a próxima tarefa não concluída."
+COMECE_AQUI="$(doc_do_projeto COMECE-AQUI.md)" && echo "1. Leia $COMECE_AQUI — explica por que as travas deste projeto existem."
+PLANO="$(doc_do_projeto PLANO.md)" && echo "2. Leia $PLANO e identifique a próxima tarefa não concluída."
 echo "3. Uma tarefa por vez, um commit por tarefa, critério de pronto atendido."
-echo "4. Registre em PROGRESSO.md o que fez, o que mediu e o que ficou pendente."
+echo "4. Registre em ${PROGRESSO:-PROGRESSO.md} o que fez, o que mediu e o que ficou pendente."

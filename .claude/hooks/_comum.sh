@@ -101,5 +101,15 @@ comando_verificacao_rapida() {
   esac
 }
 
+# Os documentos de trabalho ficam na raiz em uns projetos e em docs/ em outros.
+# Devolve o primeiro caminho que existir, relativo à raiz; nada se não houver.
+doc_do_projeto() {
+  local nome="$1" caminho
+  for caminho in "docs/$nome" "$nome"; do
+    [ -f "$RAIZ/$caminho" ] && { echo "$caminho"; return 0; }
+  done
+  return 1
+}
+
 # Carrega override manual, se existir. Deve vir por último.
 [ -f "$RAIZ/.claude/projeto.conf" ] && . "$RAIZ/.claude/projeto.conf"
